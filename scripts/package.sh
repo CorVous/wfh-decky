@@ -17,10 +17,13 @@ mkdir -p "$STAGE/dist" "$STAGE/bin"
 cp plugin.json package.json main.py LICENSE README.md "$STAGE/"
 cp dist/index.js "$STAGE/dist/"
 cp -r bin/python "$STAGE/bin/python"
+# Decky extracts zips without symlinks; main.py runs bin/python3.12 directly.
+find "$STAGE/bin/python" -type l -delete
+rm -rf "$STAGE/bin/python/lib/pkgconfig"
 mkdir -p "$STAGE/py_modules"
 cp -r py_modules/wfh "$STAGE/py_modules/wfh"
 find "$STAGE/py_modules" -name '__pycache__' -type d -prune -exec rm -rf {} +
 [ -d models ] && cp -r models "$STAGE/models"
 
-(cd "$ROOT/out/stage" && zip -qry "../$NAME.zip" "$NAME")
+(cd "$ROOT/out/stage" && zip -qr "../$NAME.zip" "$NAME")
 ls -lh "$ROOT/out/$NAME.zip"

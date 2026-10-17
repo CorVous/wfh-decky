@@ -14,7 +14,8 @@ import os
 import decky
 
 PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
-PYTHON = os.path.join(PLUGIN_DIR, "bin", "python", "bin", "python3")
+# python3.12, not the python3 symlink: Decky extracts plugin zips without symlinks.
+PYTHON = os.path.join(PLUGIN_DIR, "bin", "python", "bin", "python3.12")
 RPC_TIMEOUT = 60
 
 
@@ -119,6 +120,9 @@ class Plugin:
         if not os.path.exists(PYTHON):
             decky.logger.error("bundled runtime missing at %s", PYTHON)
             return
+        # Zip extraction drops the executable bit.
+        if not os.access(PYTHON, os.X_OK):
+            os.chmod(PYTHON, 0o755)
         await self._spawn()
         self.watchdog_task = asyncio.create_task(self._watchdog())
 
