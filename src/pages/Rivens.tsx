@@ -1,5 +1,10 @@
 import { FC } from "react";
 
-const Rivens: FC = () => <div>Rivens is coming soon.</div>;
+import { Empty } from "../components/ui";
+
+// Compact section for the Quick Access Menu home; null when the page has none.
+export const Qam: FC | null = null;
+
+const Rivens: FC = () => <Empty text="Rivens is coming soon." />;
 
 export default Rivens;
