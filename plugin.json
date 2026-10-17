@@ -1,0 +1,17 @@
+{
+  "name": "WFHelper",
+  "author": "CorVous",
+  "flags": [
+    "_root"
+  ],
+  "api_version": 1,
+  "publish": {
+    "tags": [
+      "warframe",
+      "overlay",
+      "root"
+    ],
+    "description": "Warframe companion: relic reward, relic planner, riven and arbitration overlays plus world state, market, inventory and more in the Quick Access Menu. Port of WFHelper.",
+    "image": "https://opengraph.githubassets.com/1/WFHelper/WFHelper"
+  }
+}
