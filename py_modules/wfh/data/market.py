@@ -504,6 +504,10 @@ class Market:
             self._set_catalog([c for c in (normalize_catalog_item(r) for r in rows if isinstance(r, dict)) if c])
             return self._catalog or []
 
+    def catalog_if_loaded(self) -> list[CatalogItem] | None:
+        """The catalog if it is already in memory, else None (never blocks or hits the network)."""
+        return self._catalog
+
     def _set_catalog(self, cat: list[CatalogItem]) -> None:
         by_slug, by_name, by_ref = {}, {}, {}
         for c in cat:

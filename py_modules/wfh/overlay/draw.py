@@ -123,6 +123,7 @@ class Card:
                 ty = y + row.pad_y + (rh - row.pad_y * 2 - int(c.size * 1.3)) // 2
                 d.text((tx, ty), t, font=font(c.size, c.bold), fill=c.color)
                 x += cw
+            y += rh
         return img
 
 

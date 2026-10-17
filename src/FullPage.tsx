@@ -1,23 +1,21 @@
 import { Tabs } from "@decky/ui";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 
+import { getLastTab, openTab, registerTabSetter } from "./nav";
 import { PAGES } from "./registry";
 
-// Remembers the last tab across openings of the page.
-let lastTab = "dashboard";
-
-export function openTab(id: string): void {
-  lastTab = id;
-}
-
 const FullPage: FC = () => {
-  const [tab, setTab] = useState(lastTab);
+  const [tab, setTab] = useState(getLastTab());
+  useEffect(() => {
+    registerTabSetter(setTab);
+    return () => registerTabSetter(null);
+  }, []);
   return (
     <div style={{ marginTop: "40px", height: "calc(100% - 40px)", background: "#0e121e" }}>
       <Tabs
         activeTab={tab}
         onShowTab={(id: string) => {
-          lastTab = id;
+          openTab(id);
           setTab(id);
         }}
         tabs={PAGES.map((p) => ({ id: p.id, title: p.title, content: <p.component /> }))}

@@ -42,4 +42,4 @@ export const PAGES: PageDef[] = [
   { id: "settings", title: "Settings", icon: FaCog, component: Settings },
 ];
 
-export const ROUTE = "/wfhelper";
+export { ROUTE } from "./nav";
