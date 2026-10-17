@@ -1,0 +1,28 @@
+"UserLocalConfigStore"
+{
+	"Software"
+	{
+		"Valve"
+		{
+			"Steam"
+			{
+				"apps"
+				{
+					"1091500"
+					{
+						"LaunchOptions"		"-skipStartScreen"
+					}
+					"230410"
+					{
+						"LastPlayed"		"1791000000"
+						"LaunchOptions"		"PROTON_LOG=1 %command% -cluster:public"
+						"cloud"
+						{
+							"last_sync_state"		"synchronized"
+						}
+					}
+				}
+			}
+		}
+	}
+}

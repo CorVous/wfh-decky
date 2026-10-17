@@ -1,0 +1,1742 @@
+[
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T4VoidProjectionCitrinePrimeBSilver",
+  "name": "Axi C12 Exceptional",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicAxiA.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 4,
+    "item": {
+     "name": "Citrine Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "6ab3f1bb626e0c6df7f6c9af",
+      "urlName": "citrine_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Kestrel Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+     "warframeMarket": {
+      "id": "6939aac85d9ebda239125d32",
+      "urlName": "kestrel_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Corufell Prime Handle",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/CorufellPrimeHandle",
+     "warframeMarket": {
+      "id": "6ab3f27b626e0c6df7f6c9bc",
+      "urlName": "corufell_prime_handle"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Vadarya Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+     "warframeMarket": {
+      "id": "68add07d731e63abe79a5d19",
+      "urlName": "vadarya_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Daikyu Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+     "warframeMarket": {
+      "id": "682dfb5635715d4f3e9c64ed",
+      "urlName": "daikyu_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Alternox Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+     "warframeMarket": {
+      "id": "6939aa8c5d9ebda239125d2e",
+      "urlName": "alternox_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6ab3f2ee626e0c6df7f6c9bf",
+   "urlName": "axi_c12_relic"
+  },
+  "vaulted": true,
+  "masterable": false,
+  "drops": [
+   {
+    "location": "Void/Mithra (Interception), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   },
+   {
+    "location": "Void/Mot (Survival), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   }
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T4VoidProjectionCitrinePrimeBGold",
+  "name": "Axi C12 Flawless",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicAxiB.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 6,
+    "item": {
+     "name": "Citrine Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "6ab3f1bb626e0c6df7f6c9af",
+      "urlName": "citrine_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Kestrel Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+     "warframeMarket": {
+      "id": "6939aac85d9ebda239125d32",
+      "urlName": "kestrel_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Corufell Prime Handle",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/CorufellPrimeHandle",
+     "warframeMarket": {
+      "id": "6ab3f27b626e0c6df7f6c9bc",
+      "urlName": "corufell_prime_handle"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Vadarya Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+     "warframeMarket": {
+      "id": "68add07d731e63abe79a5d19",
+      "urlName": "vadarya_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Daikyu Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+     "warframeMarket": {
+      "id": "682dfb5635715d4f3e9c64ed",
+      "urlName": "daikyu_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Alternox Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+     "warframeMarket": {
+      "id": "6939aa8c5d9ebda239125d2e",
+      "urlName": "alternox_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6ab3f2ee626e0c6df7f6c9bf",
+   "urlName": "axi_c12_relic"
+  },
+  "vaulted": true,
+  "masterable": false,
+  "drops": [
+   {
+    "location": "Void/Mithra (Interception), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   },
+   {
+    "location": "Void/Mot (Survival), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   }
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T4VoidProjectionCitrinePrimeBBronze",
+  "name": "Axi C12 Intact",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicAxiD.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 2,
+    "item": {
+     "name": "Citrine Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "6ab3f1bb626e0c6df7f6c9af",
+      "urlName": "citrine_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Kestrel Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+     "warframeMarket": {
+      "id": "6939aac85d9ebda239125d32",
+      "urlName": "kestrel_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Corufell Prime Handle",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/CorufellPrimeHandle",
+     "warframeMarket": {
+      "id": "6ab3f27b626e0c6df7f6c9bc",
+      "urlName": "corufell_prime_handle"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Vadarya Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+     "warframeMarket": {
+      "id": "68add07d731e63abe79a5d19",
+      "urlName": "vadarya_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Daikyu Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+     "warframeMarket": {
+      "id": "682dfb5635715d4f3e9c64ed",
+      "urlName": "daikyu_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Alternox Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+     "warframeMarket": {
+      "id": "6939aa8c5d9ebda239125d2e",
+      "urlName": "alternox_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6ab3f2ee626e0c6df7f6c9bf",
+   "urlName": "axi_c12_relic"
+  },
+  "vaulted": true,
+  "masterable": false,
+  "drops": [
+   {
+    "location": "Void/Mithra (Interception), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   },
+   {
+    "location": "Void/Mot (Survival), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   }
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T4VoidProjectionCitrinePrimeBPlatinum",
+  "name": "Axi C12 Radiant",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicAxiC.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 10,
+    "item": {
+     "name": "Citrine Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "6ab3f1bb626e0c6df7f6c9af",
+      "urlName": "citrine_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Kestrel Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+     "warframeMarket": {
+      "id": "6939aac85d9ebda239125d32",
+      "urlName": "kestrel_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Corufell Prime Handle",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/CorufellPrimeHandle",
+     "warframeMarket": {
+      "id": "6ab3f27b626e0c6df7f6c9bc",
+      "urlName": "corufell_prime_handle"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Vadarya Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+     "warframeMarket": {
+      "id": "68add07d731e63abe79a5d19",
+      "urlName": "vadarya_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Daikyu Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+     "warframeMarket": {
+      "id": "682dfb5635715d4f3e9c64ed",
+      "urlName": "daikyu_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Alternox Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+     "warframeMarket": {
+      "id": "6939aa8c5d9ebda239125d2e",
+      "urlName": "alternox_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6ab3f2ee626e0c6df7f6c9bf",
+   "urlName": "axi_c12_relic"
+  },
+  "vaulted": true,
+  "masterable": false,
+  "drops": [
+   {
+    "location": "Void/Mithra (Interception), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   },
+   {
+    "location": "Void/Mot (Survival), Rotation C",
+    "type": "Axi C12 Relic",
+    "chance": 0.29,
+    "rarity": "Legendary"
+   }
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T1VoidProjectionGSilver",
+  "name": "Lith A1 Exceptional",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicLithA.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 13,
+    "item": {
+     "name": "Saryn Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "56c3bbdb5d2f0202da32e93c",
+      "urlName": "saryn_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Vectis Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+     "warframeMarket": {
+      "id": "559daae8e779897b56bee133",
+      "urlName": "vectis_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Braton Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff32",
+      "urlName": "braton_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 4,
+    "item": {
+     "name": "Akstiletto Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "573b80450ec44a47787a6915",
+      "urlName": "akstiletto_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Vasto Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff67",
+      "urlName": "vasto_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054de4e5221e30057501057",
+   "urlName": "lith_a1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T1VoidProjectionGGold",
+  "name": "Lith A1 Flawless",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicLithB.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 17,
+    "item": {
+     "name": "Saryn Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "56c3bbdb5d2f0202da32e93c",
+      "urlName": "saryn_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Vectis Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+     "warframeMarket": {
+      "id": "559daae8e779897b56bee133",
+      "urlName": "vectis_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Braton Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff32",
+      "urlName": "braton_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 6,
+    "item": {
+     "name": "Akstiletto Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "573b80450ec44a47787a6915",
+      "urlName": "akstiletto_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Vasto Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff67",
+      "urlName": "vasto_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054de4e5221e30057501057",
+   "urlName": "lith_a1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T1VoidProjectionGBronze",
+  "name": "Lith A1 Intact",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicLithD.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 11,
+    "item": {
+     "name": "Saryn Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "56c3bbdb5d2f0202da32e93c",
+      "urlName": "saryn_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Vectis Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+     "warframeMarket": {
+      "id": "559daae8e779897b56bee133",
+      "urlName": "vectis_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Braton Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff32",
+      "urlName": "braton_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 2,
+    "item": {
+     "name": "Akstiletto Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "573b80450ec44a47787a6915",
+      "urlName": "akstiletto_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Vasto Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff67",
+      "urlName": "vasto_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054de4e5221e30057501057",
+   "urlName": "lith_a1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T1VoidProjectionGPlatinum",
+  "name": "Lith A1 Radiant",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicLithC.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 20,
+    "item": {
+     "name": "Saryn Prime Neuroptics Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetBlueprint",
+     "warframeMarket": {
+      "id": "56c3bbdb5d2f0202da32e93c",
+      "urlName": "saryn_prime_neuroptics_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Vectis Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+     "warframeMarket": {
+      "id": "559daae8e779897b56bee133",
+      "urlName": "vectis_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Braton Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff32",
+      "urlName": "braton_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 10,
+    "item": {
+     "name": "Akstiletto Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "573b80450ec44a47787a6915",
+      "urlName": "akstiletto_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Vasto Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff67",
+      "urlName": "vasto_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054de4e5221e30057501057",
+   "urlName": "lith_a1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T2VoidProjectionQSilver",
+  "name": "Meso F2 Exceptional",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicMesoA.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 4,
+    "item": {
+     "name": "Frost Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff80",
+      "urlName": "frost_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Reaper Prime Blade",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff58",
+      "urlName": "reaper_prime_blade"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "2X Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Latron Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff4c",
+      "urlName": "latron_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Ember Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff7e",
+      "urlName": "ember_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Sicarus Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff5e",
+      "urlName": "sicarus_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dde05221e30057500fdc",
+   "urlName": "meso_f2_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T2VoidProjectionQGold",
+  "name": "Meso F2 Flawless",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicMesoB.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 6,
+    "item": {
+     "name": "Frost Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff80",
+      "urlName": "frost_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Reaper Prime Blade",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff58",
+      "urlName": "reaper_prime_blade"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "2X Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Latron Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff4c",
+      "urlName": "latron_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Ember Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff7e",
+      "urlName": "ember_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Sicarus Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff5e",
+      "urlName": "sicarus_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dde05221e30057500fdc",
+   "urlName": "meso_f2_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T2VoidProjectionQBronze",
+  "name": "Meso F2 Intact",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicMesoD.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 2,
+    "item": {
+     "name": "Frost Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff80",
+      "urlName": "frost_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Reaper Prime Blade",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff58",
+      "urlName": "reaper_prime_blade"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "2X Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Latron Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff4c",
+      "urlName": "latron_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Ember Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff7e",
+      "urlName": "ember_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Sicarus Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff5e",
+      "urlName": "sicarus_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dde05221e30057500fdc",
+   "urlName": "meso_f2_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T2VoidProjectionQPlatinum",
+  "name": "Meso F2 Radiant",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicMesoC.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 10,
+    "item": {
+     "name": "Frost Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff80",
+      "urlName": "frost_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Reaper Prime Blade",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff58",
+      "urlName": "reaper_prime_blade"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "2X Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Latron Prime Stock",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff4c",
+      "urlName": "latron_prime_stock"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Ember Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff7e",
+      "urlName": "ember_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Sicarus Prime Barrel",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff5e",
+      "urlName": "sicarus_prime_barrel"
+     }
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dde05221e30057500fdc",
+   "urlName": "meso_f2_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T3VoidProjectionRhinoNyxVaultASilver",
+  "name": "Neo R1 Exceptional",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicNeoA.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 4,
+    "item": {
+     "name": "Rhino Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff77",
+      "urlName": "rhino_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Boltor Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff30",
+      "urlName": "boltor_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Nyx Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff73",
+      "urlName": "nyx_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Hikou Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff46",
+      "urlName": "hikou_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Ankyros Prime Gauntlet",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff26",
+      "urlName": "ankyros_prime_gauntlet"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd8e5221e30057500f88",
+   "urlName": "neo_r1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T3VoidProjectionRhinoNyxVaultAGold",
+  "name": "Neo R1 Flawless",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicNeoB.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 6,
+    "item": {
+     "name": "Rhino Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff77",
+      "urlName": "rhino_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Boltor Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff30",
+      "urlName": "boltor_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Nyx Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff73",
+      "urlName": "nyx_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Hikou Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff46",
+      "urlName": "hikou_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Ankyros Prime Gauntlet",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff26",
+      "urlName": "ankyros_prime_gauntlet"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd8e5221e30057500f88",
+   "urlName": "neo_r1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T3VoidProjectionRhinoNyxVaultABronze",
+  "name": "Neo R1 Intact",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicNeoD.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 2,
+    "item": {
+     "name": "Rhino Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff77",
+      "urlName": "rhino_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Boltor Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff30",
+      "urlName": "boltor_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Nyx Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff73",
+      "urlName": "nyx_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Hikou Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff46",
+      "urlName": "hikou_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Ankyros Prime Gauntlet",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff26",
+      "urlName": "ankyros_prime_gauntlet"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd8e5221e30057500f88",
+   "urlName": "neo_r1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T3VoidProjectionRhinoNyxVaultAPlatinum",
+  "name": "Neo R1 Radiant",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicNeoC.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 10,
+    "item": {
+     "name": "Rhino Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff77",
+      "urlName": "rhino_prime_blueprint"
+     }
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Boltor Prime Receiver",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff30",
+      "urlName": "boltor_prime_receiver"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Nyx Prime Chassis Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff73",
+      "urlName": "nyx_prime_chassis_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Hikou Prime Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff46",
+      "urlName": "hikou_prime_blueprint"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Ankyros Prime Gauntlet",
+     "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+     "warframeMarket": {
+      "id": "54a73e65e779893a797fff26",
+      "urlName": "ankyros_prime_gauntlet"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Forma Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd8e5221e30057500f88",
+   "urlName": "neo_r1_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T5VoidProjectionImmortalASilver",
+  "name": "Requiem I Exceptional",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicImmortalA.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 4,
+    "item": {
+     "name": "Exilus Weapon Adapter Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/WeaponUtilityUnlockerBlueprint"
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Lohk",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalOneMod",
+     "warframeMarket": {
+      "id": "5dbe9b0b7ea27b0ffe3ca26e",
+      "urlName": "lohk"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 13,
+    "item": {
+     "name": "Xata",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalTwoMod",
+     "warframeMarket": {
+      "id": "5dbe9b127ea27b0ffe3ca285",
+      "urlName": "xata"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "1200X Kuva",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/Kuva"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Ayatan Amber Star",
+     "uniqueName": "/Lotus/Types/Items/FusionTreasures/OroFusexOrnamentB",
+     "warframeMarket": {
+      "id": "57e91e5cc76eb74c087f492d",
+      "urlName": "ayatan_amber_star"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 23.33,
+    "item": {
+     "name": "Riven Sliver",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/RivenFragment"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd0c5221e30057500f18",
+   "urlName": "requiem_i_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T5VoidProjectionImmortalAGold",
+  "name": "Requiem I Flawless",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicImmortalB.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 6,
+    "item": {
+     "name": "Exilus Weapon Adapter Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/WeaponUtilityUnlockerBlueprint"
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Lohk",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalOneMod",
+     "warframeMarket": {
+      "id": "5dbe9b0b7ea27b0ffe3ca26e",
+      "urlName": "lohk"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 17,
+    "item": {
+     "name": "Xata",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalTwoMod",
+     "warframeMarket": {
+      "id": "5dbe9b127ea27b0ffe3ca285",
+      "urlName": "xata"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "1200X Kuva",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/Kuva"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Ayatan Amber Star",
+     "uniqueName": "/Lotus/Types/Items/FusionTreasures/OroFusexOrnamentB",
+     "warframeMarket": {
+      "id": "57e91e5cc76eb74c087f492d",
+      "urlName": "ayatan_amber_star"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Riven Sliver",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/RivenFragment"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd0c5221e30057500f18",
+   "urlName": "requiem_i_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T5VoidProjectionImmortalABronze",
+  "name": "Requiem I Intact",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicImmortalD.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 2,
+    "item": {
+     "name": "Exilus Weapon Adapter Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/WeaponUtilityUnlockerBlueprint"
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Lohk",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalOneMod",
+     "warframeMarket": {
+      "id": "5dbe9b0b7ea27b0ffe3ca26e",
+      "urlName": "lohk"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 11,
+    "item": {
+     "name": "Xata",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalTwoMod",
+     "warframeMarket": {
+      "id": "5dbe9b127ea27b0ffe3ca285",
+      "urlName": "xata"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "1200X Kuva",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/Kuva"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Ayatan Amber Star",
+     "uniqueName": "/Lotus/Types/Items/FusionTreasures/OroFusexOrnamentB",
+     "warframeMarket": {
+      "id": "57e91e5cc76eb74c087f492d",
+      "urlName": "ayatan_amber_star"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 25.33,
+    "item": {
+     "name": "Riven Sliver",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/RivenFragment"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd0c5221e30057500f18",
+   "urlName": "requiem_i_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ },
+ {
+  "uniqueName": "/Lotus/Types/Game/Projections/T5VoidProjectionImmortalAPlatinum",
+  "name": "Requiem I Radiant",
+  "codexSecret": false,
+  "type": "Relic",
+  "imageName": "RelicImmortalC.png",
+  "category": "Relics",
+  "tradable": true,
+  "rewards": [
+   {
+    "chance": 10,
+    "item": {
+     "name": "Exilus Weapon Adapter Blueprint",
+     "uniqueName": "/Lotus/Types/Recipes/Components/WeaponUtilityUnlockerBlueprint"
+    },
+    "rarity": "Rare"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Lohk",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalOneMod",
+     "warframeMarket": {
+      "id": "5dbe9b0b7ea27b0ffe3ca26e",
+      "urlName": "lohk"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 20,
+    "item": {
+     "name": "Xata",
+     "uniqueName": "/Lotus/Upgrades/Mods/Immortal/ImmortalTwoMod",
+     "warframeMarket": {
+      "id": "5dbe9b127ea27b0ffe3ca285",
+      "urlName": "xata"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "1200X Kuva",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/Kuva"
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Ayatan Amber Star",
+     "uniqueName": "/Lotus/Types/Items/FusionTreasures/OroFusexOrnamentB",
+     "warframeMarket": {
+      "id": "57e91e5cc76eb74c087f492d",
+      "urlName": "ayatan_amber_star"
+     }
+    },
+    "rarity": "Uncommon"
+   },
+   {
+    "chance": 16.67,
+    "item": {
+     "name": "Riven Sliver",
+     "uniqueName": "/Lotus/Types/Items/MiscItems/RivenFragment"
+    },
+    "rarity": "Uncommon"
+   }
+  ],
+  "marketInfo": {
+   "id": "6054dd0c5221e30057500f18",
+   "urlName": "requiem_i_relic"
+  },
+  "vaulted": true,
+  "masterable": false
+ }
+]

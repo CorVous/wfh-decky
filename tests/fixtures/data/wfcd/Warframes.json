@@ -1,0 +1,373 @@
+[
+ {
+  "uniqueName": "/Lotus/Powersuits/Ninja/AshPrime",
+  "name": "Ash Prime",
+  "health": 455,
+  "shield": 365,
+  "armor": 185,
+  "stamina": 3,
+  "power": 100,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1.2,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "AshPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "madurai",
+  "conclave": true,
+  "color": 0,
+  "sex": "Male",
+  "sprint": 1.2,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Geode/CitrinePrime",
+  "name": "Citrine Prime",
+  "health": 400,
+  "shield": 270,
+  "armor": 325,
+  "stamina": 3,
+  "power": 150,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 5
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "CitrinePrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "naramon",
+  "conclave": false,
+  "color": 0,
+  "sex": "Female",
+  "sprint": 1,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Ember/EmberPrime",
+  "name": "Ember Prime",
+  "health": 270,
+  "shield": 365,
+  "armor": 160,
+  "stamina": 3,
+  "power": 175,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1.1,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "EmberPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "madurai",
+  "conclave": false,
+  "color": 0,
+  "sex": "Female",
+  "sprint": 1.1,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Frost/FrostPrime",
+  "name": "Frost Prime",
+  "health": 270,
+  "shield": 550,
+  "armor": 315,
+  "stamina": 3,
+  "power": 100,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 0.94999999,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "FrostPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "vazarin",
+  "conclave": true,
+  "color": 0,
+  "sex": "Male",
+  "sprint": 0.95,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Jade/NyxPrime",
+  "name": "Nyx Prime",
+  "health": 270,
+  "shield": 365,
+  "armor": 135,
+  "stamina": 3,
+  "power": 175,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1.125,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "NyxPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "naramon",
+  "conclave": true,
+  "color": 0,
+  "sex": "Female",
+  "sprint": 1.125,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Rhino/RhinoPrime",
+  "name": "Rhino Prime",
+  "health": 270,
+  "shield": 455,
+  "armor": 290,
+  "stamina": 3,
+  "power": 100,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 3
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "RhinoPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "madurai",
+  "conclave": true,
+  "color": 0,
+  "sex": "Male",
+  "sprint": 1,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "uniqueName": "/Lotus/Powersuits/Saryn/SarynPrime",
+  "name": "Saryn Prime",
+  "health": 365,
+  "shield": 270,
+  "armor": 315,
+  "stamina": 3,
+  "power": 200,
+  "codexSecret": false,
+  "masteryReq": 0,
+  "sprintSpeed": 1,
+  "productCategory": "Suits",
+  "buildPrice": 25000,
+  "buildTime": 259200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeChassisComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetComponent",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeSystemsComponent",
+    "itemCount": 1
+   }
+  ],
+  "type": "Warframe",
+  "imageName": "SarynPrime.png",
+  "category": "Warframes",
+  "tradable": false,
+  "wikiAvailable": true,
+  "aura": "vazarin",
+  "conclave": true,
+  "color": 0,
+  "sex": "Female",
+  "sprint": 1,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ }
+]

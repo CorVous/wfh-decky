@@ -59,5 +59,6 @@ cli/decky
 # Built runtime, models and plugin zip
 /bin/
 /models/
+/data/
 /out/
 /.devdeps/

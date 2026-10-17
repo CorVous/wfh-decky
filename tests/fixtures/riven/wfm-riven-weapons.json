@@ -1,0 +1,1674 @@
+[
+ {
+  "slug": "acceltra",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/SapientPrimary/SapientPrimaryWeapon"
+ },
+ {
+  "slug": "ack_and_brunt",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerTylAxeAndBoar/RegorAxeShield"
+ },
+ {
+  "slug": "acrid",
+  "gameRef": "/Lotus/Weapons/ClanTech/Bio/AcidDartPistol"
+ },
+ {
+  "slug": "aegrit",
+  "gameRef": "/Lotus/Weapons/Grineer/ThrowingWeapons/GrnVorStickyBomb/GrnVorStickyBomb"
+ },
+ {
+  "slug": "aeolak",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnRifleErsatz/TnRifleErsatzWeapon"
+ },
+ {
+  "slug": "afentis",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnHopliteSpear/TnHopliteSpearGunWeapon"
+ },
+ {
+  "slug": "afuris",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkimboAutoPistols"
+ },
+ {
+  "slug": "akarius",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/SapientPistol/SapientPistol"
+ },
+ {
+  "slug": "akaten",
+  "gameRef": "/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponPS"
+ },
+ {
+  "slug": "akbolto",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkimboBolto"
+ },
+ {
+  "slug": "akbronco",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkimboShotGun"
+ },
+ {
+  "slug": "akjagara",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TigrisRedeemerSetPistol/TnoBladedPistols"
+ },
+ {
+  "slug": "aklato",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkimboPistol"
+ },
+ {
+  "slug": "aklex",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkLexPistols"
+ },
+ {
+  "slug": "akmagnus",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/DualMagnus"
+ },
+ {
+  "slug": "aksomati",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/SomaSidearm/AkimboSomaPistols"
+ },
+ {
+  "slug": "akstiletto",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TennoUzi/TennoUzi"
+ },
+ {
+  "slug": "akvasto",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/DualVastos"
+ },
+ {
+  "slug": "akzani",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/HarlequinGun/HarlequinPistols"
+ },
+ {
+  "slug": "alternox",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/GyreRifle/GyreRifleWeapon"
+ },
+ {
+  "slug": "amanata",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/Naginata/ShrineMaidenNaginataWeapon"
+ },
+ {
+  "slug": "ambassador",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpArSniper/CrpArSniperRifle"
+ },
+ {
+  "slug": "amphis",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Staff/GrnStaff"
+ },
+ {
+  "slug": "amprex",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/ChainLightningGun/ChainLightningRifle"
+ },
+ {
+  "slug": "angstrum",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpHandRL/CorpusHandRocketLauncher"
+ },
+ {
+  "slug": "anku",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Scythe/ParisScythe/ParisScythe"
+ },
+ {
+  "slug": "ankyros",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Gauntlet/Gauntlet"
+ },
+ {
+  "slug": "arbucep",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/NokkoArchGun/NokkoArchGun"
+ },
+ {
+  "slug": "arca_plasmor",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpShotgun/CrpShotgun"
+ },
+ {
+  "slug": "arca_scisco",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/SniperPistol/CrpScopeGun"
+ },
+ {
+  "slug": "arca_titron",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Hammer/CorpusHammerWeapon"
+ },
+ {
+  "slug": "argo_and_vel",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SwordsAndBoards/DaxDuviriMaceShieldWeapon"
+ },
+ {
+  "slug": "argonak",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/LaserAimRifle/LaserAimRifle"
+ },
+ {
+  "slug": "artax",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/Gremlin"
+ },
+ {
+  "slug": "arum_spinosa",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/InfWarfan/InfWarfanWeapon"
+ },
+ {
+  "slug": "astilla",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnGlassShotgun/TnGlassShotgunGun"
+ },
+ {
+  "slug": "athodai",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnJetTurbine/TnJetTurbinePistolWeapon"
+ },
+ {
+  "slug": "atomos",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/HeatGun/GrnHeatGun"
+ },
+ {
+  "slug": "atterax",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerWhip/GrineerWhip"
+ },
+ {
+  "slug": "attica",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnoPrmryXbow/TnoPrmryXbowWeapon"
+ },
+ {
+  "slug": "ax_52",
+  "gameRef": "/Lotus/Weapons/Lasria/AK47/TC2024AK47Weapon"
+ },
+ {
+  "slug": "azima",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/SundialGun/SundialPistol"
+ },
+ {
+  "slug": "azothane",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/DaxDuviriTwoHandedKatana/DaxDuviriTwoHandedKatanaWeapon"
+ },
+ {
+  "slug": "balla",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipOne"
+ },
+ {
+  "slug": "ballistica",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/AutomaticHandCrossbow/AutoCrossBow"
+ },
+ {
+  "slug": "basmu",
+  "gameRef": "/Lotus/Weapons/Sentients/SentRifleNewWar/SentRifleNewWarGun"
+ },
+ {
+  "slug": "batoten",
+  "gameRef": "/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponIP"
+ },
+ {
+  "slug": "battacor",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpSentExperimentRifle/CrpSentExperimentRifle"
+ },
+ {
+  "slug": "baza",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnSMG/TnSMGWeapon"
+ },
+ {
+  "slug": "bo",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Staff/Staff"
+ },
+ {
+  "slug": "boar",
+  "gameRef": "/Lotus/Weapons/Tenno/Shotgun/FullAutoShotgun"
+ },
+ {
+  "slug": "boltace",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Tonfa/Boltonfa/Boltonfa"
+ },
+ {
+  "slug": "bolto",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/CrossBow"
+ },
+ {
+  "slug": "boltor",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/BoltoRifle"
+ },
+ {
+  "slug": "brakk",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrineerHandShotgun/GrineerHandCannon"
+ },
+ {
+  "slug": "braton",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/Rifle"
+ },
+ {
+  "slug": "broken_scepter",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnQueenSceptre/GrnQueenSceptreWeapon"
+ },
+ {
+  "slug": "broken_war",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/StalkerTwo/StalkerTwoSmallSword"
+ },
+ {
+  "slug": "bronco",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/HandShotGun"
+ },
+ {
+  "slug": "bubonico",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/InfArmCannon/InfArmCannon"
+ },
+ {
+  "slug": "burst_laser",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/BurstLaserPistol"
+ },
+ {
+  "slug": "burston",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/BurstRifle"
+ },
+ {
+  "slug": "buzlok",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnGorgSniperRifle/GrnGorgSniperRifle"
+ },
+ {
+  "slug": "cadus",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Staff/SingleStaff"
+ },
+ {
+  "slug": "cantare",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/TnChoirframeKunai/TnChoirframeKunai"
+ },
+ {
+  "slug": "cassowar",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/TnHalberdPolearm/TnHalberdPolearmWeapon"
+ },
+ {
+  "slug": "castanas",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/StickyBomb/StickyBombs"
+ },
+ {
+  "slug": "catabolyst",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfBeamPistol/InfBeamPistol"
+ },
+ {
+  "slug": "catchmoon",
+  "gameRef": "/Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelAPart"
+ },
+ {
+  "slug": "caustacyst",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/InfEmbolistScythe/InfestedScythe"
+ },
+ {
+  "slug": "cedo",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnAlchemistShotgun/TnAlchemistShotgun"
+ },
+ {
+  "slug": "ceramic_dagger",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Dagger/CeramicDagger"
+ },
+ {
+  "slug": "cerata",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Glaives/PunctureGlaive/PunctureGlaiveWeapon"
+ },
+ {
+  "slug": "cernos",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/AntlerBow/AntlerBow"
+ },
+ {
+  "slug": "cestra",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CorpusMinigun/CorpusMinigun"
+ },
+ {
+  "slug": "cinta",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/DaxDuviriAsymetricalBow/DaxDuviriAsymmetricalLongBowPlayerWeapon"
+ },
+ {
+  "slug": "cobra_and_crane",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SwordsAndBoards/PacifistShieldAndSword/PacifistShieldSword"
+ },
+ {
+  "slug": "coda_bassocyst",
+  "gameRef": "/Lotus/Weapons/Infested/InfestedLich/LongGuns/1999InfShotgun/1999InfShotgunWeapon"
+ },
+ {
+  "slug": "coda_motovore",
+  "gameRef": "/Lotus/Weapons/Infested/InfestedLich/Melee/InfestedHammer/InfLichHammerWeapon"
+ },
+ {
+  "slug": "convectrix",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpSplitLaser/CrpSplitLaser"
+ },
+ {
+  "slug": "corinth",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnHeavyShotgun/TnHeavyShotgunGun"
+ },
+ {
+  "slug": "cortege",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechArchGun/ThanoTechArchGun"
+ },
+ {
+  "slug": "corufell",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Melee/ExaltedArchScythe/ExaltedAWScytheWeapon"
+ },
+ {
+  "slug": "corvas",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/LaunchGrenade/ArchCannon"
+ },
+ {
+  "slug": "cronus",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/CronusSword/CronusLongSword"
+ },
+ {
+  "slug": "cryotra",
+  "gameRef": "/Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/CryoxionWeapon"
+ },
+ {
+  "slug": "cyanex",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpSentAmalgPistol/CrpSentAmalgPistol"
+ },
+ {
+  "slug": "cyath",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipFour"
+ },
+ {
+  "slug": "cycron",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpChargeGun/CrpChargeGun"
+ },
+ {
+  "slug": "cyngas",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ArchBurstGun/ArchBurstGun"
+ },
+ {
+  "slug": "daikyu",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/AsymetricalBow/AsymetricalBow"
+ },
+ {
+  "slug": "dakra_prime",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/CronusSword/PrimeCronusLongSword"
+ },
+ {
+  "slug": "dark_dagger",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Dagger/DarkDagger"
+ },
+ {
+  "slug": "dark_split_sword_(dual_swords)",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/DarkSword/DarkSwordDaggerHybridWeapon"
+ },
+ {
+  "slug": "dark_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/DarkSword/DarkLongSword"
+ },
+ {
+  "slug": "deconstructor",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/SentGlaiveWeapon"
+ },
+ {
+  "slug": "dehtat",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipFive"
+ },
+ {
+  "slug": "dera",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/EnergyRifle"
+ },
+ {
+  "slug": "despair",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/StalkerKunai"
+ },
+ {
+  "slug": "destreza",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TnoRapier/TnoRapier"
+ },
+ {
+  "slug": "deth_machine_rifle",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/DethMachineRifle"
+ },
+ {
+  "slug": "detron",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CorpusHandShotgun/CorpusHandCannon"
+ },
+ {
+  "slug": "dex_dakra",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/DexTheSecond/DexTheSecond"
+ },
+ {
+  "slug": "dex_nikana",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/Dex2023Nikana/Dex2023Nikana"
+ },
+ {
+  "slug": "dokrahm",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipEleven"
+ },
+ {
+  "slug": "dorrclave",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TnDagathBladeWhip/TnDagathBladeWhip"
+ },
+ {
+  "slug": "dragon_nikana",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/LowKatana"
+ },
+ {
+  "slug": "drakgoon",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerFlakCannon/FlakCannon"
+ },
+ {
+  "slug": "dread",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/StalkerBow"
+ },
+ {
+  "slug": "dual_cestra",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CorpusMinigun/DualCorpusMinigun"
+ },
+ {
+  "slug": "dual_cleavers",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/DualCleaverWeapon"
+ },
+ {
+  "slug": "dual_coda_torxica",
+  "gameRef": "/Lotus/Weapons/Infested/InfestedLich/Pistols/1999InfSporePistol/1999InfSporePistolWeapon"
+ },
+ {
+  "slug": "dual_decurion",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ArchwingHeavyPistols/ArchHeavyPistols"
+ },
+ {
+  "slug": "dual_ether",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualShortSword/DualEtherSword"
+ },
+ {
+  "slug": "dual_heat_swords",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualShortSword/DualHeatSwords"
+ },
+ {
+  "slug": "dual_ichor",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Axe/DualInfestedAxesWeapon"
+ },
+ {
+  "slug": "dual_kamas",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualKamas/DualKamas"
+ },
+ {
+  "slug": "dual_keres",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/QuillSword/QuillDualSwords"
+ },
+ {
+  "slug": "dual_raza",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Soma/SomaDualKamas"
+ },
+ {
+  "slug": "dual_skana",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualShortSword/DualShortSword"
+ },
+ {
+  "slug": "dual_toxocyst",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfVomitGun/InfVomitGunWep"
+ },
+ {
+  "slug": "dual_viciss",
+  "gameRef": "/Lotus/Weapons/Lasria/LasGooSickle/LasGooSicklePlayerWeapon"
+ },
+ {
+  "slug": "dual_zoren",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Axe/DualAxeWeapon"
+ },
+ {
+  "slug": "edun",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/DaxDuviriPolearm/DaxDuviriPolearmWeapon"
+ },
+ {
+  "slug": "efv_5_jupiter",
+  "gameRef": "/Lotus/Weapons/Lasria/LasGooAK/LasGooAKPlayerWeapon"
+ },
+ {
+  "slug": "efv_8_mars",
+  "gameRef": "/Lotus/Weapons/Lasria/LasGooPistol/LasGooPistolPlayerWeapon"
+ },
+ {
+  "slug": "ekhein",
+  "gameRef": "/Lotus/Weapons/Thanotech/EntSphereHammer/EntSphereHammer"
+ },
+ {
+  "slug": "embolist",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfestedPistol"
+ },
+ {
+  "slug": "endura",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/ThreeLeaf/ThreeLeaf"
+ },
+ {
+  "slug": "enkaus",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnInkRifle/TnInkRifleWeapon"
+ },
+ {
+  "slug": "epitaph",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnWraitheSidearm/TnWraitheSidearmWeapon"
+ },
+ {
+  "slug": "ether_daggers",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualDagger/DualEtherDagger"
+ },
+ {
+  "slug": "ether_reaper",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Scythe/EtherScytheWeapon"
+ },
+ {
+  "slug": "ether_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/LongSword/EtherSword"
+ },
+ {
+  "slug": "euphona_prime",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/AllNew1hSG/AllNew1hSG"
+ },
+ {
+  "slug": "evensong",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/TnChoirBow/TnChoirBow"
+ },
+ {
+  "slug": "exergis",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpShapeBlast/CrpShapeBlastShotgun"
+ },
+ {
+  "slug": "falcor",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Glaive/CrpGlaive/CrpGlaive"
+ },
+ {
+  "slug": "fang",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualDagger/DualDagger"
+ },
+ {
+  "slug": "felarx",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/LongGuns/PumpShotgun/ZarimanPumpShotgun"
+ },
+ {
+  "slug": "ferrox",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/Spears/Railgun/CorpusRailgun"
+ },
+ {
+  "slug": "fluctus",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/RocketArtillery/ArchRocketCrossbow"
+ },
+ {
+  "slug": "flux_rifle",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/CrpLaserRifle"
+ },
+ {
+  "slug": "fragor",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Hammer/HammerWeapon"
+ },
+ {
+  "slug": "fulmin",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnWispRifle/TnWispRifle"
+ },
+ {
+  "slug": "furax",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Fist/Fist"
+ },
+ {
+  "slug": "furis",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/AutoPistol"
+ },
+ {
+  "slug": "fusilai",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/GlassKunai/GlassKunaiWeapon"
+ },
+ {
+  "slug": "galariak_prime",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/Scythe/GrnDrillScythe/GrnDrillScythe"
+ },
+ {
+  "slug": "galatine",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/GreatSword/TennoGreatSword"
+ },
+ {
+  "slug": "galvacord",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Whips/CrpShockGrip/CrpShockGripWhipWeapon"
+ },
+ {
+  "slug": "gammacor",
+  "gameRef": "/Lotus/Weapons/Syndicates/CephalonSuda/Pistols/CSDroidArray"
+ },
+ {
+  "slug": "gazal_machete",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/PersianMachete/DjinnMachete"
+ },
+ {
+  "slug": "gaze",
+  "gameRef": "/Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelDPart"
+ },
+ {
+  "slug": "ghoulsaw",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnGhoulSaw/GrnGhoulSawPlayer"
+ },
+ {
+  "slug": "glaive",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Glaives/LightGlaive/LightGlaiveWeapon"
+ },
+ {
+  "slug": "glaxion",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpFreezeRay/CrpFreezeRayRifle"
+ },
+ {
+  "slug": "gorgon",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/HeavyRifle"
+ },
+ {
+  "slug": "gotva_prime",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnOrokinRifle/GrnOrokinRifleWeapon"
+ },
+ {
+  "slug": "grakata",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerAssaultRifle/GrnAssaultRifle"
+ },
+ {
+  "slug": "gram",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/GreatSword/GreatSword"
+ },
+ {
+  "slug": "grattler",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/RepurposedGrineerAntiAircraftGun/ArchGRNAAGun"
+ },
+ {
+  "slug": "grimoire",
+  "gameRef": "/Lotus/Weapons/Tenno/Grimoire/TnGrimoire"
+ },
+ {
+  "slug": "grinlok",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerLeverActionRifle/GLARifle"
+ },
+ {
+  "slug": "guandao",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/TnGuandaoPolearm/TnGuandaoPolearmWeapon"
+ },
+ {
+  "slug": "gunsen",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Warfan/WarfanWeapon"
+ },
+ {
+  "slug": "haalvu",
+  "gameRef": "/Lotus/Weapons/Sentients/SentOctaMiniGun/SentOctaMiniGun"
+ },
+ {
+  "slug": "halikar",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnBoomerang/GrnBoomerang"
+ },
+ {
+  "slug": "harmony",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Scythe/TnChoirScythe/TnChoirScythe"
+ },
+ {
+  "slug": "harpak",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnHarpoonGun/GrnHarpoonGun"
+ },
+ {
+  "slug": "hate",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Scythe/StalkerScytheWeapon"
+ },
+ {
+  "slug": "heat_dagger",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Dagger/Dagger"
+ },
+ {
+  "slug": "heat_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/HeatSword/HeatLongSword"
+ },
+ {
+  "slug": "hek",
+  "gameRef": "/Lotus/Weapons/Tenno/Shotgun/QuadShotgun"
+ },
+ {
+  "slug": "heliocor",
+  "gameRef": "/Lotus/Weapons/Cephalon/Melee/Hammer/CephHammerWeapon"
+ },
+ {
+  "slug": "helstrum",
+  "gameRef": "/Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/SwarmerWeapon"
+ },
+ {
+  "slug": "hema",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/InfWFAccompanyingPri/InfestedBurstRifle"
+ },
+ {
+  "slug": "hespar",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/HeavyScythe/DuviriScythe/DuviriHeavyScytheWeapon"
+ },
+ {
+  "slug": "higasa",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/Gunbrella/ShrineMaidenGunbrellaWeapon"
+ },
+ {
+  "slug": "hikou",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/TennoStars"
+ },
+ {
+  "slug": "hind",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/BurstRifle/GrnBurstRifle"
+ },
+ {
+  "slug": "hirudo",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/InfWFAccompanyingSparring/InfestedKogake"
+ },
+ {
+  "slug": "hystrix",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/QuillDartgun/QuillDartGunWeapon"
+ },
+ {
+  "slug": "ignis",
+  "gameRef": "/Lotus/Weapons/ClanTech/Chemical/FlameThrower"
+ },
+ {
+  "slug": "imperator",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/FoldingMachineGun/ArchMachineGun"
+ },
+ {
+  "slug": "innodem",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/Melee/Dagger/ZarimanDaggerWeapon"
+ },
+ {
+  "slug": "jat_kittag",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerJetPoweredPolearm/GrineerJetPolearm"
+ },
+ {
+  "slug": "jat_kusar",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnKusarigama/GrnKusarigamaWeapon"
+ },
+ {
+  "slug": "javlok",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnFlameSpear/GrnFlameSpear"
+ },
+ {
+  "slug": "jaw_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/JawSword/JawLongSword"
+ },
+ {
+  "slug": "kama",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/DualKamas/SingleKama"
+ },
+ {
+  "slug": "karak",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerM16Homage/GrineerM16Rifle"
+ },
+ {
+  "slug": "karyst",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/KrisDagger/KrisDagger"
+ },
+ {
+  "slug": "keratinos",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/InfTransformClaw/InfTransformClawsWeapon"
+ },
+ {
+  "slug": "kesheg",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerHalberd/GrnHalberd"
+ },
+ {
+  "slug": "kestrel",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Glaives/Boomerang/BoomerangWeapon"
+ },
+ {
+  "slug": "knell",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnPriestPistolScope/TnPriestPistolWeapon"
+ },
+ {
+  "slug": "kogake",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/BrassKnuckles/BrassKnuckles"
+ },
+ {
+  "slug": "kohm",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnSpark/GrnSparkRifle"
+ },
+ {
+  "slug": "kohmak",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnKohmPistol/GrnKohmPistol"
+ },
+ {
+  "slug": "komorex",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpSentAmlgSniper/CrpSentAmlgSniper"
+ },
+ {
+  "slug": "kompressa",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnYareliPistol/TnYareliPistolWeapon"
+ },
+ {
+  "slug": "korrudo",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnSparring/GrnSpiderSparring/GrnSpiderSparring"
+ },
+ {
+  "slug": "korumm",
+  "gameRef": "/Lotus/Weapons/Archon/Melee/Trident/ArchonTridentPlayerWep"
+ },
+ {
+  "slug": "kraken",
+  "gameRef": "/Lotus/Weapons/Grineer/GrineerPistol/GrnHeavyPistol"
+ },
+ {
+  "slug": "kreska",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/CrpVenusHatchet/CrpVenusHatchet"
+ },
+ {
+  "slug": "krohkur",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnEgyptSwd/GrnEgyptSwdWeapon"
+ },
+ {
+  "slug": "kronen",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Tonfa/TonfaContestWinner/TennoTonfa"
+ },
+ {
+  "slug": "kronsh",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipSix"
+ },
+ {
+  "slug": "kulstar",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnTorpedoPistol/GrnTorpedoPistol"
+ },
+ {
+  "slug": "kunai",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/Kunai"
+ },
+ {
+  "slug": "kuva_ayanga",
+  "gameRef": "/Lotus/Weapons/Grineer/HeavyWeapons/GrnHeavyGrenadeLauncher"
+ },
+ {
+  "slug": "kuva_bramma",
+  "gameRef": "/Lotus/Weapons/Grineer/Bows/GrnBow/GrnBowWeapon"
+ },
+ {
+  "slug": "kuva_chakkhurr",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnKuvaLichRifle/GrnKuvaLichRifleWeapon"
+ },
+ {
+  "slug": "kuva_shildeg",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnKuvaLichScythe/GrnKuvaLichScytheWeapon"
+ },
+ {
+  "slug": "kuva_twin_stubbas",
+  "gameRef": "/Lotus/Weapons/Grineer/KuvaLich/Secondaries/Stubba/KuvaStubba"
+ },
+ {
+  "slug": "lacera",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/StalkerMios/StalkerMios"
+ },
+ {
+  "slug": "lacerten",
+  "gameRef": "/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetMeleeWeaponIS"
+ },
+ {
+  "slug": "laetum",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/Pistols/HeavyPistol/ZarimanHeavyPistol"
+ },
+ {
+  "slug": "lanka",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/Railgun"
+ },
+ {
+  "slug": "larkspur",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/TnShieldframeArchGun/TnShieldFrameArchGun"
+ },
+ {
+  "slug": "laser_rifle",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/LaserRifle"
+ },
+ {
+  "slug": "lato",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/Pistol"
+ },
+ {
+  "slug": "latron",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/SemiAutoRifle"
+ },
+ {
+  "slug": "lecta",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Whip/CorpusWhipWeapon"
+ },
+ {
+  "slug": "lenz",
+  "gameRef": "/Lotus/Weapons/Corpus/Bow/Longbow/CrpBow"
+ },
+ {
+  "slug": "lesion",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/TipedoStaff/InfTipedoStaff"
+ },
+ {
+  "slug": "lex",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/HeavyPistol"
+ },
+ {
+  "slug": "machete",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerMachetteAndCleaver/Machete"
+ },
+ {
+  "slug": "magistar",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Maces/PaladinMace/PaladinMaceWeapon"
+ },
+ {
+  "slug": "magnus",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/Magnum/Magnum"
+ },
+ {
+  "slug": "mandonel",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/TnConcreteArchgun/TnConcreteArchgunWeapon"
+ },
+ {
+  "slug": "marelok",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrineerLeverActionPistol/GLAPistol"
+ },
+ {
+  "slug": "masseter",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TnChiselKanabo/TnChiselKanabo"
+ },
+ {
+  "slug": "mausolon",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechArchLongGun/ThanoTechLongGun"
+ },
+ {
+  "slug": "mewan",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipThree"
+ },
+ {
+  "slug": "mios",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Swords/Mios/Mios"
+ },
+ {
+  "slug": "mire",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Swords/Mire/MireSword"
+ },
+ {
+  "slug": "miter",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerSawbladeGun/SawBladeGun"
+ },
+ {
+  "slug": "morgha",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ThanoTechGrenadeLaunch/ThanoTechGrenadeLauncher"
+ },
+ {
+  "slug": "multron",
+  "gameRef": "/Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/HextraWeapon"
+ },
+ {
+  "slug": "mutalist_cernos",
+  "gameRef": "/Lotus/Weapons/Infested/Bow/InfCernosBow/InfCernos"
+ },
+ {
+  "slug": "mutalist_quanta",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/InfCrpShockSwarm/InfCrpShockSwarmRifle"
+ },
+ {
+  "slug": "nagantaka",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/GarudaCrossbow/GarudaCrossbow"
+ },
+ {
+  "slug": "nami_skyla",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/CutlassAndPoignard/CutlassPoignardSwords"
+ },
+ {
+  "slug": "nami_solo",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/CutlassAndPoignard/TennoCutlass"
+ },
+ {
+  "slug": "nataruk",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/Omicrus/OmicrusPlayerWep"
+ },
+ {
+  "slug": "nepheri",
+  "gameRef": "/Lotus/Weapons/Archon/Melee/DualDaggers/ArchonDualDaggersPlayerWep"
+ },
+ {
+  "slug": "nikana",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/KatanaAndWakizashi/Katana"
+ },
+ {
+  "slug": "ninkondi",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Nunchaku/Nunchaku/Nunchaku"
+ },
+ {
+  "slug": "nukor",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrineerMicrowavegun/GrnMicrowavePistol"
+ },
+ {
+  "slug": "obex",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/KickAndPunch/KickPunchWeapon"
+ },
+ {
+  "slug": "ocucor",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpSentExperimentPistol/CrpSentExperimentPistol"
+ },
+ {
+  "slug": "ogris",
+  "gameRef": "/Lotus/Weapons/ClanTech/Chemical/RocketLauncher"
+ },
+ {
+  "slug": "ohma",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/CrpTonfa/CrpTonfa"
+ },
+ {
+  "slug": "okina",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TennoSai/TennoSais"
+ },
+ {
+  "slug": "onos",
+  "gameRef": "/Lotus/Weapons/Thanotech/EntratiWristGun/EntratiWristGunWeapon"
+ },
+ {
+  "slug": "ooltha",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipTwo"
+ },
+ {
+  "slug": "opticor",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpBFG/CrpBFG"
+ },
+ {
+  "slug": "orthos",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/PolearmWeapon"
+ },
+ {
+  "slug": "orvius",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Glaives/TeshinGlaive/TnTeshinGlaiveWep"
+ },
+ {
+  "slug": "pandero",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnBardPistol/TnBardPistolGun"
+ },
+ {
+  "slug": "pangolin_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/PangolinSword/PangolinLongSword"
+ },
+ {
+  "slug": "panthera",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/Miter/TnoMiter"
+ },
+ {
+  "slug": "paracesis",
+  "gameRef": "/Lotus/Weapons/Orokin/BallasSword/BallasSwordWeapon"
+ },
+ {
+  "slug": "paracyst",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/QuantaFullyInfested/InfQuantaRifle"
+ },
+ {
+  "slug": "paris",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/HuntingBow"
+ },
+ {
+  "slug": "pathocyst",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/InfBoomerang/InfBoomerangWeapon"
+ },
+ {
+  "slug": "pennant",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TnRailjackGreatKatana/TnRailJackGreatKatanaWeapon"
+ },
+ {
+  "slug": "penta",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/GrenadeLauncher/GrenadeLauncher"
+ },
+ {
+  "slug": "perigale",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnQuadSniper/TnQuadSniper"
+ },
+ {
+  "slug": "phaedra",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/ArchLongRifle/ArchLongRifle"
+ },
+ {
+  "slug": "phage",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/Tentacluster/InfestedShotgun"
+ },
+ {
+  "slug": "phantasma",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/RevenantShotgun/RevenantShotgun"
+ },
+ {
+  "slug": "phenmor",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/LongGuns/SemiAutoRifle/ZarimanSemiAutoRifle"
+ },
+ {
+  "slug": "plague_keewar",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMeleeInfested/Tips/PvPVariantInfestedTipTwo"
+ },
+ {
+  "slug": "plague_kripath",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMeleeInfested/Tips/PvPVariantInfestedTipOne"
+ },
+ {
+  "slug": "plasma_sword",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/PlasmaSword/PlasmaLongSword"
+ },
+ {
+  "slug": "plinx",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpSonificBlastor/CrpBlastorWeapon"
+ },
+ {
+  "slug": "pox",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfProximityStars/InfProximityStars"
+ },
+ {
+  "slug": "praedos",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/Melee/Tonfas/ZarimanTonfaWeapon"
+ },
+ {
+  "slug": "pride",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/HeavyScythe/TnOrionSiriusScythe/TnSiriusScytheWeapon"
+ },
+ {
+  "slug": "proboscis_cernos",
+  "gameRef": "/Lotus/Weapons/Tenno/Bows/PrimeDerelictCernos/DerelictCernos"
+ },
+ {
+  "slug": "prova",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/ElectroProd"
+ },
+ {
+  "slug": "pulmonars",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Nunchaku/InfNunchuck/InfNunchuck"
+ },
+ {
+  "slug": "pupacyst",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Staff/InfStaff/InfStaff"
+ },
+ {
+  "slug": "purgator_1",
+  "gameRef": "/Lotus/Weapons/Lasria/LasGrenadeLauncher/LasrianNoxPlayerWeapon"
+ },
+ {
+  "slug": "pyrana",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/SawnOffShotgun/TennoHandShotgun"
+ },
+ {
+  "slug": "quanta",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpShockRifle/CrpShockRifle"
+ },
+ {
+  "slug": "quartakk",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnFourBarrelRifle/GrnFourBarrelRifleWeapon"
+ },
+ {
+  "slug": "quassus",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Warfan/TnBrokenFrameWarfan/TnBrokenFrameWarfanWeapon"
+ },
+ {
+  "slug": "quatz",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnAmphisPistol/GrnAmphisPistol"
+ },
+ {
+  "slug": "quellor",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnRailjackRifle/RailjackRifleGun"
+ },
+ {
+  "slug": "rabvee",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipTen"
+ },
+ {
+  "slug": "rattleguts",
+  "gameRef": "/Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelCPart"
+ },
+ {
+  "slug": "rauta",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/PaxDuviricusShotgun/PaxDuviricusShotgun"
+ },
+ {
+  "slug": "reaper_prime",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon"
+ },
+ {
+  "slug": "reconifex",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnBeltFedRifle/TnBeltFedRifleWeapon"
+ },
+ {
+  "slug": "redeemer",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Gunblade/TnoGunblade"
+ },
+ {
+  "slug": "riot_848",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/1999EntHybridPistolWeapon/1999EntHybridPistolWeapon"
+ },
+ {
+  "slug": "ripkas",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerClaws/GrnClaws"
+ },
+ {
+  "slug": "rubico",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/FiveShotSniper/FiveShotSniper"
+ },
+ {
+  "slug": "rumblejack",
+  "gameRef": "/Lotus/Weapons/Operator/Melee/DrifterTazer/DrifterTazerPlayerWep"
+ },
+ {
+  "slug": "ruvox",
+  "gameRef": "/Lotus/Weapons/Thanotech/EntFistIncarnon/EntFistIncarnon"
+ },
+ {
+  "slug": "sagek_prime",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnOrokinPistol/GrnOrokinPistol"
+ },
+ {
+  "slug": "sampotes",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Hammer/DaxDuviriHammer/DaxDuviriHammerWeapon"
+ },
+ {
+  "slug": "sarofang",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Axe/WolfFrameAxeWeapon"
+ },
+ {
+  "slug": "sarpa",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Gunblade/GunbladeAutomatic/TnoGunbladeAutomatic"
+ },
+ {
+  "slug": "scindo",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Axe/AxeWeapon"
+ },
+ {
+  "slug": "scoliac",
+  "gameRef": "/Lotus/Weapons/Infested/Melee/Whip/InfestedWhip/InfestedWhipWeapon"
+ },
+ {
+  "slug": "scourge",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnPriestSpear/TnPriestSpearGun"
+ },
+ {
+  "slug": "scyotid",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/TnOraxiaFlechette/TnOraxiaFlechette"
+ },
+ {
+  "slug": "seer",
+  "gameRef": "/Lotus/Weapons/Grineer/GrineerPistol/GrnScopedPistolPlayer"
+ },
+ {
+  "slug": "sepfahn",
+  "gameRef": "/Lotus/Weapons/Ostron/Melee/ModularMelee02/Tip/TipNine"
+ },
+ {
+  "slug": "sepulcrum",
+  "gameRef": "/Lotus/Weapons/Thanotech/ThanoPistol/ThanotechPistol"
+ },
+ {
+  "slug": "serro",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Polearm/CorpusPolearm01/CorpusPolearmWeapon"
+ },
+ {
+  "slug": "shaku",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Nunchaku/TnoNunchaku/TnoNunchaku"
+ },
+ {
+  "slug": "shedu",
+  "gameRef": "/Lotus/Weapons/Sentients/Shedu/SheduHeavyWeapon"
+ },
+ {
+  "slug": "sheev",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrineerCombatKnife/GrineerCombatKnife"
+ },
+ {
+  "slug": "sibear",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Hammer/IceHammer/IceHammer"
+ },
+ {
+  "slug": "sicarus",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/BurstPistol"
+ },
+ {
+  "slug": "sigma_and_octantis",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SwordsAndBoards/SundialSwordBoard/SundialBoardSword"
+ },
+ {
+  "slug": "silva_and_aegis",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SwordsAndBoards/MeleeContestWinnerOne/TennoSwordShield"
+ },
+ {
+  "slug": "simulor",
+  "gameRef": "/Lotus/Weapons/Cephalon/Primary/CephPrimary/CephPrimary"
+ },
+ {
+  "slug": "skana",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/LongSword/LongSword"
+ },
+ {
+  "slug": "skiajati",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/UmbraKatana/UmbraKatana"
+ },
+ {
+  "slug": "slaytra",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnSharbola/GrnSharbolaWeapon"
+ },
+ {
+  "slug": "snipetron",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/SniperRifle"
+ },
+ {
+  "slug": "sobek",
+  "gameRef": "/Lotus/Weapons/Tenno/Shotgun/DoubleBarrelShotgun"
+ },
+ {
+  "slug": "soma",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/TennoAR"
+ },
+ {
+  "slug": "sonicor",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpAirPistol/CrpAirPistolArray"
+ },
+ {
+  "slug": "spectra",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/CrpLaserPistol"
+ },
+ {
+  "slug": "spinnerex",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Whips/SpiderWhip/SpiderWhipWeapon"
+ },
+ {
+  "slug": "spira",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/LiDagger/LiDagger"
+ },
+ {
+  "slug": "sporelacer",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfKitGun/Barrels/InfBarrelEgg/InfModularBarrelEggPart"
+ },
+ {
+  "slug": "sporothrix",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/InfSniperRifle/InfSniperRifle"
+ },
+ {
+  "slug": "stahlta",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpRubanRifle/CrpRubanRifle"
+ },
+ {
+  "slug": "staticor",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpElectroMag/CrpElectroMag"
+ },
+ {
+  "slug": "steflos",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnoLotusPodShotgun/TnoLotusPodShotgun"
+ },
+ {
+  "slug": "stinger",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/SentBioWeapon"
+ },
+ {
+  "slug": "stradavar",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TennoTommyGun/TennoTommyGunRifle"
+ },
+ {
+  "slug": "stropha",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Gunblade/CrpGunBlade/CrpGunbladeWeapon"
+ },
+ {
+  "slug": "strun",
+  "gameRef": "/Lotus/Weapons/Tenno/Shotgun/Shotgun"
+ },
+ {
+  "slug": "stubba",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnUzi/GrnUziWeapon"
+ },
+ {
+  "slug": "stug",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrineerCrossbow/GrineerGooGun"
+ },
+ {
+  "slug": "sun_and_moon",
+  "gameRef": "/Lotus/Types/Friendly/PlayerControllable/Weapons/DuviriDualSwordsWeapon"
+ },
+ {
+  "slug": "supra",
+  "gameRef": "/Lotus/Weapons/ClanTech/Energy/CrpHeavyRifle"
+ },
+ {
+  "slug": "sweeper",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/SentShotgun"
+ },
+ {
+  "slug": "syam",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/DaxDuviriKatana/DaxDuviriKatanaWeapon"
+ },
+ {
+  "slug": "sybaris",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnoLeverAction/TnoLeverActionRifle"
+ },
+ {
+  "slug": "sydon",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnTrident/GrnTridentWeapon"
+ },
+ {
+  "slug": "synapse",
+  "gameRef": "/Lotus/Weapons/Infested/LongGuns/InfestedRifle"
+ },
+ {
+  "slug": "tak_and_lug",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SwordsAndBoards/MortiforShieldAndSword/MortiforShieldAndSword"
+ },
+ {
+  "slug": "talons",
+  "gameRef": "/Lotus/Weapons/Tenno/ThrowingWeapons/U18ThrowingKnives/U18throwingknives"
+ },
+ {
+  "slug": "tatsu",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/TnTwoHandedKatana/TnTwoHandedKatana"
+ },
+ {
+  "slug": "tazicor",
+  "gameRef": "/Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/TazronWeapon"
+ },
+ {
+  "slug": "tekko",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Gauntlet/BrawlerKnuckles/BrawlerKnuckles"
+ },
+ {
+  "slug": "tenet_agendus",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/ShieldAndSword/CrpHammerShield/CrpHammerShield"
+ },
+ {
+  "slug": "tenet_diplos",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpBriefcaseAkimbo/CrpBriefcaseAkimboPistol"
+ },
+ {
+  "slug": "tenet_envoy",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CrpBriefcaseLauncher/CrpBriefcaseLauncher"
+ },
+ {
+  "slug": "tenet_exec",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/CrpBigSlash/CrpBigSlash"
+ },
+ {
+  "slug": "tenet_grigori",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/CrpBriefcaseScythe/CrpBriefcaseScythe"
+ },
+ {
+  "slug": "tenet_livia",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/CrpBriefcase2HKatana/CrpBriefcase2HKatana"
+ },
+ {
+  "slug": "tenet_spirex",
+  "gameRef": "/Lotus/Weapons/Corpus/Pistols/CrpIgniterPistol/CrpIgniterPistol"
+ },
+ {
+  "slug": "tenora",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnBardRifle/TnBardRifle"
+ },
+ {
+  "slug": "tetra",
+  "gameRef": "/Lotus/Weapons/Corpus/LongGuns/CorpusUMP/CorpusUMP"
+ },
+ {
+  "slug": "thalys",
+  "gameRef": "/Lotus/Weapons/Tenno/Zariman/Melee/HeavyScythe/ZarimanHeavyScythe/ZarimanHeavyScytheWeapon"
+ },
+ {
+  "slug": "thornbak",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnModQuestRifle/TnModQuestRifleWeapon"
+ },
+ {
+  "slug": "tiberon",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/DrakeRifle/DrakeRifle"
+ },
+ {
+  "slug": "tigris",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/DoubleBarrelShotgun/TennoDoubleBarrelShotgun"
+ },
+ {
+  "slug": "tipedo",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Staff/MonkSpade/TnoMonkStaff"
+ },
+ {
+  "slug": "tombfinger",
+  "gameRef": "/Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelBPart"
+ },
+ {
+  "slug": "tonbo",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Polearms/FlowerPowerPolearm/FlowerPowerPolearmWep"
+ },
+ {
+  "slug": "tonkkatt",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/Tonfa/GrnChainSawTonfa/GrnChainSawTonfaWeapon"
+ },
+ {
+  "slug": "tonkor",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnGrenadeLauncher/GrnGrenadeLauncher"
+ },
+ {
+  "slug": "torid",
+  "gameRef": "/Lotus/Weapons/ClanTech/Bio/BioWeapon"
+ },
+ {
+  "slug": "trumna",
+  "gameRef": "/Lotus/Weapons/Thanotech/ThanoRifle/ThanotechRifle"
+ },
+ {
+  "slug": "twin_basolk",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnDualFireAxe/GrnDualFireAxe"
+ },
+ {
+  "slug": "twin_grakatas",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerAssaultRifle/TwinGrakatas"
+ },
+ {
+  "slug": "twin_gremlins",
+  "gameRef": "/Lotus/Weapons/Grineer/GrineerPistol/GrineerAkimboPistol"
+ },
+ {
+  "slug": "twin_kohmak",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnDWUniques/GrnTwinKohmaks"
+ },
+ {
+  "slug": "twin_krohkur",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GrnEgyptSwd/DualGrnEgyptSwdWeapon"
+ },
+ {
+  "slug": "twin_rogga",
+  "gameRef": "/Lotus/Weapons/Grineer/Pistols/GrnQueenGuardDualPistol/GrnQueenGuardDualPistols"
+ },
+ {
+  "slug": "twin_vipers",
+  "gameRef": "/Lotus/Weapons/Tenno/Akimbo/AkimboViperPistols"
+ },
+ {
+  "slug": "tysis",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfestedDartPistol/InfestedDartPistol"
+ },
+ {
+  "slug": "vadarya_prime",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun"
+ },
+ {
+  "slug": "vastilok",
+  "gameRef": "/Lotus/Weapons/Grineer/Melee/GunBlade/GrnGunBlade/GrnGunblade"
+ },
+ {
+  "slug": "vasto",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistol/RevolverPistol"
+ },
+ {
+  "slug": "vectis",
+  "gameRef": "/Lotus/Weapons/Tenno/Rifle/TennoSniperRifle"
+ },
+ {
+  "slug": "veldt",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/TnRevolverRifle/TnRevolverRifleGun"
+ },
+ {
+  "slug": "velocitus",
+  "gameRef": "/Lotus/Weapons/Tenno/Archwing/Primary/Railgun/ArchRailgun"
+ },
+ {
+  "slug": "velox",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnOdaliskSmg/TnOdaliskSmgPistol"
+ },
+ {
+  "slug": "venato",
+  "gameRef": "/Lotus/Weapons/Sentients/SentJointedScythe/SentJointedScytheWeapon"
+ },
+ {
+  "slug": "venka",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Claws/TennoClaws"
+ },
+ {
+  "slug": "verdilac",
+  "gameRef": "/Lotus/Weapons/Archon/Melee/Whip/ArchonWhipPlayerWep"
+ },
+ {
+  "slug": "verglas",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/SentinelFreezeRayRifle"
+ },
+ {
+  "slug": "vericres",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Warfan/TnMoonWarfan/MoonWarfanWeapon"
+ },
+ {
+  "slug": "vermisplicer",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfKitGun/Barrels/InfBarrelBeam/InfModularBarrelBeamPart"
+ },
+ {
+  "slug": "vesper_77",
+  "gameRef": "/Lotus/Weapons/Lasria/LasSilencedPistol/LasSilencedPistolWeapon"
+ },
+ {
+  "slug": "vinquibus",
+  "gameRef": "/Lotus/Weapons/Tenno/Bayonet/TnBayonetRifleWeapon"
+ },
+ {
+  "slug": "vinquibus_melee",
+  "gameRef": "/Lotus/Weapons/Tenno/Bayonet/TnBayonetRifleWeapon_melee"
+ },
+ {
+  "slug": "viper",
+  "gameRef": "/Lotus/Weapons/Grineer/GrineerPistol/GrineerLightPistol"
+ },
+ {
+  "slug": "vitrica",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/NWIIIOrokinSword/NWOrokinSword"
+ },
+ {
+  "slug": "volnus",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Hammer/GlassHammer/GlassHammer"
+ },
+ {
+  "slug": "vulcax",
+  "gameRef": "/Lotus/Types/Friendly/Pets/MoaPets/MoaPetComponents/ThermocorMoaWeapon"
+ },
+ {
+  "slug": "vulkar",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrineerSniperRifle/GrnSniperRifle"
+ },
+ {
+  "slug": "vulklok",
+  "gameRef": "/Lotus/Types/Sentinels/SentinelWeapons/SentElecRailgun"
+ },
+ {
+  "slug": "war",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Swords/StalkerTwo/StalkerTwoGreatSword"
+ },
+ {
+  "slug": "wolf_sledge",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/Hammer/ThrowingHammer"
+ },
+ {
+  "slug": "wrath",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/HeavyScythe/TnOrionSiriusScythe/TnOrionScytheWeapon"
+ },
+ {
+  "slug": "xoris",
+  "gameRef": "/Lotus/Weapons/Corpus/Melee/Glaive/CrpGhostCatcherGlaive/CrpGhostCatcherGlaive"
+ },
+ {
+  "slug": "zakti",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/TnGuandoPistol/TnGuandoPistolGun"
+ },
+ {
+  "slug": "zarr",
+  "gameRef": "/Lotus/Weapons/Grineer/LongGuns/GrnCannon/GrnCannonWeapon"
+ },
+ {
+  "slug": "zenistar",
+  "gameRef": "/Lotus/Weapons/Tenno/Melee/SunDialAxe/SundialAxeWeapon"
+ },
+ {
+  "slug": "zenith",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/LoginPrimary/SundialRifle"
+ },
+ {
+  "slug": "zhuge",
+  "gameRef": "/Lotus/Weapons/Tenno/LongGuns/RepeatingCrossbow/RepeatingCrossbow"
+ },
+ {
+  "slug": "zylok",
+  "gameRef": "/Lotus/Weapons/Tenno/Pistols/ConclaveLeverPistol/ConclaveLeverPistol"
+ },
+ {
+  "slug": "zymos",
+  "gameRef": "/Lotus/Weapons/Infested/Pistols/InfUzi/InfUziWeapon"
+ }
+]

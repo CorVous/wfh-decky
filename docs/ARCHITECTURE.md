@@ -46,6 +46,7 @@ Decky Loader (root)
 | `ocr/image.py` | shared image ops | otsu threshold, row splitting, resize helpers used by scanners |
 | `data/items.py` | item database | `items()` → `ItemDb` with `.by_unique(uniqueName)`, `.by_name(name)`, `.prime_parts()`, `.match_name(ocr_text) -> (Item, score)`; `Item` has `unique_name, name, category, ducats, vaulted, tradable, wfm_slug, components, mastery_req, image_name` |
 | `data/relics.py` | relic database | `relics()` → `RelicDb` with `.get(name)`, `.all()`, `Relic(name, tier, vaulted, rewards=[Reward(item_unique, item_name, rarity, chance_by_refinement)])` |
+| `data/names.py` | OCR reward-name matching (WFHelper rewardScannerMatch port) | `rank_candidates(ocr_text, items, limit) -> [Candidate(item, confidence, score, mode)]`, `match_single(ocr_text, items)`, `SLOT_ACCEPT_CONFIDENCE`, `normalize_wfm_slug`, `normalize_for_slug`; items are objects with `.name` or dicts with "name" |
 | `data/market.py` | warframe.market | `price(slug, rank=None) -> Price|None` (cached, fresh 30 min), `prices(slugs) -> dict`, `prefetch(slugs)` (background), `search(query)`, `orders(slug)`; `Price(median, low_sell, volume, fetched_at)`; respects the WFM rate limit |
 | `data/worldstate.py` | world state | `state(max_age=60) -> dict` (cycles, fissures, invasions, sortie, archon, nightwave, baro, steel path, circuit), `arbi_schedule() -> list` |
 | `inventory/__init__.py` | the player's inventory | `inventory() -> Inventory|None` (latest snapshot), `refresh()`, `owned_count(unique_name) -> int`, `owned_relics() -> dict[(relic_name, refinement), int]`, `status() -> dict`; sources: game memory (root) or a JSON file |
@@ -54,7 +55,10 @@ Decky Loader (root)
 
 Bundled data lives in `data/` at the plugin root (`app.data_dir`), produced at
 build time by `scripts/fetch-data.sh` from the `@wfcd/items` npm package
-(trimmed JSON). Runtime refreshes go to `app.runtime_dir`.
+(trimmed JSON: `items.json.gz`, `relics.json.gz`, `manifest.json`, ~330 KB). Runtime
+refreshes (weekly, from WFCD's GitHub JSON, setting `data_auto_refresh`) go to
+`<runtime_dir>/data`; the copy built from newer source data wins. RPCs: `data.status`,
+`data.refresh`, `items.search`, `relics.get`, `market.search`, `market.item`, `market.prices`.
 
 Models live in `models/` (`app.models_dir`): `paddle/ch_PP-OCRv3_rec_infer.onnx`,
 `paddle/ch_dict.txt`, `yolo/stat_line_detector.onnx`.

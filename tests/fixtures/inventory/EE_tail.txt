@@ -1,0 +1,5 @@
+1234.401 Sys [Info]: Some unrelated engine noise
+1234.570 Script [Info]: ThemedProjectionManager.lua: LoadingCompleteEnd
+1235.005 Script [Info]: ThemedProjectionManager.lua: LoadingCompleteEnd
+1260.013 Sys [Info]: Pause countdown done
+1261.003 Sys [Info]: You are offering: [Volt Prime Systems Blueprint, Mesa Prime Chassis Blueprint, Braton Prime Barrel, Akbronco Prime Link, Ash Prime Neuroptics Blueprint]

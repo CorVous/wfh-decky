@@ -1,0 +1,1145 @@
+[
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Components/AmberStarBlueprint",
+  "name": "Blueprint",
+  "imageName": "blueprint.png",
+  "tradable": false,
+  "masterable": false,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Types/Items/FusionTreasures/OroFusexOrnamentB"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Components/FormaBlueprint",
+  "name": "Blueprint",
+  "imageName": "blueprint.png",
+  "tradable": false,
+  "masterable": false,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Types/Items/MiscItems/Forma"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Components/OrokinCellResourceBlueprint",
+  "name": "Blueprint",
+  "imageName": "blueprint.png",
+  "tradable": false,
+  "masterable": false,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Types/Items/MiscItems/OrokinCell"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Components/WeaponUtilityUnlockerBlueprint",
+  "name": "Blueprint",
+  "imageName": "blueprint.png",
+  "tradable": false,
+  "masterable": false,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Types/Items/MiscItems/WeaponUtilityUnlocker"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 45,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ninja/AshPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ninja/AshPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ninja/AshPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 65,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ninja/AshPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Geode/CitrinePrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Geode/CitrinePrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Geode/CitrinePrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/CitrinePrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Geode/CitrinePrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ember/EmberPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ember/EmberPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ember/EmberPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/EmberPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Ember/EmberPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Frost/FrostPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Frost/FrostPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Frost/FrostPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/FrostPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Frost/FrostPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Jade/NyxPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 65,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Jade/NyxPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Jade/NyxPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/NyxPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Jade/NyxPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Rhino/RhinoPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 65,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Rhino/RhinoPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Rhino/RhinoPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Rhino/RhinoPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 65,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Saryn/SarynPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeChassisComponent",
+  "name": "Chassis",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericWarframePrimeChassis.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Saryn/SarynPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeHelmetComponent",
+  "name": "Neuroptics",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWarframePrimeHelmet.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Saryn/SarynPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/WarframeRecipes/SarynPrimeSystemsComponent",
+  "name": "Systems",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWarframePrimeSystem.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Powersuits/Saryn/SarynPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/AlternoxPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/AnkyrosPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/BoltorPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/BratonPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 25,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 25,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/BratonPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 45,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/LatronPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/LatronPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeLightningGunBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 100,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeScytheBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/SicarusPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 15,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/VastoPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 45,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+  "name": "Blueprint",
+  "primeSellingPrice": 45,
+  "imageName": "blueprint.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 25,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 25,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeLink",
+  "name": "Link",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericComponentPrimePlug.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeBlade",
+  "name": "Blade",
+  "codexSecret": false,
+  "primeSellingPrice": 65,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+  "name": "Gauntlet",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWeaponPrimeHilt.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/BratonPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/BratonPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 25,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 25,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/BratonPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/CorufellPrimeHandle",
+  "name": "Handle",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWeaponPrimeHilt.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Archwing/Melee/PrimeCorufell/PrimeCorufellScytheWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/KestrelPrimeBlade",
+  "name": "Blade",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/KestrelPrimeGrip",
+  "name": "Grip",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericComponentPrimeLatch.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/LatronPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/LatronPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Rifle/LatronPrime"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuGrip",
+  "name": "Grip",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericComponentPrimeLatch.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuLowerLimb",
+  "name": "Lower Limb",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuString",
+  "name": "String",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuUpperLimb",
+  "name": "Upper Limb",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeHikouHolster",
+  "name": "Pouch",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericComponentPrimeLatch.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeHikouStars",
+  "name": "Stars",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+  "name": "Blade",
+  "codexSecret": false,
+  "primeSellingPrice": 45,
+  "imageName": "GenericWeaponPrimeBlade.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 45,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheHandle",
+  "name": "Handle",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericWeaponPrimeHilt.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeBarrel",
+  "name": "Barrel",
+  "codexSecret": false,
+  "primeSellingPrice": 15,
+  "imageName": "GenericGunPrimeBarrel.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 15,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeReceiver",
+  "name": "Receiver",
+  "codexSecret": false,
+  "primeSellingPrice": 100,
+  "imageName": "GenericGunPrimeReceiver.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 100,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle"
+  ]
+ },
+ {
+  "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeStock",
+  "name": "Stock",
+  "codexSecret": false,
+  "primeSellingPrice": 65,
+  "imageName": "GenericGunPrimeStock.png",
+  "tradable": true,
+  "masterable": false,
+  "ducats": 65,
+  "category": "Components",
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle"
+  ]
+ }
+]

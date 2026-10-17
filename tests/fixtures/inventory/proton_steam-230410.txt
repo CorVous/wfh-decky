@@ -1,0 +1,7 @@
+1234.120:0048:004c:trace:loaddll:build_module Loaded L"C:\\windows\\system32\\kernelbase.dll" at 00006FFFFFC20000: builtin
+1234.501:0048:004c:warn:seh:OutputDebugStringA "Sys [Info]: Some unrelated engine noise\n"
+1234.567:0048:004c:warn:seh:OutputDebugStringA "Script [Info]: ThemedProjectionManager.lua: LoadingCompleteEnd\n"
+1235.002:0048:004c:warn:seh:OutputDebugStringA "Script [Info]: ThemedProjectionManager.lua: LoadingCompleteEnd\n"
+1260.010:0048:004c:warn:seh:OutputDebugStringA "Sys [Info]: Pause countdown done\n"
+1261.000:0048:004c:warn:seh:OutputDebugStringA "Sys [Info]: You are offering: [Volt Prime Systems Blueprint, Mesa Prime Chassis Blueprint, Braton Prime Barrel, Akbronco Prime Link, Ash Prime Neuropt"...
+1262.000:0048:004c:fixme:d3d:wined3d_check something unrelated

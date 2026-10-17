@@ -1,0 +1,125 @@
+{
+  "reviewed": "2026-09-13",
+  "provenance": "Existing local gameplay screenshots; original capture dates and game versions unavailable.",
+  "sanitization": "Opaque rectangular masks replace squad names, account icons, and existing name redactions. All decoded RGB pixels outside masks are byte-identical to the source. Image metadata removed; original private files unchanged.",
+  "fixtures": [
+    {
+      "file": "real-full-2p.png",
+      "masks": [
+        {
+          "left": 94,
+          "top": 43,
+          "width": 96,
+          "height": 50
+        },
+        {
+          "left": 1047,
+          "top": 494,
+          "width": 96,
+          "height": 39
+        }
+      ],
+      "expected": [
+        "Khora Prime Systems Blueprint",
+        "Fang Prime Handle"
+      ],
+      "width": 1920,
+      "height": 1080,
+      "sha256": "9d94b90522d67ad598b28272d2902e53011790833dd26dfbf0fa595e9359ce24",
+      "unmaskedPixelsVerified": true
+    },
+    {
+      "file": "real-full-4p-fps.png",
+      "masks": [
+        {
+          "left": 93,
+          "top": 43,
+          "width": 191,
+          "height": 49
+        },
+        {
+          "left": 510,
+          "top": 496,
+          "width": 870,
+          "height": 34
+        }
+      ],
+      "expected": [
+        "Xaku Prime Chassis Blueprint",
+        "Bronco Prime Receiver",
+        "Paris Prime Lower Limb",
+        "Vadarya Prime Barrel"
+      ],
+      "width": 1920,
+      "height": 1080,
+      "sha256": "609dcdbc621a7ae5e3bc7e164963f446c71994e1904d1a10300a08a95ec3536b",
+      "unmaskedPixelsVerified": true
+    },
+    {
+      "file": "real-full-4p-16x10.png",
+      "masks": [
+        {
+          "left": 73,
+          "top": 43,
+          "width": 192,
+          "height": 50
+        },
+        {
+          "left": 715,
+          "top": 557,
+          "width": 481,
+          "height": 61
+        },
+        {
+          "left": 123,
+          "top": 1156,
+          "width": 291,
+          "height": 27
+        }
+      ],
+      "expected": [
+        "2 X Forma Blueprint",
+        "2 X Forma Blueprint",
+        "2 X Forma Blueprint",
+        "2 X Forma Blueprint"
+      ],
+      "width": 1899,
+      "height": 1199,
+      "sha256": "7e0ce9089016a4796e47367670786eb47f3a658d03d7b8d24ce562ee7c198647",
+      "unmaskedPixelsVerified": true
+    },
+    {
+      "file": "real-full-4p-1080x607.png",
+      "masks": [
+        {
+          "left": 51,
+          "top": 23,
+          "width": 110,
+          "height": 29
+        },
+        {
+          "left": 540,
+          "top": 277,
+          "width": 144,
+          "height": 72
+        },
+        {
+          "left": 149,
+          "top": 545,
+          "width": 278,
+          "height": 40
+        }
+      ],
+      "expected": [
+        "Okina Prime Handle",
+        "Velox Prime Barrel",
+        "Caliban Prime Blueprint",
+        "Grendel Prime Blueprint"
+      ],
+      "width": 1080,
+      "height": 607,
+      "sha256": "7c9e07be5ea4fce9a423e35932e2a6bdd8426999fb8c3b9bcc899e7922bb98ad",
+      "unmaskedPixelsVerified": true
+    }
+  ]
+}

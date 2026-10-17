@@ -1,0 +1,260 @@
+[
+ {
+  "name": "Ankyros Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Melee/Gauntlet/PrimeAnkyros/PrimeAnkyros",
+  "codexSecret": false,
+  "damagePerShot": [
+   89.599998,
+   19.200001,
+   19.199997,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 128,
+  "criticalChance": 0.28,
+  "criticalMultiplier": 2.4000001,
+  "procChance": 0.15999997,
+  "fireRate": 1.2500001,
+  "masteryReq": 8,
+  "productCategory": "Melee",
+  "slot": 5,
+  "omegaAttenuation": 1.45,
+  "blockingAngle": 50,
+  "comboDuration": 5,
+  "followThrough": 0.89999998,
+  "range": 1.25,
+  "slamAttack": 384,
+  "slamRadialDamage": 256,
+  "slamRadius": 8,
+  "slideAttack": 384,
+  "heavyAttackDamage": 640,
+  "heavySlamAttack": 512,
+  "heavySlamRadialDamage": 384,
+  "heavySlamRadius": 9,
+  "windUp": 0.60000002,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeBlade",
+    "itemCount": 2
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/AnkyrosPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AnkyrosPrimeGauntlet",
+    "itemCount": 2
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   }
+  ],
+  "type": "Melee",
+  "imageName": "AnkyrosPrime.png",
+  "category": "Melee",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "stancePolarity": "unairu",
+  "disposition": 5,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Kestrel Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Melee/Glaives/PrimeKestrel/PrimeKestrel",
+  "codexSecret": false,
+  "damagePerShot": [
+   157.5,
+   21,
+   31.499994,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 210,
+  "criticalChance": 0.2,
+  "criticalMultiplier": 2.2,
+  "procChance": 0.39999998,
+  "fireRate": 1.2500001,
+  "masteryReq": 11,
+  "productCategory": "Melee",
+  "slot": 5,
+  "omegaAttenuation": 0.85000002,
+  "blockingAngle": 55,
+  "comboDuration": 5,
+  "followThrough": 0.69999999,
+  "range": 1.2,
+  "slamAttack": 630,
+  "slamRadialDamage": 420,
+  "slamRadius": 5,
+  "slideAttack": 420,
+  "heavyAttackDamage": 210,
+  "heavySlamAttack": 840,
+  "heavySlamRadialDamage": 630,
+  "heavySlamRadius": 6,
+  "windUp": 1.2,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/KestrelPrimeBlade",
+    "itemCount": 2
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/KestrelPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/KestrelPrimeGrip",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   }
+  ],
+  "type": "Melee",
+  "imageName": "KestrelPrime.png",
+  "category": "Melee",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Tenno",
+   "Prime"
+  ],
+  "stancePolarity": "naramon",
+  "disposition": 2,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "name": "Reaper Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Melee/Scythe/ReaperWeapon",
+  "codexSecret": false,
+  "damagePerShot": [
+   30.000002,
+   30.000002,
+   140,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 200,
+  "criticalChance": 0.34999999,
+  "criticalMultiplier": 2.5,
+  "procChance": 0.25,
+  "fireRate": 1.0833334,
+  "masteryReq": 10,
+  "productCategory": "Melee",
+  "slot": 5,
+  "omegaAttenuation": 0.80000001,
+  "blockingAngle": 60,
+  "comboDuration": 5,
+  "followThrough": 0.60000002,
+  "range": 2.8,
+  "slamAttack": 600,
+  "slamRadialDamage": 400,
+  "slamRadius": 8,
+  "slideAttack": 400,
+  "heavyAttackDamage": 1200,
+  "heavySlamAttack": 800,
+  "heavySlamRadialDamage": 600,
+  "heavySlamRadius": 9,
+  "windUp": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheBlade",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeScytheBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeScytheHandle",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   }
+  ],
+  "type": "Melee",
+  "imageName": "ReaperPrime.png",
+  "category": "Melee",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "stancePolarity": "naramon",
+  "disposition": 2,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ }
+]

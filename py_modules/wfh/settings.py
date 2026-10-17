@@ -21,7 +21,11 @@ DEFAULTS: dict[str, Any] = {
     "wfm_crossplay": True,
     "inventory_source": "memory",  # memory | file
     "inventory_file": "",
+    "inventory_auto_sync": True,  # memory source: refresh from DE every inventory_refresh_min
+    "inventory_refresh_min": 10,
+    "inventory_mission_scan": True,  # read the resident inventory after each mission
     "debug_save_captures": False,
+    "data_auto_refresh": True,  # weekly @wfcd item/relic refresh from GitHub
 }
 
 

@@ -1,0 +1,578 @@
+[
+ {
+  "name": "Alternox Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/LongGuns/PrimeAlternox/PrimeAlternoxWeapon",
+  "codexSecret": false,
+  "damagePerShot": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   75,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 75,
+  "criticalChance": 0.2,
+  "criticalMultiplier": 2.2,
+  "procChance": 0.39999998,
+  "fireRate": 5.3333335,
+  "masteryReq": 13,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 18.181818,
+  "omegaAttenuation": 0.94999999,
+  "noise": "Alarming",
+  "trigger": "Auto",
+  "magazineSize": 42,
+  "reloadTime": 1.8,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/AlternoxPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AlternoxPrimeStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Rifle",
+  "imageName": "AlternoxPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Tenno",
+   "Prime"
+  ],
+  "exilusPolarity": "madurai",
+  "disposition": 3,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "name": "Boltor Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/LongGuns/PrimeBoltor/PrimeBoltor",
+  "codexSecret": false,
+  "damagePerShot": [
+   4.5999999,
+   41.399998,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 45.999996,
+  "criticalChance": 0.12,
+  "criticalMultiplier": 2,
+  "procChance": 0.34000003,
+  "fireRate": 10.000001,
+  "masteryReq": 13,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 50,
+  "omegaAttenuation": 1.2,
+  "noise": "Alarming",
+  "trigger": "Auto",
+  "magazineSize": 60,
+  "reloadTime": 2.4000001,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/BoltorPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BoltorPrimeStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Rifle",
+  "imageName": "BoltorPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 4,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Braton Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Rifle/BratonPrime",
+  "codexSecret": false,
+  "damagePerShot": [
+   1.75,
+   12.25,
+   21,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 35,
+  "criticalChance": 0.12,
+  "criticalMultiplier": 2,
+  "procChance": 0.25999999,
+  "fireRate": 9.583334,
+  "masteryReq": 8,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 28.571428,
+  "omegaAttenuation": 1.25,
+  "noise": "Alarming",
+  "trigger": "Auto",
+  "magazineSize": 75,
+  "reloadTime": 2.1500001,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/BratonPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Rifle",
+  "imageName": "BratonPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Never Vaulted"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 4,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "name": "Daikyu Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Bows/PrimeDaikyu/PrimeDaikyuBow",
+  "codexSecret": false,
+  "damagePerShot": [
+   225.00002,
+   300,
+   224.99997,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 750,
+  "criticalChance": 0.40000001,
+  "criticalMultiplier": 2.4000001,
+  "procChance": 0.5,
+  "fireRate": 1,
+  "masteryReq": 15,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 16.666666,
+  "omegaAttenuation": 1,
+  "noise": "Silent",
+  "trigger": "Charge",
+  "magazineSize": 1,
+  "reloadTime": 0.60000002,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeDaikyuBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuGrip",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuLowerLimb",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuString",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeDaikyuUpperLimb",
+    "itemCount": 1
+   }
+  ],
+  "type": "Bow",
+  "imageName": "DaikyuPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Tenno"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 3,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "name": "Latron Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Rifle/LatronPrime",
+  "codexSecret": false,
+  "damagePerShot": [
+   9,
+   72,
+   8.9999971,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 90,
+  "criticalChance": 0.22,
+  "criticalMultiplier": 2.8,
+  "procChance": 0.25999999,
+  "fireRate": 4.166667,
+  "masteryReq": 10,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 28.571428,
+  "omegaAttenuation": 1.3,
+  "noise": "Alarming",
+  "trigger": "Semi",
+  "magazineSize": 15,
+  "reloadTime": 2.4000001,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/LatronPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/LatronPrimeStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Rifle",
+  "imageName": "LatronPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "exilusPolarity": "madurai",
+  "disposition": 4,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Vadarya Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/LongGuns/PrimeLightningGun/PrimeLightningGun",
+  "codexSecret": false,
+  "damagePerShot": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   400,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 400,
+  "criticalChance": 0.40000001,
+  "criticalMultiplier": 2.8,
+  "procChance": 0.18000001,
+  "fireRate": 2.8000002,
+  "masteryReq": 15,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 100,
+  "omegaAttenuation": 0.80000001,
+  "noise": "Alarming",
+  "trigger": "Charge",
+  "magazineSize": 16,
+  "reloadTime": 2.5999999,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeLightningGunBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeLightningGunStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Sniper",
+  "imageName": "VadaryaPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [],
+  "exilusPolarity": "naramon",
+  "disposition": 2,
+  "isPrime": true,
+  "vaulted": false,
+  "masterable": true
+ },
+ {
+  "name": "Vectis Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/LongGuns/PrimeVectis/PrimeVectisRifle",
+  "codexSecret": false,
+  "damagePerShot": [
+   140,
+   157.5,
+   52.499992,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 350,
+  "criticalChance": 0.30000001,
+  "criticalMultiplier": 2,
+  "procChance": 0.30000001,
+  "fireRate": 2.6666667,
+  "masteryReq": 14,
+  "productCategory": "LongGuns",
+  "slot": 1,
+  "accuracy": 13.333333,
+  "omegaAttenuation": 1,
+  "noise": "Alarming",
+  "trigger": "Semi",
+  "magazineSize": 2,
+  "reloadTime": 0.85000002,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/VectisPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeReceiver",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VectisPrimeStock",
+    "itemCount": 1
+   }
+  ],
+  "type": "Sniper",
+  "imageName": "VectisPrime.png",
+  "category": "Primary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 3,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ }
+]
