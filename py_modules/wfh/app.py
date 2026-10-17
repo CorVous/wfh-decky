@@ -48,6 +48,11 @@ class App:
         return os.path.join(os.path.dirname(__file__), "assets")
 
     @property
+    def data_dir(self) -> str:
+        """Bundled game data built by scripts/fetch-data.sh."""
+        return os.path.join(self.plugin_dir, "data")
+
+    @property
     def models_dir(self) -> str:
         return os.path.join(self.plugin_dir, "models")
 
