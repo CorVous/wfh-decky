@@ -140,6 +140,19 @@ def test_to_rgb_drops_alpha_and_expands_gray():
     assert image.to_rgb(rgba).shape == (2, 3, 3)
     assert image.to_rgb(np.zeros((2, 3), np.uint8)).shape == (2, 3, 3)
     assert image.to_rgb(Image.new("RGBA", (3, 2))).shape == (2, 3, 3)
+    one = image.to_rgb(np.full((2, 3, 1), 9, np.uint8))
+    assert one.shape == (2, 3, 3) and (one == 9).all()
+    la = np.zeros((2, 3, 2), np.uint8)
+    la[..., 0], la[..., 1] = 5, 200
+    two = image.to_rgb(la)
+    assert two.shape == (2, 3, 3) and (two == 5).all()
+
+
+def test_to_rgb_rejects_float_and_odd_shapes():
+    with pytest.raises(TypeError):
+        image.to_rgb(np.ones((2, 3, 3), np.float32))
+    with pytest.raises(TypeError):
+        image.to_rgb(np.zeros((2, 3, 5), np.uint8))
 
 
 def test_clean_row_text_restores_spaces():
@@ -197,6 +210,9 @@ def test_trimmed_line_confidence():
     mismatch = paddle.RecResult("abc", 0.42, [1.0])
     assert paddle.trimmed_line_confidence(mismatch) == 0.42
     assert paddle.trimmed_line_confidence(("abc", 0.3)) == 0.3
+    # JS \\d is ASCII only: a fullwidth digit is not a "value", so the glyph stays in.
+    wide = paddle.RecResult("+\uff112%制Heat", 0.0, [1, 1, 1, 1, 0.1, 1, 1, 1, 1])
+    assert paddle.trimmed_line_confidence(wide) == pytest.approx(8.1 / 9)
 
 
 def test_recognition_chunks_group_by_width():
@@ -277,6 +293,38 @@ def test_missing_models_raise(tmp_path):
     with pytest.raises(FileNotFoundError):
         ocr.StatLineDetector(str(tmp_path)).detect(np.zeros((10, 20, 3), np.uint8))
     assert ocr.PaddleRecognizer(str(tmp_path)).warmup() is False
+
+
+def test_read_strip_never_raises(tmp_path, monkeypatch):
+    strip = np.zeros((40, 200, 3), np.uint8)
+    strip[12:28, 20:180] = 255
+    assert ocr.available(str(tmp_path)) is False
+    assert ocr.read_strip(strip, str(tmp_path)) is None  # model missing -> None, not FileNotFoundError
+
+    class Boom:
+        def available(self):
+            return True
+
+        def recognize(self, crops):
+            raise RuntimeError("onnx exploded")
+
+    assert ocr.read_strip(strip, str(tmp_path), recognizer=Boom()) is None
+    assert ocr.read_strip(np.ones((40, 200, 3), np.float32), str(tmp_path), recognizer=Boom()) is None
+
+
+def test_warmup_runs_once_per_dir(tmp_path, monkeypatch):
+    started = []
+    monkeypatch.setattr(ocr.threading.Thread, "start", lambda self: started.append(self.name))
+    monkeypatch.setattr(ocr.PaddleRecognizer, "available", lambda self: True)
+    d = str(tmp_path)
+    ocr.warmup(d)
+    ocr.warmup(d + "/")
+    ocr.warmup(d, detector=True)
+    ocr.warmup(d, detector=True)
+    assert len(started) == 2
+    monkeypatch.setattr(ocr.PaddleRecognizer, "available", lambda self: False)
+    ocr.warmup(str(tmp_path / "missing"))  # no model: no thread
+    assert len(started) == 2
 
 
 # ---------------------------------------------------------------- real models on fixtures
@@ -397,16 +445,63 @@ def riven_lines(name: str, up: int) -> list[tuple[str, float]]:
     return [(r[0].strip(), ocr.trimmed_line_confidence(r)) for r in results if r[0].strip()]
 
 
+# Lines the Python port reads with a trailing glyph that the TS port's parse
+# (parseRivenStats) drops. The curse line on the 2x chat card decodes as
+# "-90,9% Projectile Speed g" here; the riven owner's parser must tolerate it.
+# Kept as a prefix check so any other change to this line still fails.
+KNOWN_SUFFIX_DIFF = {("chat-card-angstrum-stats.png", "-90,9% Projectile Speed")}
+
+
+def _is_stat(t: str) -> bool:
+    return bool(re.match(r"^[+-]|^[x×]\s*\d", t, re.I))
+
+
 @needs_models
 @pytest.mark.parametrize("name", sorted(EXPECTED["riven"]))
 def test_riven_stat_lines(name):
     spec = EXPECTED["riven"][name]
     lines = riven_lines(name, spec["upscale"])
-    texts = [t for t, _ in lines]
+    texts = [t.rstrip() for t, _ in lines]
+    matched = []
     for exp in spec["lines"]:
-        assert any(t.startswith(exp) for t in texts), (exp, texts)
-    stat = [c for t, c in lines if re.match(r"^[+-]|^[x×]\s*\d", t, re.I) and any(t.startswith(e) for e in spec["lines"])]
+        if (name, exp) in KNOWN_SUFFIX_DIFF:
+            hit = [t for t in texts if t.startswith(exp) and len(t) <= len(exp) + 2]
+        else:
+            hit = [t for t in texts if t == exp]
+        assert hit, (exp, texts)
+        matched.append(hit[0])
+    stat = [c for t, c in lines if _is_stat(t) and t.rstrip() in matched]
     assert stat and min(stat) >= 0.8  # hasLowConfidenceLine would be false
+
+
+@needs_models
+def test_chat_card_loses_curse_line_at_1x():
+    """rivenCurseLineFixtures: the chat-linked card needs the 2x scale to keep its curse line."""
+    texts = [t for t, _ in riven_lines("chat-card-angstrum-stats.png", 1)]
+    assert not any(t.startswith("-90,9% Projectile Speed") for t in texts), texts
+    assert any(t.startswith("-90,9% Projectile Speed") for t, _ in riven_lines("mod-card-angstrum-stats.png", 1))
+
+
+@needs_models
+def test_arum_heat_icon_line_confidence():
+    """rivenCurseLineFixtures "element icon line confidence": every stat line passes at 2x.
+
+    The fire icon decodes as a letter here ("+86,5% wHeat"), so the glyph trim
+    does not fire; the line still has to clear 0.8 on its own.
+    """
+    lines = riven_lines("chat-card-arum-heat-icon-stats.png", 2)
+    stat = [(t, c) for t, c in lines if _is_stat(t)]
+    assert len(stat) == 3, lines
+    assert all(c >= 0.8 for _, c in stat), stat
+    assert stat[0][0].startswith("+86,5%") and stat[0][0].endswith("Heat"), stat
+    assert stat[1][0].startswith("+86,3% Critical Damage"), stat
+    assert stat[2][0].startswith("+140,9% Melee Damage"), stat
+
+
+# TODO(riven owner): port the parse-level fixtures from rivenCurseLineFixtures.test.ts
+# that need parseRivenStats/cropRivenStatImage: mod-card-soma-trait-locked-stats.png,
+# choice-card-soma-trait-locked-stats.png (wrapped trait-locked line) and
+# roll-card-corufell-trait-locked.png (roll card in a 1920x1080 frame).
 
 
 @needs_models

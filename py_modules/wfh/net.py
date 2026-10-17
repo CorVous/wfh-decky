@@ -55,7 +55,8 @@ class HttpError(RuntimeError):
 
 
 def fetch(url: str, headers: dict | None = None, timeout: float = 20, data: bytes | None = None,
-          method: str | None = None) -> bytes:
+          method: str | None = None, retry_network: bool = True) -> bytes:
+    """retry_network=False raises a transport error at once (callers with their own backoff)."""
     host = urlparse(url).netloc
     hdrs = {"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"}
     hdrs.update(headers or {})
@@ -74,7 +75,7 @@ def fetch(url: str, headers: dict | None = None, timeout: float = 20, data: byte
                 continue
             raise HttpError(e.code, url, e.read().decode(errors="replace")[:500]) from e
         except (urllib.error.URLError, TimeoutError) as e:
-            if attempt < 2:
+            if attempt < 2 and retry_network:
                 time.sleep(1.0 * (attempt + 1))
                 continue
             raise
@@ -82,7 +83,7 @@ def fetch(url: str, headers: dict | None = None, timeout: float = 20, data: byte
 
 
 def get_json(url: str, max_age: float = 0, headers: dict | None = None, timeout: float = 20,
-             stale_ok: bool = True) -> Any:
+             stale_ok: bool = True, retry_network: bool = True) -> Any:
     """GET JSON, served from the disk cache when younger than max_age seconds.
 
     On network failure a stale cached copy is returned when stale_ok.
@@ -96,7 +97,8 @@ def get_json(url: str, max_age: float = 0, headers: dict | None = None, timeout:
         except (OSError, ValueError):
             pass
     try:
-        body = fetch(url, headers=headers, timeout=timeout)
+        kw = {} if retry_network else {"retry_network": False}
+        body = fetch(url, headers=headers, timeout=timeout, **kw)
         value = json.loads(body)
     except Exception:
         if stale_ok and os.path.exists(path):

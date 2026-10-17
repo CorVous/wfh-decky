@@ -6,6 +6,7 @@ import json
 import os
 import threading
 import time
+import urllib.error
 from datetime import datetime, timezone
 
 import pytest
@@ -29,6 +30,9 @@ ROUTES = {
     "/v2/orders/item/braton_prime_barrel/top": "top_braton_prime_barrel.json",
     "/v1/items/braton_prime_barrel/statistics": "stats_braton_prime_barrel.json",
     "/v2/orders/item/serration/top?rank=10": "top_serration_rank10.json",
+    "/v2/orders/item/serration/top": "top_serration_mixed.json",
+    "/v2/orders/item/serration/top?rank=0": "top_serration_mixed.json",
+    "/v2/orders/item/lith_a1_relic/top": "top_lith_a1_relic.json",
 }
 
 
@@ -38,12 +42,15 @@ class FakeWfm:
     def __init__(self):
         self.calls: list[tuple[str, dict]] = []
         self.fail: set[str] = set()
+        self.offline = False
         self.lock = threading.Lock()
 
-    def __call__(self, url, headers=None, timeout=20, data=None, method=None):
+    def __call__(self, url, headers=None, timeout=20, data=None, method=None, retry_network=True):
         path = url.replace(market.API, "")
         with self.lock:
             self.calls.append((path, dict(headers or {})))
+        if self.offline:
+            raise urllib.error.URLError("[Errno 101] Network is unreachable")
         if path in self.fail:
             raise net.HttpError(503, url)
         name = ROUTES.get(path)
@@ -293,6 +300,131 @@ def test_offline_search_uses_item_db(wfm, tmp_path, monkeypatch):
     finally:
         items_mod._dirs_override = None
         items_mod.reset()
+
+
+def test_unranked_price_ignores_maxed_listings(m, wfm):
+    """/top without ?rank= mixes R0 and R10; rank=None prices R0/unranked only, like stats."""
+    p = m.price("serration")
+    assert p.rank is None and p.low_sell == 8 and p.median == 9 and p.high_buy == 6 and p.sellers == 3
+    o = m.orders("serration")
+    assert {e["rank"] for e in o["sell"] + o["buy"]} == {0}
+    assert wfm.paths() == ["/v2/orders/item/serration/top"]
+
+
+def test_unranked_price_asks_for_rank_zero_when_catalog_knows(m, wfm):
+    m.catalog()
+    assert m.price("serration").low_sell == 8
+    assert wfm.paths()[-1] == "/v2/orders/item/serration/top?rank=0"
+
+
+def test_relic_price_is_intact_only(m, wfm):
+    p = m.price("lith_a1_relic")
+    assert p.low_sell == 3 and p.median == 4 and p.high_buy == 2 and p.sellers == 3
+    users = [e["user"] for e in m.orders("lith_a1_relic")["sell"]]
+    assert "NoSubtypeNed" in users and not any(u.startswith("Radiant") for u in users)
+
+
+def test_offline_item_after_restart_keeps_cached_price(m, wfm, tmp_path):
+    m.price("ash_prime_chassis_blueprint")
+    m.flush()
+    wfm.offline = True
+    again = market.Market(str(tmp_path / "market"), FakeSettings())
+    o = again.orders("ash_prime_chassis_blueprint")  # orders are not on disk: forced read fails
+    assert o == {"sell": [], "buy": []}
+    p = again.price("ash_prime_chassis_blueprint")
+    assert p is not None and p.low_sell == 12
+    again._save_disk(force=True)
+    third = market.Market(str(tmp_path / "market"), FakeSettings())
+    assert third.cached("ash_prime_chassis_blueprint")[1].low_sell == 12
+
+
+def test_expired_price_served_when_refetch_fails(m, wfm):
+    m.price("ash_prime_chassis_blueprint")
+    key = m._key("ash_prime_chassis_blueprint", None)
+    ts, p = m._prices[key]
+    m._prices[key] = (ts - market.PRICE_TTL - 1, p)
+    wfm.offline = True
+    assert m.price("ash_prime_chassis_blueprint").low_sell == 12
+
+
+def test_host_down_short_circuits_every_slug(m, wfm):
+    wfm.offline = True
+    slugs = ["ash_prime_chassis_blueprint", "braton_prime_barrel", "serration", "lith_a1_relic", "a", "b"]
+    t0 = time.monotonic()
+    out = m.prices(slugs)
+    assert time.monotonic() - t0 < 1
+    assert all(v is None for v in out.values())
+    assert len(wfm.calls) == 1  # first /top fails, everything after answers from cache
+    assert m.host_down() and m.catalog() == [] and len(wfm.calls) == 1
+    m.prefetch(["ash_prime_chassis_blueprint"])
+    assert m.wait_idle(5) and len(wfm.calls) == 1
+    # Back online once the cooldown lapses.
+    wfm.offline = False
+    m._host_down_until = 0
+    m._cooldown.clear()
+    assert m.price("ash_prime_chassis_blueprint").low_sell == 12
+
+
+def test_real_fetch_does_not_retry_network_errors(monkeypatch):
+    calls = []
+
+    def urlopen(req, timeout=None):
+        calls.append(req.full_url)
+        raise urllib.error.URLError("down")
+
+    monkeypatch.setattr(net.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(net, "_host_last", {})
+    monkeypatch.setattr(net.time, "sleep", lambda s: None)
+    mk = market.Market(None, FakeSettings())
+    assert mk.price("ash_prime_chassis_blueprint") is None
+    assert mk.price("braton_prime_barrel") is None
+    assert len(calls) == 1
+
+
+def test_prices_deadline_returns_cache_and_queues_rest(m, wfm, monkeypatch):
+    events = []
+    monkeypatch.setattr(market.rpc, "emit", lambda ev, data=None: events.append((ev, data)))
+    m.price("ash_prime_chassis_blueprint")
+    out = m.prices(["ash_prime_chassis_blueprint", "braton_prime_barrel"], deadline=0)
+    assert out["ash_prime_chassis_blueprint"].low_sell == 12 and out["braton_prime_barrel"] is None
+    assert m.wait_idle(5)
+    assert events == [("market.price", {"slug": "braton_prime_barrel", "rank": None,
+                                        "price": m.cached("braton_prime_barrel")[1].to_json()})]
+
+
+def test_waiter_gets_stale_price_when_owner_fails(m, wfm):
+    m.price("ash_prime_chassis_blueprint")
+    key = m._key("ash_prime_chassis_blueprint", None)
+    ts, p = m._prices[key]
+    m._prices[key] = (ts - market.PRICE_TTL - 1, p)
+    ev = threading.Event()
+    m._inflight[key] = ev  # another thread owns a fetch that will fail
+    res = []
+    t = threading.Thread(target=lambda: res.append(m.price("ash_prime_chassis_blueprint")))
+    t.start()
+    time.sleep(0.05)
+    m._inflight.pop(key)
+    ev.set()
+    t.join(5)
+    assert res and res[0] is p and len(wfm.calls) == 1
+
+
+def test_debounced_save_reaches_disk_and_concurrent_saves(m, wfm, tmp_path, monkeypatch):
+    monkeypatch.setattr(market, "SAVE_DEBOUNCE", 0.1)
+    m.price("ash_prime_chassis_blueprint")       # first save writes at once
+    m.price("serration", rank=10)                 # inside the debounce: timer flushes it
+    path = os.path.join(str(tmp_path / "market"), "prices.json")
+    deadline = time.time() + 3
+    while time.time() < deadline and len(json.load(open(path))) < 2:
+        time.sleep(0.05)
+    assert len(json.load(open(path))) == 2
+    threads = [threading.Thread(target=m._save_disk, kwargs={"force": True}) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(json.load(open(path))) == 2
+    assert [f for f in os.listdir(str(tmp_path / "market")) if f.endswith(".tmp")] == []
 
 
 # ---- RPCs --------------------------------------------------------------------

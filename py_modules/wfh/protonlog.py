@@ -313,14 +313,18 @@ def proton_log_env_active(env: dict[str, str] | None) -> bool | None:
 
 
 def resolve_proton_log_path(home: str | None = None, env: dict[str, str] | None = None) -> str:
-    """WFHELPER_PROTON_LOG overrides; Proton honours PROTON_LOG_DIR, else $HOME."""
+    """WFHELPER_PROTON_LOG overrides; else Proton's own rule,
+    $PROTON_LOG_DIR|$HOME/steam-$SteamGameId.log, from the running game's env.
+    A non-Steam shortcut has its own SteamGameId; 230410 while the game is closed."""
     override = os.environ.get("WFHELPER_PROTON_LOG", "").strip()
     if override:
         return override
-    log_dir = (env or {}).get("PROTON_LOG_DIR", "").strip()
+    env = env or {}
+    log_dir = env.get("PROTON_LOG_DIR", "").strip() or env.get("HOME", "").strip()
     if not log_dir:
         log_dir = home or deck_user().pw_dir
-    return os.path.join(log_dir, f"steam-{WARFRAME_STEAM_APPID}.log")
+    game_id = env.get("SteamGameId", "").strip() or WARFRAME_STEAM_APPID
+    return os.path.join(log_dir, f"steam-{game_id}.log")
 
 
 _LAUNCH_OPTIONS_RE = re.compile(r'"LaunchOptions"\s+"((?:[^"\\]|\\.)*)"', re.IGNORECASE)

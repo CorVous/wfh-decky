@@ -32,16 +32,26 @@ def js_round(x: float) -> int:
 
 
 def to_rgb(img: "Image.Image | np.ndarray") -> np.ndarray:
-    """HxWx3 uint8 RGB from a PIL image or an array (gray, RGB or RGBA)."""
+    """HxWx3 uint8 RGB from a PIL image or an array (gray, gray+alpha, RGB or RGBA).
+
+    Float arrays raise TypeError: guessing 0..1 vs 0..255 would turn a caller
+    bug into a silent ("", 0.0) "unreadable" result.
+    """
     if isinstance(img, Image.Image):
         if img.mode != "RGB":
             img = img.convert("RGB")
         return np.asarray(img, dtype=np.uint8)
     arr = np.asarray(img)
+    if arr.dtype.kind == "f":
+        raise TypeError(f"to_rgb wants uint8 pixels, got {arr.dtype}; scale to 0..255 first")
     if arr.dtype != np.uint8:
         arr = np.clip(arr, 0, 255).astype(np.uint8)
     if arr.ndim == 2:
-        return np.repeat(arr[:, :, None], 3, axis=2)
+        arr = arr[:, :, None]
+    if arr.ndim != 3 or arr.shape[2] not in (1, 2, 3, 4):
+        raise TypeError(f"to_rgb wants HxW or HxWxC (C in 1..4), got shape {arr.shape}")
+    if arr.shape[2] in (1, 2):  # gray, or gray + alpha
+        return np.repeat(arr[:, :, :1], 3, axis=2)
     if arr.shape[2] == 4:
         return np.ascontiguousarray(arr[:, :, :3])
     return arr

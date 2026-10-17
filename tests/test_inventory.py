@@ -284,7 +284,8 @@ def test_fetch_inventory_falls_back_to_mobile_host():
     calls = []
     body = fixture_bytes("inventory_api.json")
 
-    def fake_fetch(url, headers=None, timeout=None):
+    def fake_fetch(url, headers=None, timeout=None, retry_network=True):
+        assert retry_network is False
         calls.append((url, headers, timeout))
         if "api.warframe.com" in url:
             raise net.HttpError(503, url, "busy")
@@ -461,7 +462,7 @@ def test_service_api_failure_uses_resident_copy(tmp_path):
 def test_mission_end_reads_resident_inventory(tmp_path):
     clock = Clock()
     reads = iter([resident_read(sync_at(clock.t - 3600)), resident_read(sync_at(clock.t + 2), 77)])
-    svc, scans, fetches, _ = make_service(tmp_path, clock, resident=lambda: next(reads))
+    svc, scans, fetches, _ = make_service(tmp_path, clock, resident=lambda: next(reads), inventory_auto_sync=False)
     svc.on_line("812.4 Sys [Info]: EOM missionLocationUnlocked=1")
     svc.on_line("813.0 Script [Info]: TopMenu.lua: Abort: mission failed")  # same mission: joined
     svc.tick()
@@ -478,7 +479,7 @@ def test_mission_end_reads_resident_inventory(tmp_path):
 
 def test_mission_end_falls_back_to_api_when_memory_is_stale(tmp_path):
     clock = Clock()
-    svc, scans, fetches, _ = make_service(tmp_path, clock, resident=resident_read(None))
+    svc, scans, fetches, _ = make_service(tmp_path, clock, resident=resident_read(None), inventory_auto_sync=False)
     svc.on_mission_end("Sys [Info]: EOM missionLocationUnlocked=1")
     clock.t += 3
     svc.tick()
@@ -520,7 +521,6 @@ def test_login_and_auto_schedule(tmp_path):
 
     svc2, _, fetches2, _ = make_service(tmp_path / "y", clock, authz=(None, "crumbs-not-found"))
     svc2.run_memory()
-    svc2._authz = None
     svc2.on_line("Script [Info]: ThemedMainMenu.lua: MainMenu::LoginDone result=true")
     clock.t += 2
     svc2.tick()
@@ -581,3 +581,178 @@ def test_module_api_and_rpcs(app, tmp_path):
     assert isinstance(inv_mod.owned_relics(), dict)
     assert inv_mod.inventory().sync_id == "68f1a2b3c4d5e6f708192a3b"
     app.settings.update({"inventory_source": "memory", "inventory_file": ""})
+
+
+# ---- review fixes ------------------------------------------------------------------------------
+
+def test_late_file_end_line_is_dated_by_its_uptime_stamp(tmp_path):
+    clock = Clock()
+    svc, scans, _, _ = make_service(tmp_path, clock, inventory_auto_sync=False)
+    real_end = clock.t
+    # A prompt line fixes the offset; the EOM line itself reaches the file 27 s late.
+    svc.observe_file_line("800.000 Sys [Info]: earlier")
+    clock.t += 39
+    eom = "812.000 Sys [Info]: EOM missionLocationUnlocked=1"
+    svc.observe_file_line(eom)
+    svc.reads = iter([resident_read(sync_at(real_end - 5), 55)])
+    svc._scan = lambda eager: (scans.append(eager) or ((VALID, "ok-1x"), next(svc.reads),
+                                                        memory.ScanResult(None, 1, 1, 1, 4242)))
+    svc.on_line(eom)
+    assert svc._pending_mission["ended_at"] == pytest.approx(real_end + 12)
+    svc.tick()  # already past end + 3 s: read at once
+    assert scans == [True]
+    # Synced 5 s before the end, 32 s before the line arrived: still fresh enough.
+    assert svc.current.origin == "memory" and svc.current.owned_count(PLASTIDS) == 55
+
+
+def test_realtime_end_line_is_now(tmp_path):
+    clock = Clock()
+    src = {"v": "realtime"}
+    svc, *_ = make_service(tmp_path, clock)
+    svc._line_source = lambda: src["v"]
+    svc.observe_file_line("800.000 Sys [Info]: earlier")
+    clock.t += 60
+    svc.observe_file_line("810.000 Sys [Info]: late batch")  # file is 50 s behind
+    svc.on_line("Sys [Info]: EOM missionLocationUnlocked=1")
+    assert svc._pending_mission["ended_at"] == clock.t
+
+
+def test_hub_node_end_is_ignored(tmp_path):
+    clock = Clock()
+    svc, *_ = make_service(tmp_path, clock)
+    svc.on_line("Script [Info]: SyncAutoPopulatedConsumables for mission MT_PVP with location CetusHub4")
+    svc.on_line("Sys [Info]: EOM missionLocationUnlocked=1")
+    assert svc._pending_mission is None
+    # A regular node is kept through OnStateStarted of the same type...
+    svc.on_line("Script [Info]: SyncAutoPopulatedConsumables for mission MT_SURVIVAL with location SolNode1")
+    svc.on_line("Game [Info]: OnStateStarted, mission type=MT_SURVIVAL")
+    assert svc._mission_info == {"type": "MT_SURVIVAL", "node": "SolNode1"}
+    # ...but a hub node is never carried (missionRewards.ts observeLine).
+    svc.on_line("Script [Info]: SyncAutoPopulatedConsumables for mission MT_PVP with location CetusHub4")
+    svc.on_line("Game [Info]: OnStateStarted, mission type=MT_PVP")
+    assert svc._mission_info == {"type": "MT_PVP", "node": None}
+    clock.t += 60
+    svc.on_line("Sys [Info]: EOM missionLocationUnlocked=1")
+    assert svc._pending_mission is not None
+
+
+def test_settings_change_reloads_on_the_inventory_thread(tmp_path):
+    clock = Clock()
+    svc, *_ = make_service(tmp_path, clock)
+    target = tmp_path / "inv.json"
+    target.write_bytes(fixture_bytes("inventory_api.json"))
+    svc.settings.values.update({"inventory_source": "file", "inventory_file": str(target)})
+    svc.settings_changed()
+    assert svc.current is None  # nothing parsed in the listener
+    svc.tick()
+    assert svc.current.origin == "file"
+
+
+def test_broken_file_is_not_reparsed_and_clears_old_snapshot(tmp_path, monkeypatch):
+    clock = Clock()
+    svc, *_ = make_service(tmp_path, clock)
+    svc.run_memory()
+    assert svc.current.origin == "api"
+    bad = tmp_path / "bad.json"
+    bad.write_text('{"hello": 1}')
+    svc.settings.values.update({"inventory_source": "file", "inventory_file": str(bad)})
+    svc.apply_settings()
+    st = svc.status()
+    assert st["source"] == "file" and st["found"] is False
+    loads = []
+    real = svc._load_file
+    monkeypatch.setattr(svc, "_load_file", lambda p, quiet=False: loads.append(p) or real(p, quiet))
+    clock.t += 11
+    svc.tick()
+    clock.t += 11
+    svc.tick()
+    assert loads == []  # unchanged broken file: not read again
+    os.utime(bad, (time.time() + 5, time.time() + 5))
+    clock.t += 11
+    svc.tick()
+    assert loads == [str(bad)]
+
+
+def test_login_retries_after_api_failure(tmp_path):
+    clock = Clock()
+
+    def down(a):
+        raise api.InventoryFetchError("unreachable")
+
+    svc, scans, _, _ = make_service(tmp_path, clock, fetch=down, inventory_auto_sync=False)
+    svc.run_memory()
+    assert svc.last_reason == "api-failed"
+    svc.on_line("Script [Info]: ThemedMainMenu.lua: MainMenu::LoginDone result=true")
+    clock.t += 2
+    svc.tick()
+    assert svc.last_trigger == "login" and len(scans) == 2
+
+
+def test_api_runs_defer_resident_extraction(tmp_path):
+    clock = Clock()
+    resolved = []
+
+    def lazy():
+        resolved.append(1)
+        return resident_read(NEW_SYNC, 9)
+
+    svc, scans, _, _ = make_service(tmp_path, clock)
+    svc._scan = lambda eager: (scans.append(eager) or ((VALID, "ok-1x"), lazy, memory.ScanResult(None, 1, 1, 1, 4242)))
+    assert svc.run_memory() is True
+    assert scans == [False] and resolved == []  # API answered: resident copy never parsed
+
+    def down(a):
+        raise api.InventoryFetchError("unreachable")
+
+    svc._fetch = down
+    svc.run_memory()
+    assert resolved == [1] and svc.current.origin == "memory"
+
+
+def test_read_game_deferred_extracts_on_demand(tmp_path):
+    js = inventory_json(NEW_SYNC, 7).encode()
+    heap = bytearray(REGION)
+    heap[100:100 + len(VALID)] = VALID.encode()
+    heap[2000:2000 + len(js)] = js
+    root = make_proc(tmp_path, [(0x100000, bytes(heap), "rw-p", "")])
+    (authz, _), resident, scan = memory.read_game(4242, root, defer_inventory=True)
+    assert authz == VALID and callable(resident)
+    read = resident()
+    assert read.status == "ok" and read.newest.sync_id == NEW_SYNC
+
+
+def test_listener_registered_before_setup(app, monkeypatch):
+    got = []
+    svc = inv_mod._svc
+    monkeypatch.setattr(inv_mod, "_svc", None)
+    inv_mod.on_update(got.append)
+    assert inv_mod._pending_listeners == [got.append]
+    monkeypatch.setattr(inv_mod, "_svc", svc)
+    inv_mod.setup(app)
+    assert inv_mod._pending_listeners == []
+    assert got.append in inv_mod._svc._listeners
+
+
+def test_owned_relics_falls_back_per_relic_and_caches_by_identity(monkeypatch):
+    import types
+    import sys
+
+    class EmptyRelics:
+        def by_unique(self, u):
+            return None
+
+    class Items:
+        def by_unique(self, u):
+            return types.SimpleNamespace(name="Lith V1 Intact") if u.endswith("Bronze") else None
+
+    monkeypatch.setitem(sys.modules, "wfh.data.relics", types.SimpleNamespace(relics=lambda: EmptyRelics()))
+    monkeypatch.setitem(sys.modules, "wfh.data.items", types.SimpleNamespace(items=lambda: Items()))
+    name_of = inv_mod._relic_name_of()
+    assert name_of("/Lotus/Types/Game/Projections/T1VoidProjectionVPABronze") == "Lith V1 Intact"
+    assert name_of("/Lotus/Unknown") is None
+    inv = model.Inventory({"MiscItems": []}, "file", 0.0, "")
+    monkeypatch.setattr(inv_mod, "_relic_cache", None)
+    svc = types.SimpleNamespace(current=inv)
+    monkeypatch.setattr(inv_mod, "_svc", svc)
+    assert inv_mod.owned_relics() == {}
+    assert inv_mod._relic_cache[0] is inv

@@ -97,7 +97,7 @@ def ctc_greedy_decode(probs: np.ndarray, charset: list[str]) -> RecResult:
 
 # The element icon after a whole value decodes as one non-ASCII glyph.
 ICON_GLYPH_AFTER_VALUE = re.compile(
-    r"^([+\-–x×]?\s*\d(?:[\d.,]*\d)?(?:%\s*|\s+))([\u0080-￿])(?=\s*[A-Za-z])"
+    r"^([+\-–x×]?\s*[0-9](?:[0-9.,]*[0-9])?(?:%\s*|\s+))([\u0080-￿])(?=\s*[A-Za-z])"
 )
 
 

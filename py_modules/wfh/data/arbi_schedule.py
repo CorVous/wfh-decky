@@ -9,10 +9,15 @@ shows the right arbitrations. Labels come from the bundled solnodes table.
 Alerts: one-shot bells per occurrence (``"<epochMs>:<nodeId>"``) and favourite
 nodes that alert on every occurrence, ``minutesBefore`` ahead. They live in
 ``arbi-sched-alerts.json`` (same file names as WFHelper so a user can copy them
-over); favourites are mirrored into ``settings.arbitration.favorite_nodes`` so
-the arbitration overlay can read them without importing this module.
+over). Favourites have one source of truth: ``settings.arbitration.favorite_nodes``
+once ``setup()`` has wired it (the arbitration overlay reads it without importing
+this module, and a settings page may edit it). The store's ``favoriteNodes`` is
+only a copy, rewritten on every save and on every settings change; a store whose
+copy is the only one (an imported WFHelper file) seeds an empty settings list once.
 Delivery is ``app.toast`` (works with the QAM closed) plus an
-``arbi.schedule_alert`` event; ``arbitration.notify_favorites`` gates both.
+``arbi.schedule_alert`` event. ``arbitration.notify_favorites`` is the single
+notifications toggle, as in WFHelper: it silences one-shot bells as well as
+favourites (bells are not consumed while it is off; they fire later or get pruned).
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ import json
 import math
 import os
 import re
+import tempfile
 import threading
 import time
 from dataclasses import dataclass
@@ -137,7 +143,8 @@ def prune_keys(keys: list[str], now_ms: int) -> list[str]:
 
 
 def alert_text(entry: Entry, now_ms: int) -> tuple[str, str]:
-    minutes = max(0, round((entry.epoch_ms - now_ms) / 60_000))
+    # Math.round, not Python's half-to-even round(): 2.5 min reads "~3 min" like WFHelper.
+    minutes = max(0, math.floor((entry.epoch_ms - now_ms) / 60_000 + 0.5))
     timing = f"starts in ~{minutes} min" if minutes > 0 else "starting now"
     return "Arbitration Alert", f"{entry.mission} on {entry.node} vs {entry.faction} - {timing}."
 
@@ -152,6 +159,13 @@ def faction_badge(faction: str) -> str:
     if f.startswith("corrupt") or f == "orokin":
         return "corrupted"
     return "other"
+
+
+def _clean_nodes(value) -> list[str]:
+    """Valid node ids, deduplicated in order; anything else (a scalar, None) gives []."""
+    if not isinstance(value, list):
+        return []
+    return list(dict.fromkeys(n for n in value if isinstance(n, str) and NODE_ID_RE.match(n)))
 
 
 def _sanitize_store(raw) -> dict:
@@ -176,13 +190,22 @@ def _sanitize_store(raw) -> dict:
 
 
 def _write_atomic(path: str, text: str) -> None:
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(text)
-        f.flush()
-        os.fsync(f.fileno())
-    os.replace(tmp, path)
+    """Unique temp file per write, so two writers never share (and corrupt) one ``.tmp``."""
+    d = os.path.dirname(path) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix="." + os.path.basename(path) + ".", suffix=".tmp", dir=d)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 # ---- stateful schedule ----------------------------------------------------
@@ -193,7 +216,9 @@ class ArbiSchedule:
     def __init__(self, store_dir: str, fetch: Callable[[], str] | None = None,
                  now_ms: Callable[[], int] = _now_ms):
         self.store_dir = store_dir
-        self._fetch_text = fetch or (lambda: net.fetch(ARBYS_URL, timeout=FETCH_TIMEOUT).decode("utf-8", "replace"))
+        # One attempt (like WFHelper): net.fetch's transport retries would push an RPC past 45 s.
+        self._fetch_text = fetch or (lambda: net.fetch(ARBYS_URL, timeout=FETCH_TIMEOUT, retry_network=False)
+                                     .decode("utf-8", "replace"))
         self._now = now_ms
         self._lock = threading.RLock()
         self._fetch_lock = threading.Lock()
@@ -202,9 +227,10 @@ class ArbiSchedule:
         self.last_error: str | None = None
         self._last_attempt = 0
         self.store = _sanitize_store({})
-        # Hooks set by setup(): notifications toggle, favourites mirror, delivery.
+        # Hooks set by setup(): notifications toggle, favourites source of truth, delivery.
+        # load_favorites returning None means "no external source": the store's list is used.
         self.notifications_enabled: Callable[[], bool] = lambda: True
-        self.extra_favorites: Callable[[], list[str]] = lambda: []
+        self.load_favorites: Callable[[], list[str] | None] = lambda: None
         self.on_favorites_changed: Callable[[list[str]], None] = lambda favs: None
         self.notify: Callable[[str, str, Entry], None] = lambda title, body, entry: None
         self._load_store()
@@ -244,10 +270,21 @@ class ArbiSchedule:
             _log.warning("arbitration alert store unreadable: %s", e)
 
     def _save_store(self) -> None:
-        try:
-            _write_atomic(self.store_path, json.dumps(self.store, indent=2))
-        except OSError as e:
-            _log.warning("failed to save arbitration alert store: %s", e)
+        with self._lock:
+            self.store["favoriteNodes"] = self.favorites()   # keep the copy in step with settings
+            text = json.dumps(self.store, indent=2)
+            try:
+                _write_atomic(self.store_path, text)
+            except OSError as e:
+                _log.warning("failed to save arbitration alert store: %s", e)
+
+    def sync_favorites(self, favs) -> None:
+        """Settings changed elsewhere: replace the store copy so removed nodes stop alerting."""
+        clean = _clean_nodes(favs)
+        with self._lock:
+            if clean != self.store["favoriteNodes"]:
+                self.store["favoriteNodes"] = clean
+                self._save_store()
 
     # fetch -----------------------------------------------------------------
     def is_stale(self) -> bool:
@@ -294,8 +331,12 @@ class ArbiSchedule:
 
     # read ------------------------------------------------------------------
     def favorites(self) -> list[str]:
-        extra = [n for n in (self.extra_favorites() or []) if isinstance(n, str) and NODE_ID_RE.match(n)]
-        return list(dict.fromkeys(self.store["favoriteNodes"] + extra))
+        src = None
+        try:
+            src = self.load_favorites()
+        except Exception:  # noqa: BLE001
+            _log.exception("favourites source failed")
+        return _clean_nodes(self.store["favoriteNodes"] if src is None else src)
 
     def alerts(self) -> dict:
         return {"occurrences": list(self.store["occurrences"]), "favoriteNodes": self.favorites(),
@@ -326,29 +367,32 @@ class ArbiSchedule:
     def set_occurrence(self, key: str, enabled: bool) -> dict | None:
         if not isinstance(key, str) or not OCCURRENCE_KEY_RE.match(key):
             return None
-        occ = self.store["occurrences"]
-        if enabled and key not in occ:
-            occ.append(key)
-        elif not enabled and key in occ:
-            occ.remove(key)
-        self._save_store()
-        return self.alerts()
+        with self._lock:   # check_alerts reassigns these lists on the sweep thread
+            occ = self.store["occurrences"]
+            if enabled and key not in occ:
+                occ.append(key)
+            elif not enabled and key in occ:
+                occ.remove(key)
+            self._save_store()
+            return self.alerts()
 
     def set_favorite(self, node_id: str, enabled: bool) -> dict | None:
         if not isinstance(node_id, str) or not NODE_ID_RE.match(node_id):
             return None
-        favs = self.favorites()
-        if enabled and node_id not in favs:
-            favs.append(node_id)
-        elif not enabled:
-            favs = [n for n in favs if n != node_id]
-        self.store["favoriteNodes"] = favs
-        self._save_store()
-        try:
-            self.on_favorites_changed(list(favs))
-        except Exception:  # noqa: BLE001
-            _log.exception("favourite mirror failed")
-        return self.alerts()
+        with self._lock:
+            favs = self.favorites()
+            if enabled and node_id not in favs:
+                favs.append(node_id)
+            elif not enabled:
+                favs = [n for n in favs if n != node_id]
+            # Source of truth first, so favorites() (read back by _save_store) sees the new list.
+            try:
+                self.on_favorites_changed(list(favs))
+            except Exception:  # noqa: BLE001
+                _log.exception("favourite mirror failed")
+            self.store["favoriteNodes"] = favs
+            self._save_store()
+            return self.alerts()
 
     def set_lead(self, minutes) -> dict | None:
         try:
@@ -357,9 +401,10 @@ class ArbiSchedule:
             return None
         if not math.isfinite(m) or m < MIN_LEAD or m > MAX_LEAD:
             return None
-        self.store["minutesBefore"] = int(m)
-        self._save_store()
-        return self.alerts()
+        with self._lock:
+            self.store["minutesBefore"] = int(m)
+            self._save_store()
+            return self.alerts()
 
     # alert sweep -------------------------------------------------------------
     def check_alerts(self) -> list[Entry]:
@@ -426,8 +471,15 @@ def setup(app) -> None:
     """Wire settings and delivery; start the hourly refresh + 30 s alert loop."""
     s = get()
     s.notifications_enabled = lambda: bool(app.settings.get("arbitration.notify_favorites", True))
-    s.extra_favorites = lambda: list(app.settings.get("arbitration.favorite_nodes", []) or [])
+    s.load_favorites = lambda: list(app.settings.get("arbitration.favorite_nodes", []) or [])
     s.on_favorites_changed = lambda favs: app.settings.update({"arbitration": {"favorite_nodes": favs}})
+    # One-time seed: a store copied from WFHelper carries favourites settings has never seen.
+    seeded = _clean_nodes(s.store["favoriteNodes"])
+    if seeded and not _clean_nodes(s.load_favorites()):
+        s.on_favorites_changed(seeded)
+    s.sync_favorites(s.load_favorites())
+    app.settings.on_change(lambda data: s.sync_favorites(
+        ((data or {}).get("arbitration") or {}).get("favorite_nodes") or []))
 
     def notify(title: str, body: str, entry: Entry) -> None:
         app.toast(title, body)
@@ -480,16 +532,23 @@ async def _rpc_refresh(days: float = DEFAULT_DAYS) -> dict:
     return await get_app().run_blocking(run)
 
 
+# The setters fsync the store (and set_favorite writes settings): keep that off the event loop.
 @rpc.method("world.arbi_set_occurrence")
-def _rpc_set_occurrence(key: str, enabled: bool = True) -> dict | None:
-    return get().set_occurrence(key, bool(enabled))
+async def _rpc_set_occurrence(key: str, enabled: bool = True) -> dict | None:
+    from ..app import get_app
+
+    return await get_app().run_blocking(lambda: get().set_occurrence(key, bool(enabled)))
 
 
 @rpc.method("world.arbi_set_favorite")
-def _rpc_set_favorite(node_id: str, enabled: bool = True) -> dict | None:
-    return get().set_favorite(node_id, bool(enabled))
+async def _rpc_set_favorite(node_id: str, enabled: bool = True) -> dict | None:
+    from ..app import get_app
+
+    return await get_app().run_blocking(lambda: get().set_favorite(node_id, bool(enabled)))
 
 
 @rpc.method("world.arbi_set_lead")
-def _rpc_set_lead(minutes: float) -> dict | None:
-    return get().set_lead(minutes)
+async def _rpc_set_lead(minutes: float) -> dict | None:
+    from ..app import get_app
+
+    return await get_app().run_blocking(lambda: get().set_lead(minutes))

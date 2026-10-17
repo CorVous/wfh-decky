@@ -59,8 +59,15 @@ SUBSTRING_SCORE_FLOOR = 0.88
 FOLDED_EXACT_CONFIDENCE = 0.99
 FOLDED_NEAR_MIN_SIMILARITY = 0.94
 FOLDED_NEAR_MIN_LENGTH = 12
-# The reward scanner accepts a slot read at or above this (relic-rewards.md §7).
+# Slot usability gate (rewardScannerSlotScan.ts isUsableSlotCandidate,
+# relic-rewards.md §7.2). The gate depends on the mode: SLOT_ACCEPT_CONFIDENCE
+# is only the fuzzy bar; use is_usable_slot_candidate() rather than comparing
+# a bare confidence, or every SUBSTRING_SCORE_FLOOR-clamped ambiguous prefix passes.
 SLOT_ACCEPT_CONFIDENCE = 0.86
+EXACT_SLOT_GATE = 0.98
+SUBSTRING_SLOT_GATE = 0.92
+SHORT_NAME_EXACT_GATE = 0.99
+NEAR_GATE_CONFIDENCE = 0.85
 
 _QUANTITY_PREFIX = re.compile(r"^\d+\s*x\s+", re.IGNORECASE | re.ASCII)
 _QUANTITY_PREFIX_SPACING = re.compile(r"^(\d+)\s+x(?=\s|$)", re.ASCII)
@@ -355,6 +362,41 @@ def rank_candidates(ocr_text: str, items: Iterable[Any], limit: int = 5) -> list
     _boost_unique_structural(survivors, text, text_words)
     survivors.sort(key=lambda c: (-c.score, -c.confidence, -len(item_name(c.item)) if c.item is not None else 0))
     return survivors[:max(1, limit)]
+
+
+def is_usable_slot_candidate(c: Candidate | None) -> bool:
+    """isUsableSlotCandidate, verbatim: may this candidate fill a reward slot?"""
+    if c is None or c.item is None:
+        return False
+    name = item_name(c.item).strip()
+    if not name:
+        return False
+    if len(name.split()) <= 1 and len(name) < 5:
+        return c.mode == "exact" and c.confidence >= SHORT_NAME_EXACT_GATE
+    if c.mode == "exact":
+        return c.confidence >= EXACT_SLOT_GATE
+    if c.mode == "substring":
+        return c.confidence >= SUBSTRING_SLOT_GATE
+    return c.confidence >= SLOT_ACCEPT_CONFIDENCE
+
+
+def best_slot_candidate(ocr_text: str, items: Iterable[Any], limit: int = 4) -> tuple[Candidate | None, Candidate | None]:
+    """(usable, near_miss) as readSlotTitle picks them from rankRewardCandidatesDetailed(limit=4).
+
+    usable is the first candidate in rank order that passes the gate; near_miss the
+    highest-confidence rejected one (for diagnostics / "almost read" UI).
+    """
+    usable: Candidate | None = None
+    near: Candidate | None = None
+    for c in rank_candidates(ocr_text, items, limit):
+        if c.item is None:
+            continue
+        if is_usable_slot_candidate(c):
+            if usable is None:
+                usable = c
+        elif near is None or c.confidence > near.confidence:
+            near = c
+    return usable, near
 
 
 def match_single(ocr_text: str, items: Iterable[Any]) -> Candidate:

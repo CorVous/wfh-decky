@@ -14,7 +14,8 @@ Sources (setting `inventory_source`):
 Schedule (inventorySync.ts + apiHelperRunner.ts polling): an API fetch at most
 every `inventory_refresh_min` minutes while the game runs (90 s retry after a
 failure that never reached DE), right after `MainMenu::LoginDone`, and on
-demand; a resident read 3 s after each mission end. The newest snapshot is kept
+demand; a resident read 3 s after each mission end (dated by the line's
+uptime stamp, since EE.log can arrive 10-26 s late). The newest snapshot is kept
 in <runtime_dir>/inventory.json so a restart does not need the game.
 """
 
@@ -28,6 +29,7 @@ import time
 from typing import Any, Callable
 
 from .. import log, rpc, session
+from ..eelog import FILE, REALTIME, UptimeTracker
 from .api import InventoryFetchError, fetch_inventory
 from .memory import GameInventoryRead, read_game
 from .model import Inventory
@@ -49,6 +51,10 @@ LOGIN_DEDUP_S = 30.0
 LOGIN_DELAY_S = 1.0
 MISSION_END_LINE = re.compile(r"Sys \[Info\]: EOM missionLocationUnlocked=|TopMenu\.lua: Abort:")
 HUB_ABORT = re.compile(r"TopMenu\.lua: Abort: in hub")
+# Leaving Cetus/Fortuna/Necralisk logs an end with the town's hub node (missionRewards.ts).
+HUB_NODE = re.compile(r"hub", re.IGNORECASE)
+SYNC_CONSUMABLES = re.compile(r"SyncAutoPopulatedConsumables for mission (MT_[A-Z_]+) with location (\S+)")
+STATE_STARTED = re.compile(r"Game \[Info\]: OnStateStarted, mission type=(MT_[A-Z_]+)")
 # missionRewards.ts timings.
 MISSION_READ_DELAY_S = 3.0
 MISSION_READ_RETRY_S = 1.0
@@ -73,7 +79,8 @@ def should_retry_after_login(running: bool, last_ok: bool | None, reason: str | 
         return True
     if last_ok is True:
         return False
-    return reason in (None, "game-not-running", "not-logged-in", "token-not-found", "error")
+    # "api-failed" is WFHelper's "error" for a fetch that never got an inventory.
+    return reason in (None, "game-not-running", "not-logged-in", "token-not-found", "error", "api-failed")
 
 
 def file_contains(path: str, marker: bytes, chunk: int = 4 * 1024 * 1024) -> bool:
@@ -107,16 +114,23 @@ class InventoryService:
                  fetcher: Callable[[str], tuple[bytes, str]] = fetch_inventory,
                  game_running: Callable[[], bool] = session.warframe_running,
                  ee_log_path: Callable[[], str | None] = lambda: None,
-                 home: Callable[[], str] = lambda: session.deck_user().pw_dir):
+                 home: Callable[[], str] = lambda: session.deck_user().pw_dir,
+                 line_source: Callable[[], str] = lambda: FILE):
         self.runtime_dir = runtime_dir
         self.settings = settings
         self._emit = emit or (lambda name, data: None)
         self._clock = clock
-        self._scan = scan or (lambda want_inventory: read_game(want_inventory=want_inventory))
+        # scan(eager): eager parses the resident copy in the walk (mission reads);
+        # otherwise it comes back as a callable used only on the API fallback.
+        self._scan = scan or (lambda eager: read_game(want_inventory=True, defer_inventory=not eager))
         self._fetch = fetcher
         self._game_running = game_running
         self._ee_log_path = ee_log_path
         self._home = home
+        self._line_source = line_source
+        self._uptime = UptimeTracker()
+        self._mission_info: dict | None = None
+        self._reapply = False
         self._lock = threading.RLock()
         self._run_lock = threading.Lock()
         self._listeners: list[Callable[[Inventory], None]] = []
@@ -201,14 +215,20 @@ class InventoryService:
         self._applied = key
         src, path = key
         if src == "file":
-            if path:
-                self._load_file(path)
-            else:
+            # A failed load must not leave the previous api/memory snapshot showing as "file".
+            if not path or not self._load_file(path):
                 self._set_current(None)
         elif src == "memory":
             self._load_persisted()
         else:
             self._set_current(None)
+
+    def settings_changed(self) -> None:
+        """Settings listener (runs on the event loop): only compare the key; the
+        reload itself (up to a 50 MB file parse) happens on the inventory thread."""
+        if (self.source(), self.file_setting()) != self._applied:
+            self._reapply = True
+            self._wake.set()
 
     def _set_current(self, inv: Inventory | None, publish: bool = True) -> None:
         with self._lock:
@@ -244,6 +264,8 @@ class InventoryService:
     def _load_file(self, path: str, quiet: bool = False) -> bool:
         try:
             st = os.stat(path)
+            # Remembered even if the parse fails, so a broken file is not re-read every poll.
+            self._file_mtime = st.st_mtime
             if not os.path.isfile(path):
                 raise InventoryFormatError("Inventory path is not a file")
             if st.st_size > MAX_FILE_BYTES:
@@ -256,7 +278,6 @@ class InventoryService:
             if not quiet:
                 _log.warning("inventory file %s: %s", path, e)
             return False
-        self._file_mtime = st.st_mtime
         self.last_error = None
         self._set_current(Inventory(data, "file", st.st_mtime, path))
         return True
@@ -308,7 +329,14 @@ class InventoryService:
             return "token-not-found"
         return "not-logged-in"
 
-    def _adopt_resident(self, resident: GameInventoryRead | None, min_sync_ms: float | None = None) -> bool:
+    def _adopt_resident(self, resident: GameInventoryRead | Callable[[], GameInventoryRead] | None,
+                        min_sync_ms: float | None = None) -> bool:
+        if callable(resident):  # deferred extraction (memory.read_game defer_inventory)
+            try:
+                resident = resident()
+            except Exception:  # noqa: BLE001
+                _log.exception("deferred resident inventory read failed")
+                return False
         if resident is None:
             return False
         self.last_resident = resident.summary()
@@ -321,8 +349,8 @@ class InventoryService:
         _log.info("resident inventory adopted (sync %s)", time.strftime("%H:%M:%S", time.localtime(copy.sync_time / 1000)))
         return True
 
-    def _scan_game(self) -> tuple[tuple[str | None, str], GameInventoryRead | None]:
-        (authz, reason), resident, scan = self._scan(True)
+    def _scan_game(self, eager: bool) -> tuple[tuple[str | None, str], Any]:
+        (authz, reason), resident, scan = self._scan(eager)
         self.last_scan = {"ms": scan.ms, "mb": scan.bytes // (1024 * 1024), "regions": scan.regions,
                           "reason": reason, "at": self._clock()}
         return (authz, reason), resident
@@ -359,7 +387,7 @@ class InventoryService:
             if not self._game_running():
                 return self._settle(False, "game-not-running", trigger)
             _log.info("reading inventory auth from game memory (%s)", trigger)
-            (authz, reason), resident = self._scan_game()
+            (authz, reason), resident = self._scan_game(False)
             return self._api_from(authz, reason, resident, trigger)
         except Exception as e:  # noqa: BLE001
             _log.exception("inventory run failed")
@@ -380,7 +408,7 @@ class InventoryService:
         try:
             self.running = True
             pending["attempts"] += 1
-            (authz, reason), resident = self._scan_game()
+            (authz, reason), resident = self._scan_game(True)
             if self._adopt_resident(resident, (pending["ended_at"] - SYNC_TOLERANCE_S) * 1000):
                 self._pending_mission = None
                 self._settle(True, None, "mission-end")
@@ -404,7 +432,38 @@ class InventoryService:
 
     # ---- EE.log hooks (tailer thread: only bookkeeping here) -------------------
 
+    def observe_file_line(self, line: str) -> None:
+        """Every EE.log file line (echoes included), in order: feeds the lag estimate."""
+        self._uptime.observe(line, self._clock())
+
+    def _line_wall_time(self, line: str) -> float:
+        """When the game logged line: now for a real-time line, else now minus the
+        file's flush lag from its uptime stamp (missionRewards.ts lineWallTime)."""
+        now = self._clock()
+        if self._line_source() == REALTIME:
+            return now
+        return now - self._uptime.observe(line, now)
+
+    def _observe_mission_info(self, line: str) -> None:
+        """missionRewards.ts observeLine: the last mission type/node before an end."""
+        m = SYNC_CONSUMABLES.search(line)
+        info = {"type": m.group(1), "node": m.group(2)} if m else None
+        if info is None:
+            m = STATE_STARTED.search(line)
+            info = {"type": m.group(1), "node": None} if m else None
+        if info is None:
+            return
+        cur = self._mission_info or {}
+        # OnStateStarted repeats the type its SyncAutoPopulatedConsumables named with a
+        # node; a hub node is never carried into the next mission.
+        keep_node = info["type"] == cur.get("type") and not HUB_NODE.search(cur.get("node") or "")
+        if info["node"] or not keep_node:
+            self._mission_info = info
+
     def on_line(self, line: str) -> None:
+        if ("SyncAutoPopulated" in line or "OnStateStarted" in line):
+            self._observe_mission_info(line)
+            return
         if "LoginDone" in line and LOGIN_LINE.search(line):
             now = self._clock()
             if now - self._last_login_at >= LOGIN_DEDUP_S:
@@ -418,17 +477,23 @@ class InventoryService:
     def on_mission_end(self, line: str = "") -> None:
         if self.source() != "memory" or not self.mission_scan_enabled():
             return
+        ended_at = self._line_wall_time(line)
         if HUB_ABORT.search(line):
             return
-        now = self._clock()
-        if self._last_end_at is not None and abs(now - self._last_end_at) < MISSION_END_JOIN_S:
+        if self._last_end_at is not None and abs(ended_at - self._last_end_at) < MISSION_END_JOIN_S:
             # The same mission's later line restarts the wait.
-            self._last_end_at = now
+            self._last_end_at = ended_at
             if self._pending_mission is not None:
-                self._pending_mission["due"] = now + MISSION_READ_DELAY_S
+                self._pending_mission["due"] = ended_at + MISSION_READ_DELAY_S
+                self._wake.set()
             return
-        self._last_end_at = now
-        self._pending_mission = {"ended_at": now, "due": now + MISSION_READ_DELAY_S, "attempts": 0}
+        info, self._mission_info = self._mission_info, None
+        if info and info.get("node") and HUB_NODE.search(info["node"]):
+            _log.info("mission end in a hub ignored")
+            return
+        self._last_end_at = ended_at
+        # A late file line may already be past the delay: then the read is immediate.
+        self._pending_mission = {"ended_at": ended_at, "due": ended_at + MISSION_READ_DELAY_S, "attempts": 0}
         self._wake.set()
 
     # ---- scheduling ---------------------------------------------------------------
@@ -446,6 +511,9 @@ class InventoryService:
         return self.last_run_at + interval
 
     def tick(self) -> None:
+        if self._reapply:
+            self._reapply = False
+            self.apply_settings()
         now = self._clock()
         src = self.source()
         if src == "file":
@@ -458,7 +526,8 @@ class InventoryService:
                     mtime = None
                 if mtime is not None and mtime != self._file_mtime:
                     _log.info("inventory file changed, reloading")
-                    self._load_file(path)
+                    if not self._load_file(path) and self.current is not None and self.current.origin != "file":
+                        self._set_current(None)
             return
         if src != "memory":
             return
@@ -543,7 +612,10 @@ class InventoryService:
 # ---- module API (docs/ARCHITECTURE.md) ------------------------------------------
 
 _svc: InventoryService | None = None
-_relic_cache: tuple[int, dict] | None = None
+# (snapshot, counts): keyed on the object itself, since id() is reused after GC.
+_relic_cache: tuple[Inventory, dict] | None = None
+# on_update() calls made before setup() are handed to the service there.
+_pending_listeners: list[Callable[[Inventory], None]] = []
 
 
 def service() -> InventoryService | None:
@@ -568,16 +640,35 @@ def owned_count(unique_name: str) -> int:
 
 
 def _relic_name_of() -> Callable[[str], str | None] | None:
+    """Projection uniqueName -> "Lith V1 Radiant": the relic db's byUniqueName
+    (as WFHelper's parseOwnedRelics), else, per relic, the item db's relic rows.
+    relics() may return an empty db instead of raising, so the fallback is per name."""
+    rdb = idb = None
+    try:
+        from ..data.relics import relics
+
+        rdb = relics()
+    except Exception:  # noqa: BLE001 - relic data not built
+        pass
     try:
         from ..data.items import items
 
-        db = items()
-    except Exception:  # noqa: BLE001 - no item data yet: relics cannot be named
+        idb = items()
+    except Exception:  # noqa: BLE001 - no item data yet
+        pass
+    if rdb is None and idb is None:
         return None
 
     def name_of(unique: str) -> str | None:
-        it = db.by_unique(unique)
-        return it.name if it else None
+        if rdb is not None:
+            hit = rdb.by_unique(unique)
+            if hit:
+                return f"{hit[0].name} {hit[1].capitalize()}"
+        if idb is not None:
+            it = idb.by_unique(unique)
+            if it:
+                return it.name
+        return None
     return name_of
 
 
@@ -587,11 +678,12 @@ def owned_relics() -> dict[tuple[str, str], int]:
     inv = inventory()
     if inv is None:
         return {}
-    if _relic_cache is not None and _relic_cache[0] == id(inv):
+    if _relic_cache is not None and _relic_cache[0] is inv:
         return _relic_cache[1]
     result = inv.owned_relics(_relic_name_of())
+    # An empty answer for an inventory with relics means the data is not loaded yet.
     if result or not inv.relic_counts():
-        _relic_cache = (id(inv), result)
+        _relic_cache = (inv, result)
     return result
 
 
@@ -600,9 +692,12 @@ def status() -> dict:
 
 
 def on_update(fn: Callable[[Inventory], None]) -> None:
-    """fn(inventory) after every new snapshot (runs on the inventory thread)."""
+    """fn(inventory) after every new snapshot (runs on the inventory thread).
+    Safe to call before setup(): the listener is attached when the service starts."""
     if _svc is not None:
         _svc.on_update(fn)
+    else:
+        _pending_listeners.append(fn)
 
 
 def import_file(path: str) -> dict:
@@ -616,17 +711,26 @@ def setup(app) -> None:
     _svc = InventoryService(
         app.runtime_dir, app.settings, emit=app.emit,
         ee_log_path=lambda: app.eelog.path,
+        line_source=lambda: app.eelog.source,
     )
+    for fn in _pending_listeners:
+        _svc.on_update(fn)
+    _pending_listeners.clear()
     _svc.apply_settings(force=True)
-    app.settings.on_change(lambda _data: _svc.apply_settings())
+    app.settings.on_change(lambda _data: _svc.settings_changed())
+    # File lines (echoes too) date mission ends; merged lines drive the events.
+    app.eelog.subscribe(_svc.observe_file_line, source=FILE)
     app.eelog.subscribe(_svc.on_line)
     app.services["inventory"] = _svc
     app.services.setdefault("on_start", []).append(_svc.start)
 
 
 @rpc.method("inventory.status")
-def _rpc_status() -> dict:
-    return status()
+async def _rpc_status() -> dict:
+    # Polled by the frontend; status() may walk /proc, so keep it off the loop.
+    from ..app import get_app
+
+    return await get_app().run_blocking(status)
 
 
 @rpc.method("inventory.refresh")

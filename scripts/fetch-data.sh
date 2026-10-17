@@ -6,9 +6,13 @@
 # build_bundle): ~29 MB of category JSON becomes
 #   data/items.json.gz   ~240 KB  (~9.8k items, 608 relic rewards; 2.9 MB as JSON)
 #   data/relics.json.gz   ~90 KB  (~800 relics with per-refinement chances)
-#   data/manifest.json    version, source time, counts, sizes
+#   data/manifest.json    version, source time, counts, sizes, and source_sha256
+#                         of Relics.json/Components.json (byte-identical to the
+#                         v$VERSION tag on GitHub)
 # The worker refreshes this weekly from GitHub into its runtime dir; the bundle
-# is the offline fallback. Bump VERSION (and SHA512) to update.
+# is the offline fallback. Its first check downloads only Relics.json and
+# Components.json (~13 MB raw) and skips the full ~29 MB when their sha256 still
+# matches source_sha256. Bump VERSION (and SHA512) to update.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

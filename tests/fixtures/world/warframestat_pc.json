@@ -1,0 +1,147 @@
+{
+ "timestamp": "2026-10-17T12:00:00.000Z",
+ "earthCycle": {
+  "id": "earthCycle1792244400000",
+  "expiry": "2026-10-17T13:35:00.000Z",
+  "activation": "2026-10-17T09:35:00.000Z",
+  "isDay": true,
+  "state": "day",
+  "timeLeft": "1h 35m 0s"
+ },
+ "cetusCycle": {
+  "id": "cetusCycle",
+  "expiry": "2026-10-17T12:37:00.000Z",
+  "activation": "2026-10-17T11:47:00.000Z",
+  "isDay": false,
+  "state": "night",
+  "timeLeft": "37m 0s",
+  "isCetus": true,
+  "shortString": "37m to Day"
+ },
+ "zarimanCycle": {
+  "id": "zarimanCycle",
+  "bountiesEndDate": "2026-10-17T12:37:00.000Z",
+  "expiry": "2026-10-17T12:37:00.000Z",
+  "activation": "2026-10-17T10:07:00.000Z",
+  "isCorpus": false,
+  "state": "grineer",
+  "timeLeft": "37m 0s"
+ },
+ "duviriCycle": {
+  "id": "duviriCycle",
+  "state": "fear",
+  "choices": [
+   {
+    "category": "normal",
+    "categoryKey": "EXC_NORMAL",
+    "choices": [
+     "Saryn",
+     "Vauban",
+     "Nova"
+    ]
+   },
+   {
+    "category": "hard",
+    "categoryKey": "EXC_HARD",
+    "choices": [
+     "Lex",
+     "Magistar",
+     "Boltor",
+     "Bronco",
+     "Ceramic Dagger"
+    ]
+   }
+  ]
+ },
+ "invasions": [
+  {
+   "id": "wfs-inv-1",
+   "node": "Casta (Ceres)",
+   "desc": "Corpus Siege",
+   "completed": false,
+   "completion": 43.04,
+   "vsInfestation": false,
+   "attacker": {
+    "faction": "Grineer",
+    "reward": {
+     "items": [],
+     "countedItems": [
+      {
+       "count": 1,
+       "type": "Dera Vandal Barrel"
+      }
+     ],
+     "credits": 0
+    }
+   },
+   "defender": {
+    "faction": "Corpus",
+    "reward": {
+     "items": [],
+     "countedItems": [
+      {
+       "count": 3,
+       "type": "Fieldron"
+      }
+     ],
+     "credits": 0
+    }
+   }
+  },
+  {
+   "id": "wfs-inv-2",
+   "node": "Tharsis (Mars)",
+   "completed": true,
+   "completion": 100
+  }
+ ],
+ "syndicateMissions": [
+  {
+   "id": "wfs-sm-1",
+   "syndicate": "Ostrons",
+   "syndicateKey": "Ostrons",
+   "expiry": "2026-10-17T12:37:00.000Z",
+   "jobs": [
+    {
+     "type": "Capture the Grineer Commander",
+     "enemyLevels": [
+      5,
+      15
+     ],
+     "standingStages": [
+      430,
+      430,
+      430
+     ],
+     "minMR": 0
+    }
+   ]
+  },
+  {
+   "id": "wfs-sm-2",
+   "syndicate": "Entrati",
+   "syndicateKey": "Entrati",
+   "expiry": "2026-10-17T12:37:00.000Z",
+   "jobs": [
+    {
+     "type": "Exterminate the Infested",
+     "enemyLevels": [
+      15,
+      25
+     ],
+     "standingStages": [
+      1000,
+      1000
+     ],
+     "minMR": 0
+    }
+   ]
+  },
+  {
+   "id": "wfs-sm-3",
+   "syndicate": "Arbiters of Hexis",
+   "syndicateKey": "Arbiters of Hexis",
+   "jobs": []
+  }
+ ]
+}

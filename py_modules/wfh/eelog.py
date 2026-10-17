@@ -202,6 +202,9 @@ def _reset_discovery() -> None:
 
 # ---- echo pairing (missionRewardsIpc.ts isEcho, generalised) -----------------
 
+# Shortest real-time payload that may pair with a longer file line by suffix.
+SUFFIX_MIN_LEN = 12
+
 def line_text(line: str) -> tuple[str | None, str]:
     """(uptime stamp, text without it) of an EE.log line or a debugstr payload."""
     m = _UPTIME_STAMP.match(line)
@@ -239,10 +242,14 @@ class EchoFilter:
         if not text:
             return False
         seen = self._seen.get(text)
-        if seen is None and len(text) >= 12:
-            # A payload logged without its channel prefix still pairs by suffix.
+        if seen is None and len(text) > SUFFIX_MIN_LEN:
+            # A payload logged without its channel prefix still pairs by suffix, but
+            # only a long one that starts right after the prefix (": " or " "), so
+            # a short payload cannot swallow unrelated lines ending in its text.
             for key, rows in self._seen.items():
-                if text.endswith(key) and any(r["source"] == REALTIME and not r["paired"] for r in rows):
+                if (len(key) >= SUFFIX_MIN_LEN and len(text) > len(key) and text.endswith(key)
+                        and text[-len(key) - 1] in " :"
+                        and any(r["source"] == REALTIME and not r["paired"] for r in rows)):
                     seen = rows
                     break
         if seen is None:
@@ -256,6 +263,41 @@ class EchoFilter:
             original["paired"] = True
             seen.append({"source": FILE, "stamp": stamp, "at": now, "paired": True})
         return original is not None
+
+
+# ---- file lag (services/eeUptime.ts) -------------------------------------------
+
+_UPTIME_PREFIX = re.compile(r"^(\d+)\.(\d{3}) ")
+
+
+class UptimeTracker:
+    """How late a file line arrived: wall clock minus the game-uptime stamp, against
+    the smallest such offset seen (the promptest flush). Seconds throughout.
+    Feed it file lines only: a real-time line running ahead would look like a
+    game restart."""
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self._offset: float | None = None
+        self._last_uptime = 0.0
+        self._last_staleness = 0.0
+
+    def observe(self, line: str, now: float) -> float:
+        """Staleness of line; unstamped rows inherit the current batch delay."""
+        m = _UPTIME_PREFIX.match(line)
+        if not m:
+            return self._last_staleness
+        uptime = int(m.group(1)) + int(m.group(2)) / 1000
+        if uptime < self._last_uptime - 5.0:
+            self._offset = None  # game restarted
+        self._last_uptime = uptime
+        offset = now - uptime
+        if self._offset is None or offset < self._offset:
+            self._offset = offset
+        self._last_staleness = max(0.0, offset - self._offset)
+        return self._last_staleness
 
 
 # ---- the tailer --------------------------------------------------------------

@@ -338,3 +338,45 @@ def test_ui_scale_from_file():
     assert info["scale"] == 0.87  # last occurrence wins, rounded to 2 dp
     assert info["mode"] == "DSM_CUSTOM" and info["reason"] == "custom"
     assert eecfg.ui_scale("/nonexistent/EE.cfg") is None
+
+
+def test_eelog_status_rpc(app):
+    import asyncio
+
+    from wfh import rpc
+
+    st = asyncio.run(rpc.call_local("eelog.status"))
+    assert {"proton_log", "realtime_active", "launch_option_set", "ui_scale"} <= set(st)
+
+
+def test_suffix_pairing_needs_long_key_on_a_boundary():
+    clock = Clock()
+    t, merged, _, _ = _tailer(clock)
+    t._echoes.note_realtime("Got rewards", clock.t)  # short payload: exact match only
+    clock.t += 2
+    t.feed("5.000 Script [Info]: Inventory: Got rewards")
+    assert merged[-1] == "5.000 Script [Info]: Inventory: Got rewards"
+    long_key = "EOM missionLocationUnlocked=1"
+    t._echoes.note_realtime(long_key, clock.t)
+    t.feed("6.000 Sys [Info]: XEOM missionLocationUnlocked=1")  # not on a boundary
+    assert merged[-1] == "6.000 Sys [Info]: XEOM missionLocationUnlocked=1"
+    n = len(merged)
+    t.feed("6.100 Sys [Info]: EOM missionLocationUnlocked=1")  # prefix-less payload: echo
+    assert len(merged) == n and t.echoes_dropped == 1
+
+
+def test_uptime_tracker_estimates_file_lag():
+    tr = eelog.UptimeTracker()
+    assert tr.observe("100.000 Sys [Info]: a", 1000.0) == 0.0  # first line sets the offset
+    assert tr.observe("101.000 Sys [Info]: b", 1001.0) == 0.0
+    assert tr.observe("110.000 Sys [Info]: c", 1030.0) == pytest.approx(20.0)  # flushed 20 s late
+    assert tr.observe("no stamp", 1031.0) == pytest.approx(20.0)  # inherits the batch delay
+    assert tr.observe("5.000 Sys [Info]: restarted", 2000.0) == 0.0  # uptime went back: reset
+
+
+def test_proton_log_path_follows_game_env(fake_home):
+    env = {"SteamGameId": "3141592653", "HOME": "/home/deck"}
+    assert protonlog.resolve_proton_log_path(env=env) == "/home/deck/steam-3141592653.log"
+    env["PROTON_LOG_DIR"] = "/tmp/pl"
+    assert protonlog.resolve_proton_log_path(env=env) == "/tmp/pl/steam-3141592653.log"
+    assert protonlog.resolve_proton_log_path(env=None) == str(fake_home / "steam-230410.log")

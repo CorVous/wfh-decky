@@ -17,21 +17,36 @@ this port asks v2 first:
    (``closed-volume-average-48h-v1``, config/shared/wfmStats.ts), which also
    yields ``volume``. Prices from it carry ``source == "stats"``.
 
+Which orders count: with ``rank=None`` only unranked or rank-0 orders are
+priced (WFHelper's pooled-rank rule, the same one the statistics fallback
+uses), and ``/top`` is asked for ``?rank=0`` when the catalog says the item is
+rankable. ``*_relic`` slugs price the intact refinement: a missing subtype
+counts as intact (data-sources.md §1.4.2), radiant listings are dropped.
+
 Pacing: every request goes through net.fetch, whose per-host throttle keeps
 api.warframe.market at <= 3 req/s (0.35 s gap) and backs off on 429.
+Transport errors are not retried per request; instead the first timeout,
+refused connection or 5xx marks the host down for ERROR_COOLDOWN and every
+request in that window answers from cache at once (WFHelper's scheduler-wide
+degraded state, data-sources.md §1.3). That keeps a 100-slug relic-planner
+lookup from costing minutes while the Deck is offline.
 Caching: prices are fresh for 30 min in memory and on disk
 (``<runtime>/market/prices.json``) so a restart does not refetch; the item
-catalog (``/v2/items``, a few MB) is cached 24 h by net.get_json.
+catalog (``/v2/items``, a few MB) is cached 24 h by net.get_json. An expired
+price is still served when a refetch fails.
 """
 
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import queue
 import statistics
+import tempfile
 import threading
 import time
+import urllib.error
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Iterable
@@ -53,6 +68,9 @@ CATALOG_RETRY_BLOCK = 15     # wfmCatalog.ts: retry blocked 15 s after a failure
 STATS_WINDOW = 48 * 3600
 PRICE_OUTLIER_FACTOR = 10
 EXCLUDED_SLUGS = {"vendor_relic"}
+REQUEST_TIMEOUT = 10
+SAVE_DEBOUNCE = 5
+PRICES_RPC_DEADLINE = 20     # market.prices answers within ~this; the rest arrive as events
 _now = time.time  # patched by tests to replay recorded statistics
 
 
@@ -84,6 +102,10 @@ class Price:
         return cls(d.get("median"), d.get("low_sell"), d.get("volume"), float(d.get("fetched_at") or 0),
                    d.get("slug") or "", d.get("rank"), d.get("high_buy"), d.get("source") or "top",
                    int(d.get("sellers") or 0))
+
+
+class MarketUnavailable(RuntimeError):
+    """api.warframe.market is marked down; no request was made."""
 
 
 @dataclass
@@ -165,8 +187,12 @@ def normalize_catalog_item(raw: dict) -> CatalogItem | None:
     )
 
 
-def normalize_orders(payload: Any, side: str, rank: int | None = None, limit: int = 500) -> list[dict]:
-    """wfmOrders.ts normalizeWfmOrderBookSide for v1 or v2 order rows."""
+def normalize_orders(payload: Any, side: str, rank: int | None = None, limit: int = 500,
+                     subtype: str | None = None) -> list[dict]:
+    """wfmOrders.ts normalizeWfmOrderBookSide for v1 or v2 order rows.
+
+    With a subtype filter (relics) an order without a subtype counts as intact.
+    """
     rows: Any = payload
     if isinstance(payload, dict):
         data = payload.get("data")
@@ -195,7 +221,11 @@ def normalize_orders(payload: Any, side: str, rank: int | None = None, limit: in
         r = int(r) if isinstance(r, (int, float)) and not isinstance(r, bool) and r >= 0 else None
         if rank is not None and r != rank:
             continue
-        if rank is None and str(o.get("subtype") or "").lower() == "atragraph":
+        sub = str(o.get("subtype") or "").lower()
+        if subtype is not None:
+            if (sub or "intact") != subtype:
+                continue
+        elif rank is None and sub == "atragraph":
             continue
         user = o.get("user") or {}
         uname = user.get("ingameName") or user.get("ingame_name") or ""
@@ -236,6 +266,11 @@ def _parse_time(v: Any) -> float | None:
         return datetime.fromisoformat(v.replace("Z", "+00:00")).timestamp()
     except ValueError:
         return None
+
+
+def unranked(orders: list[dict]) -> list[dict]:
+    """Price pool for rank=None: unranked or rank-0 orders only (WFHelper _pooled_rank)."""
+    return [o for o in orders if o.get("rank") in (None, 0)]
 
 
 def _pooled_rank(row: dict, rank: int | None) -> tuple[bool, int | None]:
@@ -335,6 +370,9 @@ class Market:
         self._queue: queue.Queue = queue.Queue()
         self._queued: set[str] = set()
         self._worker: threading.Thread | None = None
+        self._host_down_until = 0.0
+        self._save_lock = threading.Lock()
+        self._flush_timer: threading.Timer | None = None
 
     # headers / keys
     def headers(self) -> dict:
@@ -348,8 +386,36 @@ class Market:
         h = self.headers()
         return f"{h['Platform']}|{h['Crossplay']}|{slug}|{'' if rank is None else rank}"
 
-    def _get(self, url: str) -> Any:
-        return json.loads(net.fetch(url, headers=self.headers(), timeout=20))
+    def host_down(self) -> bool:
+        return time.time() < self._host_down_until
+
+    def _mark_down(self, err: Exception) -> None:
+        if not self.host_down():
+            _log.warning("warframe.market unreachable (%s); serving cache for %ds", err, ERROR_COOLDOWN)
+        self._host_down_until = time.time() + ERROR_COOLDOWN
+
+    @staticmethod
+    def _is_transport_error(e: Exception, http: bool = True) -> bool:
+        """Unreachable host (always), or with http also a 5xx / exhausted 429."""
+        if isinstance(e, net.HttpError):
+            return http and (e.status >= 500 or e.status == 429)
+        return isinstance(e, (urllib.error.URLError, TimeoutError, OSError))
+
+    def _get(self, url: str, trip_on_http: bool = True) -> Any:
+        """One request, no transport retries; a transport error trips the host-wide circuit.
+
+        trip_on_http=False lets one endpoint's 5xx through to its fallback (/top -> v1
+        statistics) without marking the whole host down.
+        """
+        if self.host_down():
+            raise MarketUnavailable(url)
+        try:
+            body = net.fetch(url, headers=self.headers(), timeout=REQUEST_TIMEOUT, retry_network=False)
+        except Exception as e:
+            if self._is_transport_error(e, trip_on_http):
+                self._mark_down(e)
+            raise
+        return json.loads(body)
 
     # disk cache
     def _disk_path(self) -> str | None:
@@ -374,25 +440,43 @@ class Market:
                 self._prices[key] = (ts, Price.from_json(v["p"]) if v.get("p") else None)
 
     def _save_disk(self, force: bool = False) -> None:
-        """Debounced: a prefetch of hundreds of slugs rewrites the file every 5 s, not per slug."""
+        """Debounced: a prefetch of hundreds of slugs rewrites the file every 5 s, not per slug.
+
+        A skipped write arms a timer so the last prices of a burst still reach disk.
+        """
         path = self._disk_path()
-        now = time.time()
-        if not path or (not force and now - self._last_save < 5):
-            self._dirty = bool(path)
+        if not path:
             return
-        self._last_save, self._dirty = now, False
-        cutoff = time.time() - PRICE_TTL
-        with self._lock:
-            data = {k: {"t": ts, "p": p.to_json() if p else None}
-                    for k, (ts, p) in self._prices.items() if ts >= cutoff}
-        try:
-            os.makedirs(self.cache_dir, exist_ok=True)
-            tmp = path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f, separators=(",", ":"))
-            os.replace(tmp, path)
-        except OSError as e:
-            _log.warning("price cache write failed: %s", e)
+        with self._save_lock:
+            now = time.time()
+            if not force and now - self._last_save < SAVE_DEBOUNCE:
+                self._dirty = True
+                if self._flush_timer is None or not self._flush_timer.is_alive():
+                    self._flush_timer = threading.Timer(SAVE_DEBOUNCE, self.flush)
+                    self._flush_timer.daemon = True
+                    self._flush_timer.start()
+                return
+            self._last_save, self._dirty = now, False
+            cutoff = now - PRICE_TTL
+            with self._lock:
+                data = {k: {"t": ts, "p": p.to_json() if p else None}
+                        for k, (ts, p) in self._prices.items() if ts >= cutoff}
+            tmp = None
+            try:
+                os.makedirs(self.cache_dir, exist_ok=True)
+                fd, tmp = tempfile.mkstemp(prefix=".prices.", suffix=".tmp", dir=self.cache_dir)
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    json.dump(data, f, separators=(",", ":"))
+                os.replace(tmp, path)
+                tmp = None
+            except OSError as e:
+                _log.warning("price cache write failed: %s", e)
+            finally:
+                if tmp:
+                    try:
+                        os.unlink(tmp)
+                    except OSError:
+                        pass
 
     # catalog
     def catalog(self) -> list[CatalogItem]:
@@ -403,12 +487,17 @@ class Market:
             if time.time() - self._cat_failed_at < CATALOG_RETRY_BLOCK:
                 return []
             try:
+                if self.host_down():
+                    raise MarketUnavailable("host marked down")
                 raw = net.get_json(f"{API}/v2/items", max_age=CATALOG_TTL,
-                                   headers={"Accept": "application/json", "Language": "en"})
+                                   headers={"Accept": "application/json", "Language": "en"},
+                                   timeout=REQUEST_TIMEOUT, retry_network=False)
                 rows = unwrap(raw)
                 if not isinstance(rows, list) or not rows:
                     raise ValueError("empty catalog")
             except Exception as e:  # noqa: BLE001 - offline is normal on a Deck
+                if self._is_transport_error(e):
+                    self._mark_down(e)
                 _log.warning("WFM catalog unavailable: %s", e)
                 self._cat_failed_at = time.time()
                 return []
@@ -490,13 +579,20 @@ class Market:
             return True, ent[1]
         return False, None
 
-    def price(self, slug: str, rank: int | None = None, max_age: float = PRICE_TTL) -> Price | None:
+    def price(self, slug: str, rank: int | None = None, max_age: float = PRICE_TTL,
+              force: bool = False) -> Price | None:
+        """Cached price, else one network read; on failure the last known (expired) price.
+
+        force skips the freshness check (orders() uses it so orders and price agree) but
+        never discards the cached price: a failed refetch still answers with it.
+        """
         slug = (names.normalize_wfm_slug(slug) or "") if slug else ""
         if not slug or is_excluded(slug):
             return None
-        hit, p = self.cached(slug, rank, max_age)
-        if hit:
-            return p
+        if not force:
+            hit, p = self.cached(slug, rank, max_age)
+            if hit:
+                return p
         key = self._key(slug, rank)
         with self._lock:
             ev = self._inflight.get(key)
@@ -505,9 +601,10 @@ class Market:
                 ev = self._inflight[key] = threading.Event()
         if not owner:
             ev.wait(45)
-            return self.cached(slug, rank, max_age)[1]
+            hit, p = self.cached(slug, rank, max_age)
+            return p if hit else self._stale(key)
         try:
-            if time.time() < self._cooldown.get(key, 0):
+            if time.time() < self._cooldown.get(key, 0) or self.host_down():
                 return self._stale(key)
             return self._fetch_price(slug, rank, key)
         finally:
@@ -530,12 +627,20 @@ class Market:
         self._save_disk()
 
     def _fetch_price(self, slug: str, rank: int | None, key: str) -> Price | None:
-        q = "?" + urlencode({"rank": rank}) if rank is not None else ""
+        q_rank = rank
+        if rank is None:
+            cat = self._cat_slug.get(slug) if self._catalog is not None else None
+            if cat is not None and cat.max_rank:
+                q_rank = 0  # rankable: ask for R0 listings rather than filtering a mixed top 5
+        q = "?" + urlencode({"rank": q_rank}) if q_rank is not None else ""
+        subtype = "intact" if slug.endswith("_relic") else None
         top_err: Exception | None = None
         try:
-            raw = self._get(f"{API}/v2/orders/item/{quote(slug)}/top{q}")
-            sells = normalize_orders(raw, "sell", rank)
-            buys = normalize_orders(raw, "buy", rank)
+            raw = self._get(f"{API}/v2/orders/item/{quote(slug)}/top{q}", trip_on_http=False)
+            sells = normalize_orders(raw, "sell", rank, subtype=subtype)
+            buys = normalize_orders(raw, "buy", rank, subtype=subtype)
+            if rank is None:
+                sells, buys = unranked(sells), unranked(buys)
             orders = {"sell": sells, "buy": buys}
             if sells:
                 units = [e["unit"] for e in sells]
@@ -573,8 +678,31 @@ class Market:
             self._cooldown[key] = time.time() + ERROR_COOLDOWN
         return self._stale(key)
 
-    def prices(self, slugs: Iterable[str], rank: int | None = None) -> dict[str, Price | None]:
-        return {s: self.price(s, rank) for s in dict.fromkeys(s for s in slugs if s)}
+    def prices(self, slugs: Iterable[str], rank: int | None = None,
+               deadline: float | None = None) -> dict[str, Price | None]:
+        """Prices keyed by the slugs as given.
+
+        With a deadline (seconds) slugs not reached in time answer with their last known
+        price (or None) and are queued for prefetch, which emits "market.price" events.
+        """
+        end = None if deadline is None else time.monotonic() + deadline
+        out: dict[str, Price | None] = {}
+        late: list[str] = []
+        for s in dict.fromkeys(s for s in slugs if s):
+            ns = names.normalize_wfm_slug(s) or ""
+            if ns and not is_excluded(ns):
+                hit, p = self.cached(ns, rank)
+                if hit:
+                    out[s] = p
+                    continue
+                if end is not None and time.monotonic() >= end:
+                    out[s] = self._stale(self._key(ns, rank))
+                    late.append(ns)
+                    continue
+            out[s] = self.price(s, rank)
+        if late:
+            self.prefetch(late, rank, notify=True)
+        return out
 
     def orders(self, slug: str, rank: int | None = None) -> dict:
         """Top online orders {"sell": [...], "buy": [...]} (fetched with the price)."""
@@ -585,16 +713,17 @@ class Market:
         with self._lock:
             ent = self._orders.get(key)
         if not ent or time.time() - ent[0] >= PRICE_TTL:
-            with self._lock:  # force a network read so orders and price agree
-                self._prices.pop(key, None)
-            self.price(slug, rank)
+            self.price(slug, rank, force=True)  # orders and price from the same read
             with self._lock:
                 ent = self._orders.get(key)
         return ent[1] if ent else {"sell": [], "buy": []}
 
     # background
-    def prefetch(self, slugs: Iterable[str], rank: int | None = None) -> int:
-        """Queue slugs that are not fresh; one daemon thread drains them at the throttle rate."""
+    def prefetch(self, slugs: Iterable[str], rank: int | None = None, notify: bool = False) -> int:
+        """Queue slugs that are not fresh; one daemon thread drains them at the throttle rate.
+
+        notify emits a "market.price" event {slug, rank, price} as each one lands.
+        """
         n = 0
         for s in dict.fromkeys(names.normalize_wfm_slug(x) or "" for x in slugs if x):
             if not s or is_excluded(s) or self.cached(s, rank)[0]:
@@ -604,7 +733,7 @@ class Market:
                 if k in self._queued:
                     continue
                 self._queued.add(k)
-            self._queue.put((s, rank, k))
+            self._queue.put((s, rank, k, notify))
             n += 1
         if n:
             self._ensure_worker()
@@ -620,14 +749,16 @@ class Market:
     def _drain(self) -> None:
         while True:
             try:
-                slug, rank, key = self._queue.get(timeout=0.5 if self._dirty else 30)
+                slug, rank, key, notify = self._queue.get(timeout=0.5 if self._dirty else 30)
             except queue.Empty:
                 if self._dirty:
                     self._save_disk(force=True)
                     continue
                 return
             try:
-                self.price(slug, rank)
+                p = self.price(slug, rank)
+                if notify:
+                    rpc.emit("market.price", {"slug": slug, "rank": rank, "price": p.to_json() if p else None})
             except Exception:  # noqa: BLE001
                 _log.exception("prefetch %s failed", slug)
             finally:
@@ -636,6 +767,7 @@ class Market:
                 self._queue.task_done()
 
     def flush(self) -> None:
+        """Write pending prices now (debounce timer, prefetch idle, worker exit)."""
         if self._dirty:
             self._save_disk(force=True)
 
@@ -700,8 +832,10 @@ def slug_for(key: str) -> str | None:
 
 
 def setup(app) -> None:
-    set_market(Market(os.path.join(app.runtime_dir, "market"), app.settings))
-    app.services["market"] = get()
+    m = Market(os.path.join(app.runtime_dir, "market"), app.settings)
+    set_market(m)
+    app.services["market"] = m
+    atexit.register(m.flush)  # the worker exits when main.py closes stdin
 
 
 @rpc.method("market.search")
@@ -717,8 +851,8 @@ async def _rpc_item(slug: str, rank: int | None = None) -> dict:
 
     def work() -> dict:
         m = get()
+        o = m.orders(slug, rank)  # first: a forced orders read also refreshes the price
         p = m.price(slug, rank)
-        o = m.orders(slug, rank)
         cat = m.lookup(slug)
         return {"slug": slug, "name": cat.name if cat else slug.replace("_", " ").title(),
                 "item": cat.to_json() if cat else None, "price": p.to_json() if p else None,
@@ -731,5 +865,5 @@ async def _rpc_item(slug: str, rank: int | None = None) -> dict:
 async def _rpc_prices(slugs: list[str], rank: int | None = None) -> dict:
     from ..app import get_app
 
-    out = await get_app().run_blocking(prices, slugs, rank)
+    out = await get_app().run_blocking(get().prices, slugs, rank, PRICES_RPC_DEADLINE)
     return {s: (p.to_json() if p else None) for s, p in out.items()}

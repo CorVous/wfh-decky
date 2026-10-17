@@ -82,6 +82,30 @@ def test_reward_pool(bundle):
     assert pool["Akstiletto Prime Blueprint"].rarity == "Rare"
 
 
+
+def test_non_part_rewards_have_no_parent(tmp_path):
+    """Kuva matches a catalog row with parentUniqueNames upstream; it is still not a part."""
+    full = items_mod.dir_reader(WFCD)
+    kuva = "/Lotus/Types/Items/MiscItems/Kuva"
+
+    def read(cat):
+        rows = full(cat)
+        if cat == "Resources":
+            rows = [r for r in rows or [] if r.get("uniqueName") != kuva]
+            rows.append({"uniqueName": kuva, "name": "Kuva", "tradable": False,
+                         "parentUniqueNames": ["/Lotus/Powersuits/Excalibur/ExcaliburUmbra"]})
+        return rows
+
+    items_mod.build_bundle(read, str(tmp_path / "b"), "v", "2026-10-08T00:00:00Z")
+    items_mod.set_data_dirs(str(tmp_path / "b"), None)
+    try:
+        pool = {i.name: i for i in items_mod.items().prime_parts()}
+        assert pool["1200X Kuva"].parent is None and pool["Riven Sliver"].parent is None
+        assert pool["Rhino Prime Blueprint"].parent  # real parts keep theirs
+    finally:
+        items_mod._dirs_override = None
+        items_mod.reset()
+
 def test_reward_vaulted_is_and_over_relics(bundle):
     db = items_mod.items()
     pool = {i.name: i for i in db.prime_parts()}
@@ -171,6 +195,8 @@ class FakeGithub:
             return 304, b"", etag
         path = os.path.join(WFCD, name)
         body = open(path, "rb").read() if os.path.exists(path) else b"[]"
+        if self.etag != "v1":
+            body += b"\n" * int(self.etag[1:])  # new upstream commit: same JSON, new bytes
         return 200, body, self.etag
 
 
@@ -200,12 +226,81 @@ def test_refresh_flow(bundle, monkeypatch):
     assert items_mod.refresh(fetch=gh)["status"] == "unchanged"
     assert gh.calls == [("Relics.json", "v1"), ("Components.json", "v1")]
 
+    # force checks now but still honours ETags; full rebuilds regardless.
+    gh.calls.clear()
+    assert items_mod.refresh(force=True, fetch=gh)["status"] == "unchanged" and len(gh.calls) == 2
+    gh.calls.clear()
+    assert items_mod.refresh(full=True, fetch=gh)["status"] == "updated"
+    assert len(gh.calls) == len(items_mod.SOURCE_FILES)
+
     # Upstream changed: full download again.
     gh.calls.clear()
     gh.etag = "v2"
     assert items_mod.refresh(force=False, fetch=gh)["status"] == "fresh"  # checked just now
     assert items_mod.refresh(force=True, fetch=gh)["status"] == "updated"
     assert len(gh.calls) == len(items_mod.SOURCE_FILES)
+
+
+def test_first_refresh_skips_download_when_bundle_matches(tmp_path, monkeypatch):
+    """fetch-data.sh records sha256 of Relics/Components; identical upstream costs two GETs."""
+    out = tmp_path / "bundle"
+    m = items_mod.build_bundle(items_mod.dir_reader(WFCD), str(out), "1.1276.18", "2026-10-08T19:33:06Z",
+                               source_hashes=items_mod.dir_hashes(WFCD))
+    assert set(m["source_sha256"]) == {"Relics", "Components"}
+    items_mod.set_data_dirs(str(out), str(tmp_path / "runtime"))
+    try:
+        gh = FakeGithub()
+        assert items_mod.refresh(fetch=gh)["status"] == "unchanged"
+        assert gh.calls == [("Relics.json", None), ("Components.json", None)]
+        assert items_mod.active_data_dir()[1] == "bundle"
+        gh.calls.clear()
+        assert items_mod.refresh(force=True, fetch=gh)["status"] == "unchanged"
+        assert gh.calls == [("Relics.json", "v1"), ("Components.json", "v1")]  # ETags kept
+        monkeypatch.setattr(items_mod, "MIN_REFRESH_RELICS", 1)
+        monkeypatch.setattr(items_mod, "MIN_REFRESH_ITEMS", 1)
+        gh.etag = "v3"
+        assert items_mod.refresh(force=True, fetch=gh)["status"] == "updated"
+    finally:
+        items_mod._dirs_override = None
+        items_mod.reset()
+
+
+def test_slim_rows_build_identical_bundle(tmp_path):
+    """The refresh's trimmed reader must not change a single output byte."""
+    full_reader = items_mod.dir_reader(WFCD)
+    a = items_mod.build_bundle(full_reader, str(tmp_path / "a"), "v", "2026-10-08T00:00:00Z")
+    b = items_mod.build_bundle(lambda c: items_mod.slim_rows(c, full_reader(c) or []), str(tmp_path / "b"),
+                               "v", "2026-10-08T00:00:00Z")
+    assert a["counts"] == b["counts"]
+    for f in (items_mod.ITEMS_FILE, items_mod.RELICS_FILE):
+        ja = items_mod.load_json_gz(str(tmp_path / "a"), f)
+        jb = items_mod.load_json_gz(str(tmp_path / "b"), f)
+        ja.pop("built_at"), jb.pop("built_at")
+        assert ja == jb
+
+
+def test_refresh_loop_rearms(monkeypatch):
+    calls = []
+    stop = __import__("threading").Event()
+    monkeypatch.setattr(items_mod, "REFRESH_FIRST_DELAY", 0)
+    monkeypatch.setattr(items_mod, "REFRESH_CHECK_EVERY", 0.01)
+
+    def fake_refresh():
+        calls.append(1)
+        if len(calls) == 2:
+            raise OSError("offline")  # a failure must not end the loop
+        if len(calls) >= 4:
+            stop.set()
+        return {"status": "fresh"}
+
+    monkeypatch.setattr(items_mod, "refresh", fake_refresh)
+    monkeypatch.setattr(items_mod.os, "nice", lambda n: 0)
+
+    class FakeApp:
+        settings = {"data_auto_refresh": True}
+
+    items_mod._refresh_loop(FakeApp, stop)
+    assert len(calls) == 4
 
 
 def test_refresh_rejects_tiny_upstream(bundle):
@@ -308,6 +403,38 @@ def test_structural_boosts():
         assert r[0].name == "Wukong Prime Chassis Blueprint" and r[0].confidence >= 0.92, read
     amb = pool("Wukong Prime Chassis Blueprint", "Yareli Prime Chassis Blueprint")
     assert all(c.confidence < 0.92 for c in top("Prime Chassis Blueprint", amb, 4))
+
+
+def test_slot_gate_is_mode_dependent():
+    """isUsableSlotCandidate (relic-rewards.md §7.2), incl. 'keeps ambiguous prefixes below the slot gate'."""
+    braton = [{"name": n} for n in ("Braton Prime Stock", "Braton Prime Blueprint", "Braton Prime Receiver",
+                                     "Braton Prime Barrel")]
+    ranked = rank_candidates("Braton Prime", braton, 4)
+    assert ranked and not any(names.is_usable_slot_candidate(c) for c in ranked)
+    usable, near = names.best_slot_candidate("Braton Prime", braton)
+    assert usable is None and near is not None and near.confidence >= names.SUBSTRING_SCORE_FLOOR
+    yareli = [{"name": "Yareli Prime Chassis Blueprint"}, {"name": "Yareli Prime Blueprint"},
+              {"name": "Yareli Prime Systems Blueprint"}, {"name": "Yareli Prime Neuroptics Blueprint"}]
+    usable, _ = names.best_slot_candidate("Yareli Prime Chassis", yareli)
+    assert usable.name == "Yareli Prime Chassis Blueprint" and usable.mode == "substring"
+    C = names.Candidate
+    assert names.is_usable_slot_candidate(C({"name": "Ash Prime Blueprint"}, 0.98, 980, "exact"))
+    assert not names.is_usable_slot_candidate(C({"name": "Ash Prime Blueprint"}, 0.97, 970, "exact"))
+    assert not names.is_usable_slot_candidate(C({"name": "Ash Prime Blueprint"}, 0.91, 480, "substring"))
+    assert names.is_usable_slot_candidate(C({"name": "Ash Prime Blueprint"}, 0.86, 88, "fuzzy"))
+    # One short word: exact >= 0.99 only.
+    assert not names.is_usable_slot_candidate(C({"name": "Lohk"}, 0.98, 980, "exact"))
+    assert not names.is_usable_slot_candidate(C({"name": "Lohk"}, 0.95, 95, "fuzzy"))
+    assert names.is_usable_slot_candidate(C({"name": "Lohk"}, 1.0, 1000, "exact"))
+    assert not names.is_usable_slot_candidate(C(None, 1.0, 1000, "none"))
+
+
+def test_match_name_applies_slot_gate(bundle):
+    db = items_mod.items()
+    braton = [{"name": n} for n in ("Braton Prime Stock", "Braton Prime Blueprint", "Braton Prime Barrel")]
+    assert db.match_name("Braton Prime", braton) == (None, 0.0)  # ambiguous substring, < 0.92
+    item, conf = db.match_name("Braton Prime Barrel", braton)
+    assert item["name"] == "Braton Prime Barrel" and conf >= names.EXACT_SLOT_GATE
 
 
 def test_alias_table():

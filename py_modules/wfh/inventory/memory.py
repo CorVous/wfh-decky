@@ -19,7 +19,7 @@ import os
 import re
 import time
 from dataclasses import dataclass, field
-from typing import Iterable, Iterator, Protocol
+from typing import Callable, Iterable, Iterator, Protocol
 
 from .. import log
 from .payload import has_inventory_shape
@@ -521,7 +521,10 @@ class InventoryCollector:
     """Collects `LastInventorySync` anchors during a walk and parses the newest
     complete copy at the end."""
 
-    def __init__(self) -> None:
+    def __init__(self, defer: bool = False) -> None:
+        # defer: finish() keeps the anchors and extract() parses later, so a run
+        # that only needs the auth query skips the ~9 MB reads + JSON parse.
+        self.defer = defer
         self._candidates: list[Candidate] = []
         self._seen: set[int] = set()
         self._sync_times: set[int] = set()
@@ -573,10 +576,18 @@ class InventoryCollector:
         return self.copies == 0
 
     def finish(self, reader) -> None:
-        ordered = sorted(self._candidates, key=lambda c: sync_id_time(c.sync_id), reverse=True)
-        self._candidates = []
         self._seen = set()
         self._tail_region = None
+        if not self.defer:
+            self.extract(reader)
+
+    def has_candidates(self) -> bool:
+        return bool(self._candidates)
+
+    def extract(self, reader) -> None:
+        """Parse the newest complete copy among the collected anchors."""
+        ordered = sorted(self._candidates, key=lambda c: sync_id_time(c.sync_id), reverse=True)
+        self._candidates = []
         attempts = 0
         for cand in ordered:
             if self.newest and sync_id_time(cand.sync_id) <= self.newest.sync_time:
@@ -627,13 +638,47 @@ def read_game_inventory(pid: int | None = None, proc_root: str = "/proc") -> Gam
     return inventory_read_from(c, scan_process([c], pid, proc_root))
 
 
-def read_game(pid: int | None = None, proc_root: str = "/proc", want_inventory: bool = True
-              ) -> tuple[tuple[str | None, str], GameInventoryRead | None, ScanResult]:
-    """One walk for both: ((authz, reason), resident read or None, scan)."""
+def complete_deferred(collector: InventoryCollector, scan: ScanResult, proc_root: str = "/proc"
+                      ) -> GameInventoryRead:
+    """Extract a deferred collector's newest copy by reopening the same process.
+    The anchors' addresses may have moved since the walk; extract_candidate
+    validates each copy, so a stale anchor just yields no copy."""
+    if collector.has_candidates() and scan.failure is None and scan.pid:
+        base = os.path.join(proc_root, str(scan.pid))
+        try:
+            fd = os.open(os.path.join(base, "mem"), os.O_RDONLY)
+        except OSError as e:
+            _log.warning("deferred inventory read: cannot reopen game memory: %s", e)
+        else:
+            try:
+                with open(os.path.join(base, "maps"), encoding="utf-8", errors="replace") as f:
+                    maps = f.read().split("\n")
+                collector.extract(MemoryReader(fd, maps))
+            except OSError as e:
+                _log.warning("deferred inventory read failed: %s", e)
+            finally:
+                os.close(fd)
+    return inventory_read_from(collector, scan)
+
+
+def read_game(pid: int | None = None, proc_root: str = "/proc", want_inventory: bool = True,
+              defer_inventory: bool = False
+              ) -> tuple[tuple[str | None, str], GameInventoryRead | Callable[[], GameInventoryRead] | None,
+                         ScanResult]:
+    """One walk for both: ((authz, reason), resident read or None, scan).
+
+    defer_inventory: the resident part comes back as a zero-argument callable
+    that does the extraction only when called (the API fallback path)."""
     a = AuthzVisitor()
     visitors: list = [a]
-    c = InventoryCollector() if want_inventory else None
+    c = InventoryCollector(defer=defer_inventory) if want_inventory else None
     if c:
         visitors.append(c)
     scan = scan_process(visitors, pid, proc_root)
-    return a.result(scan), (inventory_read_from(c, scan) if c else None), scan
+    if c is None:
+        resident = None
+    elif defer_inventory and scan.failure is None:
+        resident = lambda: complete_deferred(c, scan, proc_root)  # noqa: E731
+    else:
+        resident = inventory_read_from(c, scan)
+    return a.result(scan), resident, scan

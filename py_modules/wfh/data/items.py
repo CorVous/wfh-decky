@@ -13,6 +13,7 @@ is read-only afterwards, so it is safe to share between threads.
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import os
 import shutil
@@ -45,8 +46,20 @@ SOURCE_FILES = CATEGORIES + ["Components", "Relics"]
 
 RAW_BASE = "https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json/"
 REFRESH_INTERVAL = 7 * 24 * 3600
-# Files whose ETags decide whether a refresh needs the full download.
+# How often the worker wakes to see whether REFRESH_INTERVAL has passed: a Deck
+# can stay up (sleep/resume) for weeks without restarting Decky.
+REFRESH_CHECK_EVERY = 12 * 3600
+REFRESH_FIRST_DELAY = 120
+# Files whose ETags (and sha256, recorded in the manifest as source_sha256)
+# decide whether a refresh needs the full download.
 _PROBE_FILES = ("Relics", "Components")
+# Source fields build_bundle reads; a refresh keeps only these per category so
+# ~29 MB of upstream JSON never sits in memory at once.
+_KEEP_ROW = frozenset({"uniqueName", "name", "tradable", "isPrime", "masteryReq", "type", "vaulted", "imageName",
+                       "components", "primeSellingPrice", "ducats", "parentUniqueNames", "marketInfo", "rewards",
+                       "dropCount"})
+_KEEP_COMPONENT = frozenset({"uniqueName", "name", "tradable", "itemCount", "imageName", "primeSellingPrice",
+                             "ducats"})
 # A refresh smaller than this is a broken upstream, not a game update.
 MIN_REFRESH_RELICS = 500
 MIN_REFRESH_ITEMS = 5000
@@ -196,12 +209,15 @@ class ItemDb:
         return names.rank_candidates(ocr_text, self._pool if pool is None else pool, limit)
 
     def match_name(self, ocr_text: str, pool: Iterable[Item] | None = None) -> tuple[Item | None, float]:
-        """Best reward-pool item for one OCR'd card title and its confidence (0..1).
+        """Best reward-pool item for one OCR'd card title that passes the slot gate.
 
-        Callers accept a read at names.SLOT_ACCEPT_CONFIDENCE (0.86) or above.
+        Applies names.is_usable_slot_candidate (mode-dependent: exact >= 0.98,
+        substring >= 0.92, fuzzy >= 0.86, short single words exact only), so a
+        returned item is already accepted; (None, 0.0) means no usable read. For the
+        near miss or the raw ranking use names.best_slot_candidate / rank_names.
         """
-        best = names.match_single(ocr_text, self._pool if pool is None else pool)
-        return best.item, best.confidence
+        usable, _ = names.best_slot_candidate(ocr_text, self._pool if pool is None else pool)
+        return (usable.item, usable.confidence) if usable else (None, 0.0)
 
     def search(self, query: str, limit: int = 20, tradable_only: bool = False) -> list[Item]:
         """Prefix matches first, then substring matches."""
@@ -365,11 +381,14 @@ def _parse_relic_name(name: str) -> tuple[str, str, str] | None:
 
 
 def build_bundle(read: Callable[[str], list | None], out_dir: str, version: str = "",
-                 source_time: str = "", source: str = "@wfcd/items") -> dict:
+                 source_time: str = "", source: str = "@wfcd/items",
+                 source_hashes: dict[str, str] | None = None) -> dict:
     """Trim WFCD category JSON into items.json.gz + relics.json.gz + manifest.json.
 
-    ``read(category)`` returns the parsed ``data/json/<category>.json`` list or None.
-    Returns the manifest.
+    ``read(category)`` returns the parsed ``data/json/<category>.json`` list or None;
+    each category is read once. ``source_hashes`` (sha256 of the raw probe files) is
+    read after all categories, so a streaming reader may fill it as it goes; the
+    runtime refresh compares it with upstream to skip identical data. Returns the manifest.
     """
     comps_raw = read("Components") or []
     relics_raw = read("Relics") or []
@@ -424,7 +443,10 @@ def build_bundle(read: Callable[[str], list | None], out_dir: str, version: str 
             pool = rewards.get(rname)
             if pool is None:
                 comp = catalog.get(uniq) or catalog.get(_component_alias(uniq)) or {}
-                parents = comp.get("parentUniqueNames") or []
+                # Only real parts have a parent set ("1200X Kuva" also matches some row
+                # with parentUniqueNames, but it is not an Excalibur Umbra part).
+                is_part = uniq in comp_ids or _component_alias(uniq) in comp_ids
+                parents = (comp.get("parentUniqueNames") or []) if is_part else []
                 rewards[rname] = {"name": rname, "uniqueName": uniq, "wfmSlug": slug, "rarity": rarity,
                                   "ducats": _ducats(it) or _ducats(comp), "vaulted": vaulted,
                                   "parent": parents[0] if parents else None,
@@ -508,6 +530,8 @@ def build_bundle(read: Callable[[str], list | None], out_dir: str, version: str 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     meta = {"schema": SCHEMA, "source": source, "version": version, "source_time": source_time or now,
             "built_at": now}
+    if source_hashes:
+        meta["source_sha256"] = dict(source_hashes)
     os.makedirs(out_dir, exist_ok=True)
     sizes = {}
     for fname, body in ((ITEMS_FILE, {**meta, "items": out_items, "rewards": out_rewards}),
@@ -533,6 +557,37 @@ def _component_alias(u: str) -> str:
 
 def _blueprint_alias(u: str) -> str:
     return u[: -len("Component")] + "Blueprint" if u.endswith("Component") else u
+
+
+def slim_rows(cat: str, rows: Any) -> list:
+    """Keep only what build_bundle reads (relic drop lists become dropCount)."""
+    out = []
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, dict):
+            continue
+        slim = {k: v for k, v in row.items() if k in _KEEP_ROW}
+        if cat == "Relics" and "dropCount" not in slim:
+            slim["dropCount"] = len(row.get("drops") or [])
+        if isinstance(slim.get("components"), list):
+            slim["components"] = [{k: v for k, v in c.items() if k in _KEEP_COMPONENT}
+                                  for c in slim["components"] if isinstance(c, dict)]
+        out.append(slim)
+    return out
+
+
+def sha256_hex(body: bytes) -> str:
+    return hashlib.sha256(body).hexdigest()
+
+
+def dir_hashes(json_dir: str) -> dict[str, str]:
+    """sha256 of the probe files in a WFCD data/json dir (fetch-data.sh baseline)."""
+    out = {}
+    for cat in _PROBE_FILES:
+        path = os.path.join(json_dir, f"{cat}.json")
+        if os.path.exists(path):
+            with open(path, "rb") as f:
+                out[cat] = sha256_hex(f.read())
+    return out
 
 
 def dir_reader(json_dir: str) -> Callable[[str], list | None]:
@@ -589,12 +644,19 @@ _refresh_lock = threading.Lock()
 
 
 def refresh(force: bool = False, base_url: str = RAW_BASE,
-            fetch: Callable[[str, str | None], tuple[int, bytes, str | None]] | None = None) -> dict:
+            fetch: Callable[[str, str | None], tuple[int, bytes, str | None]] | None = None,
+            full: bool = False) -> dict:
     """Weekly update from WFCD's GitHub JSON into <runtime_dir>/data.
 
-    Probes Relics/Components with ETags first so an unchanged week costs two
-    304s; otherwise downloads every category (~25 MB), rebuilds and swaps the
-    directory atomically. Any failure leaves the current data in place.
+    Probes Relics/Components first: a 304 on the stored ETag, or a body whose
+    sha256 matches the active data's manifest (the bundle records it), means
+    nothing changed, so an unchanged week costs two 304s and the very first
+    check costs those two files instead of all ~25 MB. Otherwise every category
+    is downloaded one at a time, trimmed (slim_rows) and the bundle rebuilt and
+    swapped in atomically. Any failure leaves the current data in place.
+
+    force skips the weekly interval but still honours ETags and hashes; full
+    rebuilds from a fresh download regardless.
     """
     fetch = fetch or (lambda url, etag: _get(url, etag))
     _, runtime = _dirs()
@@ -604,33 +666,45 @@ def refresh(force: bool = False, base_url: str = RAW_BASE,
         return {"status": "busy"}
     try:
         state = _read_state(runtime)
-        if not force and time.time() - float(state.get("checked_at", 0)) < REFRESH_INTERVAL:
+        if not (force or full) and time.time() - float(state.get("checked_at", 0)) < REFRESH_INTERVAL:
             return {"status": "fresh", "checked_at": state.get("checked_at")}
         etags: dict = dict(state.get("etags") or {})
-        changed = force or _read_manifest(runtime) is None
+        active, _ = active_data_dir()
+        baseline: dict = (_read_manifest(active) or {}).get("source_sha256") or {}
+        hashes: dict[str, str] = {}
         probed: dict[str, bytes] = {}
+        changed = full
         if not changed:
             for cat in _PROBE_FILES:
                 status, body, tag = fetch(base_url + f"{cat}.json", etags.get(cat))
-                if status != 304:
+                if status == 304:
+                    if baseline.get(cat):
+                        hashes[cat] = baseline[cat]
+                    continue
+                etags[cat] = tag
+                hashes[cat] = sha256_hex(body)
+                probed[cat] = body
+                if hashes[cat] != baseline.get(cat):
                     changed = True
-                    probed[cat] = body
-                    etags[cat] = tag
         if not changed:
-            state["checked_at"] = time.time()
+            state["etags"], state["checked_at"] = etags, time.time()
             _write_state(runtime, state)
             return {"status": "unchanged"}
 
-        docs: dict[str, list] = {}
-        for cat in SOURCE_FILES:
-            body = probed.get(cat)
+        def read(cat: str) -> list:
+            body = probed.pop(cat, None)
             if body is None:
                 _, body, tag = fetch(base_url + f"{cat}.json", None)
                 etags[cat] = tag
-            docs[cat] = json.loads(body)
+                if cat in _PROBE_FILES:
+                    hashes[cat] = sha256_hex(body)
+            return slim_rows(cat, json.loads(body))
+
         tmp_dir = runtime + ".new"
         shutil.rmtree(tmp_dir, ignore_errors=True)
-        manifest = build_bundle(docs.get, tmp_dir, version="github-master", source="WFCD/warframe-items@master")
+        manifest = build_bundle(read, tmp_dir, version="github-master", source="WFCD/warframe-items@master",
+                                source_hashes=hashes)
+        probed.clear()
         if manifest["counts"]["relics"] < MIN_REFRESH_RELICS or manifest["counts"]["items"] < MIN_REFRESH_ITEMS:
             raise ValueError(f"refusing suspicious refresh: {manifest['counts']}")
         old = runtime + ".old"
@@ -657,11 +731,25 @@ def status() -> dict:
 
 # ---- worker wiring -----------------------------------------------------
 
-def setup(app) -> None:
-    def kick() -> None:
+def _refresh_loop(app, stop: threading.Event) -> None:
+    """Dedicated low-priority thread: wakes every REFRESH_CHECK_EVERY, refresh() gates weekly."""
+    try:
+        os.nice(10)  # per-thread on Linux; never compete with the game for CPU
+    except OSError:
+        pass
+    if stop.wait(REFRESH_FIRST_DELAY):
+        return
+    while True:
         if app.settings.get("data_auto_refresh", True):
-            app.submit(refresh)
+            try:
+                refresh()
+            except Exception as e:  # noqa: BLE001 - offline is normal; try again next wake
+                _log.warning("game data refresh failed: %s", e)
+        if stop.wait(REFRESH_CHECK_EVERY):
+            return
 
+
+def setup(app) -> None:
     app.services["items"] = items
     if os.environ.get("WFH_HEADLESS"):
         return  # tests and CLI runs never touch the network on their own
@@ -675,9 +763,9 @@ def setup(app) -> None:
     # Parse once up front so the first reward scan does not pay for it.
     app.submit(warm)
     # Late and in the background: never compete with plugin start or the game launch.
-    t = threading.Timer(120, kick)
-    t.daemon = True
-    t.start()
+    stop = threading.Event()
+    app.services["data_refresh_stop"] = stop
+    threading.Thread(target=_refresh_loop, args=(app, stop), name="wfh-data-refresh", daemon=True).start()
 
 
 @rpc.method("data.status")
@@ -691,10 +779,11 @@ async def _rpc_status() -> dict:
 
 
 @rpc.method("data.refresh")
-async def _rpc_refresh(force: bool = True) -> dict:
+async def _rpc_refresh(force: bool = True, full: bool = False) -> dict:
+    """force: check now (ETags still apply); full: re-download and rebuild everything."""
     from ..app import get_app
 
-    return await get_app().run_blocking(refresh, force)
+    return await get_app().run_blocking(lambda: refresh(force, full=full))
 
 
 @rpc.method("items.search")
@@ -711,7 +800,7 @@ def _main(argv: list[str]) -> int:
         print(_main.__doc__)
         return 2
     m = build_bundle(dir_reader(argv[1]), argv[2], argv[3] if len(argv) > 3 else "",
-                     argv[4] if len(argv) > 4 else "")
+                     argv[4] if len(argv) > 4 else "", source_hashes=dir_hashes(argv[1]))
     print(json.dumps(m, indent=1))
     return 0
 

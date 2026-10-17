@@ -1,0 +1,48 @@
+{
+ "expiry": 1792240620000,
+ "rot": "B",
+ "vaultRot": "C",
+ "zarimanFaction": "FC_CORPUS",
+ "bounties": {
+  "ZarimanSyndicate": [
+   {
+    "node": "SolNode230",
+    "challenge": "/Lotus/Types/Challenges/Zariman/ZarimanUseVoidRiftsEasy"
+   },
+   {
+    "node": "SolNode231"
+   },
+   {
+    "node": "SolNode232"
+   },
+   {
+    "node": "SolNode233"
+   },
+   {
+    "node": "SolNode235"
+   }
+  ],
+  "EntratiLabSyndicate": [
+   {
+    "node": "SolNode850"
+   },
+   {
+    "node": "SolNode851"
+   },
+   {
+    "node": "SolNode852"
+   }
+  ],
+  "HexSyndicate": [
+   {
+    "node": "SolNode858",
+    "ally": "/Lotus/Types/Enemies/1999/Allies/QuincyAllyAgent"
+   }
+  ],
+  "MadeUpSyndicate": [
+   {
+    "node": "SolNode1"
+   }
+  ]
+ }
+}

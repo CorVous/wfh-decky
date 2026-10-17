@@ -8,4 +8,4 @@ if [ ! -d "$ROOT/.devdeps/pytest" ]; then
   python3 -m pip install --quiet --target "$ROOT/.devdeps" pytest
 fi
 cd "$ROOT"
-PYTHONPATH="$ROOT/py_modules:$ROOT/.devdeps" WFH_HEADLESS=1 "$PY" -m pytest -q tests "$@"
+PYTHONPATH="$ROOT/py_modules:$ROOT/.devdeps" WFH_HEADLESS=1 "$PY" -m pytest -q "${@:-tests}"

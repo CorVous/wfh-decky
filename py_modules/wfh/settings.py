@@ -26,6 +26,7 @@ DEFAULTS: dict[str, Any] = {
     "inventory_mission_scan": True,  # read the resident inventory after each mission
     "debug_save_captures": False,
     "data_auto_refresh": True,  # weekly @wfcd item/relic refresh from GitHub
+    "world": {"enrich": True},  # oracle.browse.wf + warframestat.us cycle/bounty enrichment
 }
 
 

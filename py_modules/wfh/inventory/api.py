@@ -35,7 +35,9 @@ def fetch_inventory(authz: str, fetch: Callable[..., bytes] = net.fetch) -> tupl
     for host in HOSTS:
         url = inventory_url(host, authz)
         try:
-            body = fetch(url, headers=dict(HEADERS), timeout=NETWORK_TIMEOUT_S)
+            # One 30 s attempt per host, as WFHelper: net.fetch's transport retries
+            # would stretch this to minutes while the run lock is held.
+            body = fetch(url, headers=dict(HEADERS), timeout=NETWORK_TIMEOUT_S, retry_network=False)
         except net.HttpError as e:
             last = InventoryFetchError(f"{host} returned HTTP {e.status} ({len(e.body)} bytes)")
             _log.warning("%s", last)

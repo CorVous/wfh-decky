@@ -160,7 +160,86 @@ def challenge(path: str) -> tuple[str, str, int | None, int] | None:
 
 # ---- table build ----------------------------------------------------------
 
-_BEGIN = "# --- GENERATED BEGIN from warframe-public-export-plus 0.6.12 (python -m wfh.data.solnodes build)
+_BEGIN = "# --- GENERATED BEGIN"
+_END = "# --- GENERATED END"
+
+
+def _load(pep_dir: str, name: str) -> dict:
+    with open(os.path.join(pep_dir, name), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_tables(pep_dir: str) -> tuple[dict, dict, dict]:
+    regions = _load(pep_dir, "ExportRegions.json")
+    mts = _load(pep_dir, "ExportMissionTypes.json")
+    chal = _load(pep_dir, "ExportChallenges.json")
+    d = _load(pep_dir, "dict.en.json")
+
+    def res(v) -> str:
+        if not isinstance(v, str) or not v:
+            return ""
+        return v if not v.startswith("/") else (d.get(v) or "")
+
+    nodes = {}
+    for nid, r in regions.items():
+        name = res(r.get("name"))
+        if not name:
+            continue
+        mission = res(r.get("missionName"))
+        nodes[nid] = (name, res(r.get("systemName")), r.get("missionType") or "",
+                      title_case(mission) if mission else "", r.get("faction") or "",
+                      int(r.get("minEnemyLevel") or 0), int(r.get("maxEnemyLevel") or 0))
+    mission_types = {k: title_case(res(v.get("name"))) for k, v in mts.items() if res(v.get("name"))}
+    # Nightwave acts and 1999 calendar challenges: the only ones the world state names.
+    challenges = {}
+    for path, e in chal.items():
+        if "/Challenges/Seasons/" not in path and "/Challenges/Calendar1999/" not in path:
+            continue
+        title = res(e.get("name"))
+        if not title:
+            continue
+        desc_key = e.get("description") or (e.get("name") or "").replace("_Name", "_Description")
+        standing = e.get("standing")
+        challenges[path] = (title, res(desc_key), standing if isinstance(standing, int) and standing >= 0 else None,
+                            int(e.get("requiredCount") or 0))
+    return nodes, mission_types, challenges
+
+
+def _render(nodes: dict, mission_types: dict, challenges: dict, source: str) -> str:
+    out = [_BEGIN + f" from {source} (python -m wfh.data.solnodes build)", "# fmt: off",
+           "# node id: (name, system, MT_ type, mission label, faction, min level, max level)",
+           "NODES: dict[str, tuple[str, str, str, str, str, int, int]] = {"]
+    out += [f"    {k!r}: {tuple(v)!r}," for k, v in sorted(nodes.items())]
+    out += ["}", "", "MISSION_TYPES: dict[str, str] = {"]
+    out += [f"    {k!r}: {v!r}," for k, v in sorted(mission_types.items())]
+    out += ["}", "", "# challenge path: (title, description template, standing, required count)",
+            "CHALLENGES: dict[str, tuple[str, str, int | None, int]] = {"]
+    out += [f"    {k!r}: {tuple(v)!r}," for k, v in sorted(challenges.items())]
+    out += ["}", "# fmt: on", _END]
+    return "\n".join(out)
+
+
+def build(pep_dir: str) -> None:
+    try:
+        with open(os.path.join(pep_dir, "package.json"), encoding="utf-8") as f:
+            source = "warframe-public-export-plus " + json.load(f).get("version", "?")
+    except (OSError, ValueError):
+        source = "warframe-public-export-plus"
+    block = _render(*build_tables(pep_dir), source)
+    path = os.path.abspath(__file__)
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    # Anchor on line starts: the marker constants above contain the same text.
+    start = text.index("\n" + _BEGIN) + 1
+    end = text.index("\n" + _END, start) + 1 + len(_END)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text[:start] + block + text[end:])
+    os.replace(tmp, path)
+    print(f"wrote {path}")
+
+
+# --- GENERATED BEGIN from warframe-public-export-plus 0.6.12 (python -m wfh.data.solnodes build)
 # fmt: off
 # node id: (name, system, MT_ type, mission label, faction, min level, max level)
 NODES: dict[str, tuple[str, str, str, str, str, int, int]] = {
@@ -872,87 +951,6 @@ CHALLENGES: dict[str, tuple[str, str, int | None, int]] = {
     '/Lotus/Types/Challenges/Seasons/WeeklyHard/SeasonWeeklyHardZarimanBountyHunter': ('Zariman Bounty Hunter', 'Complete |COUNT| Bounties in the Zariman.', 7000, 4),
 }
 # fmt: on
-# --- GENERATED END"
-
-
-def _load(pep_dir: str, name: str) -> dict:
-    with open(os.path.join(pep_dir, name), encoding="utf-8") as f:
-        return json.load(f)
-
-
-def build_tables(pep_dir: str) -> tuple[dict, dict, dict]:
-    regions = _load(pep_dir, "ExportRegions.json")
-    mts = _load(pep_dir, "ExportMissionTypes.json")
-    chal = _load(pep_dir, "ExportChallenges.json")
-    d = _load(pep_dir, "dict.en.json")
-
-    def res(v) -> str:
-        if not isinstance(v, str) or not v:
-            return ""
-        return v if not v.startswith("/") else (d.get(v) or "")
-
-    nodes = {}
-    for nid, r in regions.items():
-        name = res(r.get("name"))
-        if not name:
-            continue
-        mission = res(r.get("missionName"))
-        nodes[nid] = (name, res(r.get("systemName")), r.get("missionType") or "",
-                      title_case(mission) if mission else "", r.get("faction") or "",
-                      int(r.get("minEnemyLevel") or 0), int(r.get("maxEnemyLevel") or 0))
-    mission_types = {k: title_case(res(v.get("name"))) for k, v in mts.items() if res(v.get("name"))}
-    # Nightwave acts and 1999 calendar challenges: the only ones the world state names.
-    challenges = {}
-    for path, e in chal.items():
-        if "/Challenges/Seasons/" not in path and "/Challenges/Calendar1999/" not in path:
-            continue
-        title = res(e.get("name"))
-        if not title:
-            continue
-        desc_key = e.get("description") or (e.get("name") or "").replace("_Name", "_Description")
-        standing = e.get("standing")
-        challenges[path] = (title, res(desc_key), standing if isinstance(standing, int) and standing >= 0 else None,
-                            int(e.get("requiredCount") or 0))
-    return nodes, mission_types, challenges
-
-
-def _render(nodes: dict, mission_types: dict, challenges: dict, source: str) -> str:
-    out = [_BEGIN + f" from {source} (python -m wfh.data.solnodes build)", "# fmt: off",
-           "# node id: (name, system, MT_ type, mission label, faction, min level, max level)",
-           "NODES: dict[str, tuple[str, str, str, str, str, int, int]] = {"]
-    out += [f"    {k!r}: {tuple(v)!r}," for k, v in sorted(nodes.items())]
-    out += ["}", "", "MISSION_TYPES: dict[str, str] = {"]
-    out += [f"    {k!r}: {v!r}," for k, v in sorted(mission_types.items())]
-    out += ["}", "", "# challenge path: (title, description template, standing, required count)",
-            "CHALLENGES: dict[str, tuple[str, str, int | None, int]] = {"]
-    out += [f"    {k!r}: {tuple(v)!r}," for k, v in sorted(challenges.items())]
-    out += ["}", "# fmt: on", _END]
-    return "\n".join(out)
-
-
-def build(pep_dir: str) -> None:
-    try:
-        with open(os.path.join(pep_dir, "package.json"), encoding="utf-8") as f:
-            source = "warframe-public-export-plus " + json.load(f).get("version", "?")
-    except (OSError, ValueError):
-        source = "warframe-public-export-plus"
-    block = _render(*build_tables(pep_dir), source)
-    path = os.path.abspath(__file__)
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
-    start = text.index(_BEGIN)
-    end = text.index(_END) + len(_END)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(text[:start] + block + text[end:])
-    os.replace(tmp, path)
-    print(f"wrote {path}")
-
-
-# --- GENERATED BEGIN
-NODES: dict[str, tuple[str, str, str, str, str, int, int]] = {}
-MISSION_TYPES: dict[str, str] = {}
-CHALLENGES: dict[str, tuple[str, str, int | None, int]] = {}
 # --- GENERATED END
 
 

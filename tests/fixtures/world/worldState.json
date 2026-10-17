@@ -1,0 +1,904 @@
+{
+ "WorldSeed": "fixture",
+ "Version": 10,
+ "MobileVersion": "1.0",
+ "BuildLabel": "2026.10.15.12.00/fixture",
+ "Time": 1792238400,
+ "Events": [],
+ "Goals": [],
+ "Alerts": [
+  {
+   "_id": {
+    "$oid": "6710aa01e1b2c3d4e5f60001"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792231200000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792317600000"
+    }
+   },
+   "MissionInfo": {
+    "missionType": "MT_TERRITORY",
+    "faction": "FC_CORPUS",
+    "location": "SolNode25",
+    "levelOverride": "/Lotus/Levels/Proc/Corpus/CorpusShipTerritory",
+    "enemySpec": "/Lotus/Types/Game/EnemySpecs/CorpusShipTerritoryC",
+    "minEnemyLevel": 1,
+    "maxEnemyLevel": 2,
+    "difficulty": 1,
+    "seed": 4242,
+    "missionReward": {
+     "credits": 50000,
+     "countedItems": [
+      {
+       "ItemType": "/Lotus/Types/Items/MiscItems/WaterFightBucks",
+       "ItemCount": 175
+      }
+     ],
+     "items": [
+      "/Lotus/StoreItems/Types/Items/MiscItems/MadeUpThing"
+     ]
+    }
+   },
+   "Tag": "WaterFight"
+  },
+  {
+   "_id": {
+    "$oid": "6710aa01e1b2c3d4e5f60002"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792130400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792216800000"
+    }
+   },
+   "MissionInfo": {
+    "missionType": "MT_RESCUE",
+    "faction": "FC_GRINEER",
+    "location": "SolNode15"
+   }
+  }
+ ],
+ "Sorties": [
+  {
+   "_id": {
+    "$oid": "6710b0000000000000000001"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792224000000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792310400000"
+    }
+   },
+   "Reward": "/Lotus/Types/Game/MissionDecks/SortieRewards",
+   "Seed": 33901,
+   "Boss": "SORTIE_BOSS_LEPHANTIS",
+   "ExtraDrops": [],
+   "Variants": [
+    {
+     "missionType": "MT_SURVIVAL",
+     "modifierType": "SORTIE_MODIFIER_ARMOR",
+     "node": "SolNode15",
+     "tileset": "GrineerGalleonTileset"
+    },
+    {
+     "missionType": "MT_EXTERMINATION",
+     "modifierType": "SORTIE_MODIFIER_MELEE_ONLY",
+     "node": "SolNode11",
+     "tileset": "GrineerSettlementTileset"
+    },
+    {
+     "missionType": "MT_DEFENSE",
+     "modifierType": "SORTIE_MODIFIER_MADE_UP",
+     "node": "SolNode63",
+     "tileset": "GrineerForestTileset"
+    }
+   ],
+   "Twitter": true
+  }
+ ],
+ "LiteSorties": [
+  {
+   "_id": {
+    "$oid": "6710b0000000000000000002"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791763200000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792368000000"
+    }
+   },
+   "Reward": "/Lotus/Types/Game/MissionDecks/ArchonSortieRewards",
+   "Seed": 7781,
+   "Boss": "SORTIE_BOSS_NIRA",
+   "Missions": [
+    {
+     "missionType": "MT_RESCUE",
+     "node": "SolNode25"
+    },
+    {
+     "missionType": "MT_SURVIVAL",
+     "node": "SolNode15"
+    },
+    {
+     "missionType": "MT_ASSASSINATION",
+     "node": "SolNode53"
+    }
+   ]
+  }
+ ],
+ "SyndicateMissions": [
+  {
+   "_id": {
+    "$oid": "6710c0000000000000000001"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792231620000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792240620000"
+    }
+   },
+   "Tag": "CetusSyndicate",
+   "Seed": 1111,
+   "Nodes": [],
+   "Jobs": [
+    {
+     "jobType": "/Lotus/Types/Gameplay/Eidolon/Jobs/AttritionBountyLib",
+     "rewards": "/Lotus/Types/Game/MissionDecks/EidolonJobMissionRewards/TierATableARewards",
+     "masteryReq": 0,
+     "minEnemyLevel": 5,
+     "maxEnemyLevel": 15,
+     "xpAmounts": [
+      430,
+      430,
+      430
+     ]
+    },
+    {
+     "jobType": "/Lotus/Types/Gameplay/Eidolon/Jobs/ReclamationBountyCap",
+     "rewards": "/Lotus/Types/Game/MissionDecks/EidolonJobMissionRewards/TierBTableARewards",
+     "masteryReq": 1,
+     "minEnemyLevel": 10,
+     "maxEnemyLevel": 30,
+     "xpAmounts": [
+      620,
+      620,
+      620
+     ]
+    },
+    {
+     "rewards": "/Lotus/Types/Game/MissionDecks/EidolonJobMissionRewards/NoJobType",
+     "masteryReq": 0
+    }
+   ]
+  },
+  {
+   "_id": {
+    "$oid": "6710c0000000000000000002"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792231620000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792240620000"
+    }
+   },
+   "Tag": "SolarisSyndicate",
+   "Seed": 2222,
+   "Nodes": [],
+   "Jobs": [
+    {
+     "jobType": "/Lotus/Types/Gameplay/Venus/Jobs/VenusSpyJobSpy",
+     "rewards": "/Lotus/Types/Game/MissionDecks/VenusJobMissionRewards/VenusTierATableARewards",
+     "masteryReq": 0,
+     "minEnemyLevel": 5,
+     "maxEnemyLevel": 15,
+     "xpAmounts": [
+      480,
+      480,
+      480
+     ]
+    }
+   ]
+  },
+  {
+   "_id": {
+    "$oid": "6710c0000000000000000003"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792231620000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792240620000"
+    }
+   },
+   "Tag": "ArbitersSyndicate",
+   "Seed": 3333,
+   "Nodes": [
+    "SolNode149"
+   ]
+  },
+  {
+   "_id": {
+    "$oid": "6710c0000000000000000004"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792130400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792231200000"
+    }
+   },
+   "Tag": "EntratiSyndicate",
+   "Seed": 4444,
+   "Jobs": [
+    {
+     "jobType": "/Lotus/Types/Gameplay/InfestedMicroplanet/Jobs/DeimosExcavateBounty",
+     "minEnemyLevel": 5,
+     "maxEnemyLevel": 15,
+     "xpAmounts": [
+      1
+     ]
+    }
+   ]
+  }
+ ],
+ "ActiveMissions": [
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000001"
+   },
+   "Region": 3,
+   "Seed": 1,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792237200000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792240860000"
+    }
+   },
+   "Node": "SolNode63",
+   "MissionType": "MT_CAPTURE",
+   "Modifier": "VoidT1"
+  },
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000002"
+   },
+   "Region": 9,
+   "Seed": 2,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792235400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792242600000"
+    }
+   },
+   "Node": "SolNode149",
+   "MissionType": "MT_DEFENSE",
+   "Modifier": "VoidT4",
+   "Hard": true
+  },
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000003"
+   },
+   "Region": 15,
+   "Seed": 3,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792237800000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792244100000"
+    }
+   },
+   "Node": "SolNode230",
+   "MissionType": "MT_CORRUPTION",
+   "Modifier": "VoidT2"
+  },
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000004"
+   },
+   "Region": 7,
+   "Seed": 4,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792227600000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792238340000"
+    }
+   },
+   "Node": "SolNode25",
+   "MissionType": "MT_TERRITORY",
+   "Modifier": "VoidT3"
+  },
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000005"
+   },
+   "Region": 19,
+   "Seed": 5,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792238100000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792245600000"
+    }
+   },
+   "Node": "SolNode707",
+   "MissionType": "MT_DEFENSE",
+   "Modifier": "VoidT5Hard"
+  },
+  {
+   "_id": {
+    "$oid": "6710d0000000000000000006"
+   },
+   "Region": 1,
+   "Seed": 6,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792238100000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792245600000"
+    }
+   },
+   "Node": "SolNode94",
+   "MissionType": "MT_SURVIVAL",
+   "Modifier": "SomethingElse"
+  }
+ ],
+ "VoidStorms": [
+  {
+   "_id": {
+    "$oid": "6710e0000000000000000001"
+   },
+   "Node": "CrewBattleNode515",
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792236600000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792242000000"
+    }
+   },
+   "ActiveMissionTier": "VoidT3"
+  },
+  {
+   "_id": {
+    "$oid": "6710e0000000000000000002"
+   },
+   "Node": "CrewBattleNode524",
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792236600000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792242000000"
+    }
+   },
+   "ActiveMissionTier": "VoidT2Hard"
+  },
+  {
+   "_id": {
+    "$oid": "6710e0000000000000000003"
+   },
+   "Node": "CrewBattleNode524",
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792236600000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792242000000"
+    }
+   },
+   "ActiveMissionTier": "Bogus"
+  }
+ ],
+ "Invasions": [
+  {
+   "_id": {
+    "$oid": "6710f0000000000000000001"
+   },
+   "Faction": "FC_GRINEER",
+   "DefenderFaction": "FC_CORPUS",
+   "Node": "SolNode149",
+   "Count": -4200,
+   "Goal": 30000,
+   "LocTag": "/Lotus/Language/Menu/CorpusInvasionGeneric",
+   "Completed": false,
+   "ChainID": {
+    "$oid": "c1"
+   },
+   "AttackerReward": {
+    "countedItems": [
+     {
+      "ItemType": "/Lotus/Types/Recipes/Weapons/WeaponParts/DeraVandalBarrel",
+      "ItemCount": 1
+     }
+    ]
+   },
+   "AttackerMissionInfo": {
+    "seed": 1,
+    "faction": "FC_CORPUS"
+   },
+   "DefenderReward": {
+    "countedItems": [
+     {
+      "ItemType": "/Lotus/Types/Items/Research/EnergyComponent",
+      "ItemCount": 3
+     }
+    ]
+   },
+   "DefenderMissionInfo": {
+    "seed": 2,
+    "faction": "FC_GRINEER"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792144800000"
+    }
+   }
+  },
+  {
+   "_id": {
+    "$oid": "6710f0000000000000000002"
+   },
+   "Faction": "FC_INFESTATION",
+   "DefenderFaction": "FC_CORPUS",
+   "Node": "SolNode125",
+   "Count": 18000,
+   "Goal": 20000,
+   "LocTag": "/Lotus/Language/Menu/InfestedInvasionGeneric",
+   "Completed": false,
+   "AttackerReward": [],
+   "DefenderReward": {
+    "countedItems": [
+     {
+      "ItemType": "/Lotus/Types/Items/Research/ChemComponent",
+      "ItemCount": 3
+     }
+    ],
+    "credits": 0
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792202400000"
+    }
+   }
+  },
+  {
+   "_id": {
+    "$oid": "6710f0000000000000000003"
+   },
+   "Faction": "FC_GRINEER",
+   "DefenderFaction": "FC_CORPUS",
+   "Node": "SolNode11",
+   "Count": 30000,
+   "Goal": 30000,
+   "Completed": true,
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792058400000"
+    }
+   }
+  }
+ ],
+ "VoidTraders": [
+  {
+   "_id": {
+    "$oid": "5d1e07a0a38e4a4fdd7cefca"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792166400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792339200000"
+    }
+   },
+   "Character": "Baro'Ki Teel",
+   "Node": "PlutoHUB",
+   "Manifest": [
+    {
+     "ItemType": "/Lotus/StoreItems/Upgrades/Mods/Warframe/AvatarShieldMaxMod",
+     "PrimePrice": 350,
+     "RegularPrice": 150000
+    },
+    {
+     "ItemType": "/Lotus/StoreItems/Types/Items/ShipDecos/Plushies/PlushyNecraLoid",
+     "PrimePrice": 100,
+     "RegularPrice": 50000
+    },
+    {
+     "ItemType": "/Lotus/StoreItems/Types/BoosterPacks/BaroTreasureBox",
+     "PrimePrice": 0,
+     "RegularPrice": 0
+    },
+    {
+     "ItemType": "/Lotus/StoreItems/Types/StoreItems/AvatarImages/AvatarImageBaroKiTeel",
+     "PrimePrice": 50,
+     "RegularPrice": 25000
+    },
+    {
+     "ItemType": "/Lotus/StoreItems/Types/Game/Projections/T1VoidProjectionGaussPrimeDBronze",
+     "PrimePrice": 25
+    },
+    {
+     "ItemType": "/Lotus/StoreItems/Weapons/Tenno/Rifle/Rifle",
+     "RegularPrice": 25000
+    }
+   ]
+  }
+ ],
+ "PrimeVaultTraders": [
+  {
+   "_id": {
+    "$oid": "pv1"
+   },
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791806400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792411200000"
+    }
+   },
+   "Node": "TennoConHUB2",
+   "Manifest": [
+    {
+     "ItemType": "/Lotus/StoreItems/Types/Items/MiscItems/Forma",
+     "PrimePrice": 2
+    }
+   ]
+  }
+ ],
+ "PrimeAccessAvailability": {
+  "State": "PRIME1"
+ },
+ "DailyDeals": [
+  {
+   "StoreItem": "/Lotus/StoreItems/Weapons/Tenno/Melee/Glaives/Boomerang/BoomerangWeapon",
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792216800000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792303200000"
+    }
+   },
+   "Discount": 50,
+   "OriginalPrice": 150,
+   "SalePrice": 75,
+   "AmountTotal": 300,
+   "AmountSold": 97
+  },
+  {
+   "StoreItem": "/Lotus/StoreItems/Types/Items/OldItem",
+   "Activation": {
+    "$date": {
+     "$numberLong": "1792130400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792216800000"
+    }
+   },
+   "Discount": 10
+  }
+ ],
+ "SeasonInfo": {
+  "Activation": {
+   "$date": {
+    "$numberLong": "1788782400000"
+   }
+  },
+  "Expiry": {
+   "$date": {
+    "$numberLong": "1799150400000"
+   }
+  },
+  "AffiliationTag": "RadioLegionIntermission16Syndicate",
+  "Season": 18,
+  "Phase": 0,
+  "Params": "",
+  "ActiveChallenges": [
+   {
+    "_id": {
+     "$oid": "nw-daily1"
+    },
+    "Daily": true,
+    "Activation": {
+     "$date": {
+      "$numberLong": "1792231200000"
+     }
+    },
+    "Expiry": {
+     "$date": {
+      "$numberLong": "1792490400000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/Daily/SeasonDailyAimGlide"
+   },
+   {
+    "_id": {
+     "$oid": "nw-elite1"
+    },
+    "Activation": {
+     "$date": {
+      "$numberLong": "1791763200000"
+     }
+    },
+    "Expiry": {
+     "$date": {
+      "$numberLong": "1792368000000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/WeeklyHard/SeasonWeeklyHardRiseOfTheMachine"
+   },
+   {
+    "_id": {
+     "$oid": "nw-rad"
+    },
+    "Daily": true,
+    "Activation": {
+     "$date": {
+      "$numberLong": "1792231200000"
+     }
+    },
+    "Expiry": {
+     "$date": {
+      "$numberLong": "1792490400000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/Daily/SeasonDailyKillEnemiesWithRadiation"
+   },
+   {
+    "_id": {
+     "$oid": "nw-unknown"
+    },
+    "Activation": {
+     "$date": {
+      "$numberLong": "1791763200000"
+     }
+    },
+    "Expiry": {
+     "$date": {
+      "$numberLong": "1792368000000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/Daily/SeasonDailyMadeUpAct"
+   },
+   {
+    "_id": {
+     "$oid": "nw-expired"
+    },
+    "Daily": true,
+    "Activation": {
+     "$date": {
+      "$numberLong": "1791950400000"
+     }
+    },
+    "Expiry": {
+     "$date": {
+      "$numberLong": "1792209600000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/Daily/SeasonDailyAimGlide"
+   },
+   {
+    "_id": {
+     "$oid": "nw-undated"
+    },
+    "Activation": {
+     "$date": {
+      "$numberLong": "1792234800000"
+     }
+    },
+    "Challenge": "/Lotus/Types/Challenges/Seasons/Daily/SeasonDailyAimGlide"
+   }
+  ]
+ },
+ "Descents": [
+  {
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791158400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1791763200000"
+    }
+   }
+  },
+  {
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791763200000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792368000000"
+    }
+   },
+   "Challenges": []
+  }
+ ],
+ "KnownCalendarSeasons": [
+  {
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791374400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1799150400000"
+    }
+   },
+   "Season": "CST_AUTUMN",
+   "YearIteration": 3,
+   "Version": 19,
+   "Days": [
+    {
+     "day": 9,
+     "events": []
+    },
+    {
+     "day": 13,
+     "events": [
+      {
+       "type": "CET_REWARD",
+       "reward": "/Lotus/StoreItems/Types/Boosters/ModDropChanceBooster3DayStoreItem"
+      },
+      {
+       "type": "CET_CHALLENGE",
+       "challenge": "/Lotus/Types/Challenges/Calendar1999/CalendarKillEnemiesEasy"
+      }
+     ]
+    },
+    {
+     "day": 24,
+     "events": [
+      {
+       "type": "CET_UPGRADE",
+       "upgrade": "/Lotus/Upgrades/Calendar/Armor"
+      },
+      {
+       "type": "CET_UPGRADE",
+       "upgrade": "/Lotus/Upgrades/Calendar/AbilityStrength"
+      },
+      {
+       "type": "CET_UNKNOWN"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "EndlessXpSchedule": [
+  {
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791158400000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1791763200000"
+    }
+   },
+   "CategoryChoices": [
+    {
+     "Category": "EXC_NORMAL",
+     "Choices": [
+      "Ash",
+      "Frost",
+      "Nyx"
+     ]
+    }
+   ]
+  },
+  {
+   "Activation": {
+    "$date": {
+     "$numberLong": "1791763200000"
+    }
+   },
+   "Expiry": {
+    "$date": {
+     "$numberLong": "1792368000000"
+    }
+   },
+   "CategoryChoices": [
+    {
+     "Category": "EXC_NORMAL",
+     "Choices": [
+      "Saryn",
+      "Vauban",
+      "Nova"
+     ]
+    },
+    {
+     "Category": "EXC_HARD",
+     "Choices": [
+      "Lex",
+      "Magistar",
+      "Boltor",
+      "Bronco",
+      "CeramicDagger"
+     ]
+    }
+   ]
+  }
+ ],
+ "ProjectPct": [
+  42.1,
+  63.0,
+  0
+ ],
+ "ConstructionProjects": [],
+ "Conquests": []
+}
