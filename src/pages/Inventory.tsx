@@ -6,6 +6,7 @@ import { openFilePicker } from "@decky/api";
 import {
   ButtonItem,
   DialogButton,
+  Dropdown,
   DropdownItem,
   Field,
   Focusable,
@@ -20,7 +21,7 @@ import {
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, Loading, Page, Plat, Section, Stat, colors } from "../components/ui";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Plat, Section, Stat, chip, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -547,6 +548,7 @@ const Inventory: FC = () => {
   const [s, setS] = useState<ViewState>(loadState);
   const [page, setPage] = useState(0);
   const [searchDraft, setSearchDraft] = useState(s.search);
+  const [showMore, setShowMore] = useState(false);
   const [fetchMsg, setFetchMsg] = useState<string>();
   const update = (patch: Partial<ViewState>) => {
     setS((prev) => {
@@ -631,16 +633,50 @@ const Inventory: FC = () => {
     </Focusable>
   );
 
+  const refreshInventory = async () => {
+    setFetchMsg("Refreshing inventory…");
+    try {
+      await call("inventory.refresh");
+      setFetchMsg("Inventory refreshed.");
+    } catch (e) {
+      setFetchMsg(String((e as Error)?.message ?? e));
+    }
+    view.reload();
+  };
+
+  // Compact filter bar above the list; the rarely used filters fold out
+  // below it so the rows keep the full width.
   const filters = (
-    <Focusable style={{ width: "250px", flexShrink: 0, display: "flex", flexDirection: "column" }}>
-      <TextField label="Search" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
-      <DropdownItem
-        label="Sort"
-        rgOptions={sorts.map((k) => ({ data: k, label: SORT_LABEL[k] ?? k }))}
-        selectedOption={v.sort ?? "name"}
-        onChange={(o) => update({ sort: o.data, direction: DESC_DEFAULT.includes(o.data) ? "desc" : "asc" })}
-      />
-      <ToggleField label="Descending" checked={v.direction === "desc"} onChange={(b) => update({ sort: v.sort ?? "name", direction: b ? "desc" : "asc" })} />
+    <Focusable style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap" }}>
+        <FilterCell label="Search" width="220px">
+          <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
+        </FilterCell>
+        <FilterCell label="Sort" width="180px">
+          <Dropdown
+            rgOptions={sorts.map((k) => ({ data: k, label: SORT_LABEL[k] ?? k }))}
+            selectedOption={v.sort ?? "name"}
+            onChange={(o) => update({ sort: o.data, direction: DESC_DEFAULT.includes(o.data) ? "desc" : "asc" })}
+          />
+        </FilterCell>
+        <DialogButton style={chip(v.direction === "desc")} onClick={() => update({ sort: v.sort ?? "name", direction: v.direction === "desc" ? "asc" : "desc" })}>
+          {v.direction === "desc" ? "Descending" : "Ascending"}
+        </DialogButton>
+        <DialogButton style={chip(s.filters.minimumAmount >= 2)} onClick={() => setFilter({ minimumAmount: s.filters.minimumAmount >= 2 ? 0 : 2 })}>
+          Spares only
+        </DialogButton>
+        <DialogButton style={chip(showMore)} onClick={() => setShowMore(!showMore)}>
+          {showMore ? "Fewer filters" : "More filters"}
+        </DialogButton>
+        <DialogButton style={chip(false)} onClick={() => { setSearchDraft(""); update({ search: "", filters: DEFAULT_FILTERS, sort: null, direction: null }); }}>
+          Reset
+        </DialogButton>
+        <DialogButton style={chip(false)} onClick={() => void refreshInventory()}>
+          Refresh inventory
+        </DialogButton>
+      </Focusable>
+      {showMore && (
+        <Focusable style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0 16px" }}>
       {s.tab === "everything" && (
         <Field label="Sources" childrenLayout="below" focusable={false}>
           <Focusable style={{ display: "flex", flexDirection: "column" }}>
@@ -687,32 +723,15 @@ const Inventory: FC = () => {
           <DropdownItem label="Leveled up" rgOptions={yesNoOptions("Leveled")} selectedOption={s.filters.leveledUp} onChange={(o) => setFilter({ leveledUp: o.data })} />
         </>
       )}
-      <ToggleField label="Spares only" description="Own more than one" checked={s.filters.minimumAmount >= 2} onChange={(b) => setFilter({ minimumAmount: b ? 2 : 0 })} />
-      <ButtonItem layout="below" onClick={() => { setSearchDraft(""); update({ search: "", filters: DEFAULT_FILTERS, sort: null, direction: null }); }}>
-        Reset filters
-      </ButtonItem>
       <ToggleField
         label="Hide blueprints in the foundry"
         checked={prefs.hideFoundryClaims}
         onChange={(b) => setPrefs({ hide_foundry_claims: b })}
       />
-      <ButtonItem
-        layout="below"
-        onClick={async () => {
-          setFetchMsg("Refreshing inventory…");
-          try {
-            await call("inventory.refresh");
-            setFetchMsg("Inventory refreshed.");
-          } catch (e) {
-            setFetchMsg(String((e as Error)?.message ?? e));
-          }
-          view.reload();
-        }}
-      >
-        Refresh inventory
-      </ButtonItem>
+        </Focusable>
+      )}
       {v.inventory && (
-        <div style={{ color: colors.muted, fontSize: "12px", padding: "4px 0" }}>
+        <div style={{ color: colors.muted, fontSize: "12px" }}>
           Synced {ago(v.inventory.syncTime ?? v.inventory.fetchedAt)} · {v.inventory.origin}
         </div>
       )}
@@ -758,9 +777,9 @@ const Inventory: FC = () => {
   return (
     <Page>
       {tabStrip}
-      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start", width: "100%" }} flow-children="horizontal">
+      <Focusable style={{ display: "flex", flexDirection: "column" }}>
         {filters}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div>
           {v.value && s.tab !== "resources" && <ValueStrip v={v.value} prefs={prefs} onPrefs={setPrefs} onFetch={fetchPrices} fetchMsg={fetchMsg} />}
           {view.loading && <div style={{ color: colors.muted, fontSize: "12px" }}>Updating…</div>}
           {body}

@@ -17,9 +17,9 @@ import {
   ToggleField,
   showModal,
 } from "@decky/ui";
-import { CSSProperties, FC, ReactNode, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, Loading, Page, Plat, Section, Stat, colors } from "../components/ui";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Plat, Section, Stat, chip, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -425,13 +425,6 @@ function chunk<T>(items: T[], n: number): T[][] {
   return out;
 }
 
-const FilterCell: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-    <span style={{ fontSize: "11px", color: colors.muted, textTransform: "uppercase" }}>{label}</span>
-    {children}
-  </div>
-);
-
 const OverlayFiltersModal: FC<{ closeModal?: () => void; onPush: () => Promise<void>; onClear: () => Promise<void> }> = ({ closeModal, onPush, onClear }) => (
   <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
     <div style={{ color: colors.text }}>
@@ -505,12 +498,6 @@ const Relics: FC = () => {
     setPushed(`Overlay uses these filters (squad ${f.squadSize}).`);
   };
 
-  const chip = (on: boolean): CSSProperties => ({
-    minWidth: 0,
-    padding: "6px 12px",
-    background: on ? colors.accent : undefined,
-    color: on ? "#0e121e" : undefined,
-  });
   const noInv = v ? !v.hasInventory : false;
 
   // Compact filter bar above the relics: two rows of small controls instead of

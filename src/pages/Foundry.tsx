@@ -2,10 +2,10 @@
 // whole crafting chains from owned blueprints) and blueprints missing parts; pinned blueprints
 // with summed credits / resources. QAM: counts, the actionable rows, pinned shortfall.
 // Backend: py_modules/wfh/menus/foundry.py (foundry.view/pin/qam).
-import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, TextField, ToggleField, showModal } from "@decky/ui";
+import { ButtonItem, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, TextField, showModal } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Empty, ErrorText, Loading, Page, Section, colors, countdown } from "../components/ui";
+import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Section, chip, colors, countdown } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -334,43 +334,53 @@ const Foundry: FC = () => {
     </Focusable>
   );
 
+  // Compact filter bar above the list so rows get the full width.
   const filters = (
-    <Focusable style={{ width: "250px", flexShrink: 0, display: "flex", flexDirection: "column" }}>
-      <TextField label="Search" description="Name or ingredient" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
-      <DropdownItem label="State" rgOptions={STATES} selectedOption={s.state} onChange={(o) => update({ state: o.data })} />
-      <DropdownItem
-        label="Sort"
-        rgOptions={SORTS}
-        selectedOption={s.sort}
-        onChange={(o) => update({ sort: o.data, direction: o.data === "count" ? "desc" : "asc" })}
-      />
-      <ToggleField label="Descending" checked={s.direction === "desc"} onChange={(b) => update({ direction: b ? "desc" : "asc" })} />
-      <DropdownItem
-        label="Prime"
-        rgOptions={[
-          { data: "all", label: "Any" },
-          { data: "prime", label: "Prime only" },
-          { data: "non_prime", label: "Non-prime" },
-        ]}
-        selectedOption={s.prime}
-        onChange={(o) => update({ prime: o.data })}
-      />
-      <DropdownItem
-        label="Vaulted"
-        rgOptions={[
-          { data: "all", label: "Any" },
-          { data: "yes", label: "Vaulted" },
-          { data: "no", label: "Not vaulted" },
-        ]}
-        selectedOption={s.vaulted}
-        onChange={(o) => update({ vaulted: o.data })}
-      />
-      <ButtonItem layout="below" onClick={() => { setSearchDraft(""); update({ ...DEFAULT_STATE, tab: s.tab }); }}>
-        Reset filters
-      </ButtonItem>
+    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap", marginTop: "8px" }}>
+      <FilterCell label="Search" width="220px">
+        <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
+      </FilterCell>
+      <FilterCell label="State" width="170px">
+        <Dropdown rgOptions={STATES} selectedOption={s.state} onChange={(o) => update({ state: o.data })} />
+      </FilterCell>
+      <FilterCell label="Sort" width="170px">
+        <Dropdown rgOptions={SORTS} selectedOption={s.sort} onChange={(o) => update({ sort: o.data, direction: o.data === "count" ? "desc" : "asc" })} />
+      </FilterCell>
+      <DialogButton style={chip(s.direction === "desc")} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
+        {s.direction === "desc" ? "Descending" : "Ascending"}
+      </DialogButton>
+      <FilterCell label="Prime" width="150px">
+        <Dropdown
+          rgOptions={[
+            { data: "all", label: "Any" },
+            { data: "prime", label: "Prime only" },
+            { data: "non_prime", label: "Non-prime" },
+          ]}
+          selectedOption={s.prime}
+          onChange={(o) => update({ prime: o.data })}
+        />
+      </FilterCell>
+      <FilterCell label="Vaulted" width="150px">
+        <Dropdown
+          rgOptions={[
+            { data: "all", label: "Any" },
+            { data: "yes", label: "Vaulted" },
+            { data: "no", label: "Not vaulted" },
+          ]}
+          selectedOption={s.vaulted}
+          onChange={(o) => update({ vaulted: o.data })}
+        />
+      </FilterCell>
+      <DialogButton style={chip(false)} onClick={() => { setSearchDraft(""); update({ ...DEFAULT_STATE, tab: s.tab }); }}>
+        Reset
+      </DialogButton>
+    </Focusable>
+  );
+  const notes = (
+    <>
       {v.inventory && <div style={{ color: colors.muted, fontSize: "12px", padding: "4px 0" }}>Inventory synced {ago(v.inventory.syncTime ?? v.inventory.fetchedAt)}</div>}
       {v.recipeData === false && <div style={{ color: colors.warn, fontSize: "12px" }}>Recipe data missing (run scripts/fetch-data.sh): credits and build times are unknown.</div>}
-    </Focusable>
+    </>
   );
 
   let body: ReactNode;
@@ -402,9 +412,10 @@ const Foundry: FC = () => {
   return (
     <Page>
       {tabStrip}
-      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start", width: "100%" }} flow-children="horizontal">
+      <Focusable style={{ display: "flex", flexDirection: "column" }}>
         {filters}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {notes}
+        <div>
           <Section title="Foundry">
             <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               <Segmented

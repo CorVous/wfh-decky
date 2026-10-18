@@ -146,3 +146,19 @@ export class PageBoundary extends Component<{ id: string; children: ReactNode },
     return this.props.children;
   }
 }
+
+// Small labelled control for the filter bars above lists.
+export const FilterCell: FC<{ label: string; children: ReactNode; width?: string }> = ({ label, children, width }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0, width }}>
+    <span style={{ fontSize: "11px", color: colors.muted, textTransform: "uppercase" }}>{label}</span>
+    {children}
+  </div>
+);
+
+// DialogButton style for toggle chips in filter bars.
+export const chip = (on: boolean): CSSProperties => ({
+  minWidth: 0,
+  padding: "6px 12px",
+  background: on ? colors.accent : undefined,
+  color: on ? "#0e121e" : undefined,
+});
