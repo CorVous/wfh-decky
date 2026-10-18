@@ -1,10 +1,10 @@
 // Syndicates: rank, standing to next rank, today's remaining standing per pool and rank-up
 // goals with their credits / items / days (docs/port/menus.md §11). Data: syndicates.* RPCs
 // (py_modules/wfh/menus/syndicates.py).
-import { ButtonItem, DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
+import { DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
 import { FC, ReactNode, useState } from "react";
 
-import { Bar, Empty, ErrorText, Grid, Loading, Page, Section, Stat, card, colors, ellipsis } from "../components/ui";
+import { Bar, Empty, ErrorText, Grid, Loading, Page, QamMessage, QamNote, QamRow, Section, Stat, card, colors, ellipsis } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 import { openPage } from "./Mastery";
 
@@ -257,43 +257,28 @@ export const Qam: FC = () => {
   useEvent("syndicates.updated", () => q.reload());
   const d = q.data;
   return (
-    <PanelSection title="Syndicates">
-      {q.error && !d && (
-        <PanelSectionRow>
-          <Field label="Error" description={q.error} />
-        </PanelSectionRow>
-      )}
-      {!d && !q.error && (
-        <PanelSectionRow>
-          <Field label="Loading…" />
-        </PanelSectionRow>
-      )}
-      {d && !d.inventory && (
-        <PanelSectionRow>
-          <Field label="Waiting for the inventory" />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {q.error && !d && <QamMessage label="Error" sub={q.error} />}
+      {!d && !q.error && <QamMessage label="Loading…" />}
+      {d && !d.inventory && <QamMessage label="Waiting for the inventory" />}
       {d && d.inventory && (
         <>
-          {d.pools.length > 0 && (
-            <PanelSectionRow>
-              <Field focusable padding="compact" label="Left today" description={d.pools.map((p) => `${p.label} ${short(p.remaining)}`).join(" · ")} onActivate={openSyndicates} />
-            </PanelSectionRow>
-          )}
+          {d.pools.length > 0 && <QamRow label="Left today" sub={d.pools.map((p) => `${p.label} ${short(p.remaining)}`).join(" · ")} onActivate={openSyndicates} />}
           {d.rows.map((r) => (
             <PanelSectionRow key={r.tag}>
               <Field
                 focusable
                 padding="compact"
-                label={r.name}
+                label={<span style={{ display: "block", ...ellipsis }}>{r.name}</span>}
                 description={
-                  <div style={{ width: "260px", maxWidth: "100%" }}>
+                  // rank and standing to go share one line above a full-width bar
+                  <div style={{ width: "278px", maxWidth: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "6px" }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <span style={ellipsis}>
                         {rankText(r)}
                         {r.goal != null && <span style={{ color: colors.accent }}> → {r.goal}</span>}
                       </span>
-                      <span style={{ flexShrink: 0 }}>{r.nextLevel == null ? "Max" : `${short(r.standingToNext)} to go`}</span>
+                      <span style={{ flexShrink: 0, fontVariantNumeric: "tabular-nums", color: r.nextLevel == null ? colors.good : undefined }}>{r.nextLevel == null ? "Max" : `${short(r.standingToNext)} to go`}</span>
                     </div>
                     <div style={{ marginTop: "3px" }}>
                       <Bar value={r.nextLevel == null ? 1 : r.progress} color={r.nextLevel == null ? colors.good : r.level < 0 ? colors.bad : colors.accent} />
@@ -304,16 +289,8 @@ export const Qam: FC = () => {
               />
             </PanelSectionRow>
           ))}
-          {d.rows.length === 0 && (
-            <PanelSectionRow>
-              <Field label="No syndicate joined yet" />
-            </PanelSectionRow>
-          )}
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={openSyndicates}>
-              Open syndicates{d.more > 0 ? ` (+${d.more})` : ""}
-            </ButtonItem>
-          </PanelSectionRow>
+          {d.rows.length === 0 && <QamMessage label="No syndicate joined yet" />}
+          {d.more > 0 && <QamNote>+{d.more} more on the Syndicates page</QamNote>}
         </>
       )}
     </PanelSection>

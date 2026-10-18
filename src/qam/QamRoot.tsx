@@ -1,14 +1,16 @@
-import { ButtonItem, DropdownItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
+import { ButtonItem, DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
 import { Component, FC, ReactNode, useState } from "react";
+import { FaExpand } from "react-icons/fa";
 
-import { openTab } from "../nav";
-import { PAGES, ROUTE } from "../registry";
+import { colors } from "../components/ui";
+import { openPage } from "../nav";
+import { PAGES } from "../registry";
 import { call, useEvent, useRpc } from "../rpc";
 import { Qam as ArbitrationsQam } from "../pages/Arbitrations";
 import { Qam as FoundryQam } from "../pages/Foundry";
 import { Qam as InventoryQam } from "../pages/Inventory";
-import { Qam as MarketQam } from "../pages/Market";
-import { Qam as MasteryQam } from "../pages/Mastery";
+import { Qam as MarketQam, openMarket } from "../pages/Market";
+import { Qam as MasteryQam, openMastery } from "../pages/Mastery";
 import { Qam as MissionsQam } from "../pages/Missions";
 import { Qam as RelicsQam } from "../pages/Relics";
 import { Qam as RivensQam } from "../pages/Rivens";
@@ -16,26 +18,30 @@ import { Qam as SettingsQam } from "../pages/Settings";
 import { Qam as StatsQam } from "../pages/Stats";
 import { Qam as SyndicatesQam } from "../pages/Syndicates";
 import { Qam as WikiQam } from "../pages/Wiki";
-import { Qam as WorldQam } from "../pages/World";
+import { Qam as WorldQam, openWorld } from "../pages/World";
 
 // Compact summaries the QAM can show, one at a time (the panel is ~300px wide,
 // so stacking them all made a long scroll). Each loads its own small cached
-// view-model (world.qam, arbi.qam, ...).
-const SECTIONS: { id: string; title: string; Qam: FC | null }[] = [
-  { id: "world", title: "World", Qam: WorldQam },
+// view-model (world.qam, arbi.qam, ...). `open` is the header's full-screen
+// button (default: the page with the same id, on whatever sub-tab it last had).
+// Titles stay short: they are the picker's label next to that button.
+const SECTIONS: { id: string; title: string; Qam: FC | null; open?: () => void }[] = [
+  { id: "world", title: "World", Qam: WorldQam, open: () => openWorld("overview") },
   { id: "arbitrations", title: "Arbitrations", Qam: ArbitrationsQam },
   { id: "relics", title: "Relics", Qam: RelicsQam },
-  { id: "market", title: "Market", Qam: MarketQam },
+  { id: "market", title: "Market", Qam: MarketQam, open: () => openMarket("browse") },
   { id: "foundry", title: "Foundry", Qam: FoundryQam },
-  { id: "missions", title: "Last mission", Qam: MissionsQam },
+  { id: "missions", title: "Missions", Qam: MissionsQam },
   { id: "inventory", title: "Inventory", Qam: InventoryQam },
-  { id: "mastery", title: "Mastery", Qam: MasteryQam },
+  { id: "mastery", title: "Mastery", Qam: MasteryQam, open: () => openMastery("roadmap") },
   { id: "syndicates", title: "Syndicates", Qam: SyndicatesQam },
   { id: "rivens", title: "Rivens", Qam: RivensQam },
   { id: "stats", title: "Stats", Qam: StatsQam },
   { id: "wiki", title: "Wiki", Qam: WikiQam },
-  { id: "settings", title: "Overlay settings", Qam: SettingsQam },
+  { id: "settings", title: "Settings", Qam: SettingsQam },
 ].filter((x) => x.Qam);
+
+const ICONS: Record<string, FC> = Object.fromEntries(PAGES.map((p) => [p.id, p.icon]));
 
 const SECTION_KEY = "wfhelper.qamSection";
 
@@ -81,10 +87,12 @@ class SectionBoundary extends Component<{ id: string; children: ReactNode }, { e
   }
 }
 
-function openPage(id: string): void {
-  openTab(id);
-  Navigation.Navigate(ROUTE);
-  Navigation.CloseSideMenus();
+// The overlay's state in one short line under the master switch: what is missing first.
+function statusLine(s: Status): { text: string; color: string } {
+  if (!s.warframe_running) return { text: "Warframe not running", color: colors.muted };
+  if (!s.ee_log) return { text: "Warframe running · no log yet", color: colors.warn };
+  if (!s.overlay.connected) return { text: "Waiting for the game display", color: colors.warn };
+  return { text: "Drawing over the game", color: colors.good };
 }
 
 const QamRoot: FC = () => {
@@ -96,9 +104,8 @@ const QamRoot: FC = () => {
   const s = status.data;
   const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
   const Qam = current?.Qam;
-  const statusLine = s
-    ? `${s.warframe_running ? "Warframe running" : "Warframe not running"} · ${s.ee_log ? "log found" : "no log yet"}`
-    : "";
+  const line = s ? statusLine(s) : null;
+  const Icon = current ? ICONS[current.id] : undefined;
   return (
     <>
       <PanelSection>
@@ -107,12 +114,16 @@ const QamRoot: FC = () => {
             <Field label="Backend" description={status.error} />
           </PanelSectionRow>
         )}
-        {s && (
+        {s && line && (
           <>
             <PanelSectionRow>
               <ToggleField
                 label="Overlays"
-                description={`${s.overlay.connected ? "Drawing over the game" : "Waiting for the game display"}. ${statusLine}`}
+                description={
+                  <span style={{ whiteSpace: "nowrap" }}>
+                    <span style={{ color: line.color }}>●</span> {line.text}
+                  </span>
+                }
                 checked={s.overlay.enabled}
                 onChange={async (v) => {
                   await call("settings.update", { patch: { overlays_enabled: v } });
@@ -127,21 +138,42 @@ const QamRoot: FC = () => {
             )}
           </>
         )}
+        {/* Section picker and its full-screen button on one d-pad row. */}
         <PanelSectionRow>
-          <DropdownItem
-            label="Show"
-            rgOptions={SECTIONS.map((x) => ({ data: x.id, label: x.title }))}
-            selectedOption={current?.id}
-            onChange={(o) => {
-              const id = String(o.data);
-              setSection(id);
-              try {
-                localStorage.setItem(SECTION_KEY, id);
-              } catch {
-                // not persisted; still switches for this session
-              }
-            }}
-          />
+          <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "stretch", padding: "8px 0", borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+              <Dropdown
+                menuLabel="Show in Quick Access"
+                rgOptions={SECTIONS.map((x) => ({ data: x.id, label: x.title }))}
+                selectedOption={current?.id}
+                renderButtonValue={(el) => (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", minWidth: 0, verticalAlign: "middle" }}>
+                    {Icon && (
+                      <span style={{ display: "inline-flex", color: colors.accent, flexShrink: 0 }}>
+                        <Icon />
+                      </span>
+                    )}
+                    {el}
+                  </span>
+                )}
+                onChange={(o) => {
+                  const id = String(o.data);
+                  setSection(id);
+                  try {
+                    localStorage.setItem(SECTION_KEY, id);
+                  } catch {
+                    // not persisted; still switches for this session
+                  }
+                }}
+              />
+            </div>
+            <DialogButton
+              style={{ flex: "0 0 auto", width: "auto", minWidth: 0, padding: "0 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", whiteSpace: "nowrap" }}
+              onClick={() => (current?.open ? current.open() : openPage(current?.id ?? "dashboard"))}
+            >
+              <FaExpand style={{ flexShrink: 0 }} /> Open
+            </DialogButton>
+          </Focusable>
         </PanelSectionRow>
       </PanelSection>
       {Qam && current && (
@@ -150,15 +182,6 @@ const QamRoot: FC = () => {
         </SectionBoundary>
       )}
       <PanelSection>
-        <PanelSectionRow>
-          <DropdownItem
-            label="Full screen"
-            strDefaultLabel="Open…"
-            rgOptions={PAGES.map((p) => ({ data: p.id, label: p.title }))}
-            selectedOption={null}
-            onChange={(o) => openPage(String(o.data))}
-          />
-        </PanelSectionRow>
         <PanelSectionRow>
           <ButtonItem
             layout="below"

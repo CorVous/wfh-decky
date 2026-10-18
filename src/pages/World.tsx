@@ -2,11 +2,11 @@
 // Baro/Varzia/Darvo, Steel Path honors + Circuit, the arbitration schedule and a dailies tracker
 // (docs/port/menus.md §10). Data: world.view / world.qam / world.dailies (py_modules/wfh/menus/world.py),
 // world.arbi_schedule (data/arbi_schedule.py). Every date comes as epoch ms; countdowns tick locally.
-import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, Navigation, PanelSection, PanelSectionRow, SliderField } from "@decky/ui";
+import { DialogButton, DropdownItem, Field, Focusable, Navigation, PanelSection, PanelSectionRow, SliderField } from "@decky/ui";
 import { ComponentProps, FC, ReactNode, useEffect, useRef, useState } from "react";
 import { FaBell, FaRegBell, FaRegStar, FaStar } from "react-icons/fa";
 
-import { Badge, Columns, Ducats, Empty, ErrorText, Guard, Loading, Page, Paged, Row, Section, Segmented, colors } from "../components/ui";
+import { Badge, Columns, Ducats, Empty, ErrorText, Guard, Loading, Page, Paged, QamMessage, QamNote, QamRow, QamTally, Row, Section, Segmented, colors, ellipsis } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -1060,47 +1060,34 @@ export const Qam: FC = () => {
   const counts = d ? d.fissureCounts[d.prefs.fissureMode] : undefined;
   return (
     <>
-      <PanelSection title="World">
-        {q.error && !d && (
-          <PanelSectionRow>
-            <Field label="Error" description={q.error} />
-          </PanelSectionRow>
-        )}
-        {!d && !q.error && (
-          <PanelSectionRow>
-            <Field label="Loading…" />
-          </PanelSectionRow>
-        )}
+      <PanelSection>
+        {q.error && !d && <QamMessage label="Error" sub={q.error} />}
+        {!d && !q.error && <QamMessage label="Loading…" />}
         {d && (
           <>
-            {d.stale && (
-              <PanelSectionRow>
-                <div style={{ color: colors.warn, fontSize: "12px" }}>Offline: cached world state</div>
-              </PanelSectionRow>
-            )}
+            {d.stale && <QamNote color={colors.warn}>Offline: cached world state</QamNote>}
+            <QamTally
+              onActivate={() => openWorld("overview")}
+              items={d.resets.map((r) => ({ label: RESET_SHORT[r.key] ?? r.label, value: fmtShort(r.expiryMs, now) }))}
+            />
+            {/* Open-world cycles two to a line: six full rows took most of the panel. */}
             <PanelSectionRow>
-              <Field
-                focusable
+              <Focusable
                 onActivate={() => openWorld("overview")}
-                label="Resets"
-                description={
-                  // each "Label time" pair stays on one line; the panel wraps between pairs, never inside one
-                  d.resets.map((r, i) => (
-                    <span key={r.key} style={{ whiteSpace: "nowrap" }}>
-                      {i > 0 && " · "}
-                      {RESET_SHORT[r.key] ?? r.label} {fmtShort(r.expiryMs, now)}
-                    </span>
-                  ))
-                }
-              />
+                focusClassName="gpfocus"
+                style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "6px 12px", padding: "6px 0 8px", borderBottom: `1px solid ${colors.border}` }}
+              >
+                {d.cycles.map((c) => (
+                  <div key={c.key} style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: "12px", color: colors.muted, ...ellipsis }}>{c.label}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", fontSize: "14px" }}>
+                      <span style={ellipsis}>{c.state}</span>
+                      <span style={{ color: isUrgent(c.activationMs, c.expiryMs, now) ? colors.warn : colors.text, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{fmtShort(c.expiryMs, now)}</span>
+                    </div>
+                  </div>
+                ))}
+              </Focusable>
             </PanelSectionRow>
-            {d.cycles.map((c) => (
-              <PanelSectionRow key={c.key}>
-                <Field focusable padding="compact" label={c.label} onActivate={() => openWorld("overview")}>
-                  <span style={{ color: isUrgent(c.activationMs, c.expiryMs, now) ? colors.warn : colors.text, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{cycleText(c, now)}</span>
-                </Field>
-              </PanelSectionRow>
-            ))}
           </>
         )}
       </PanelSection>
@@ -1118,81 +1105,62 @@ export const Qam: FC = () => {
             />
           </PanelSectionRow>
           {counts && (
-            <PanelSectionRow>
-              <Focusable onActivate={() => openWorld("fissures")} focusClassName="gpfocus" style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "2px 0" }}>
-                {TIERS.filter((t) => t !== "Omnia" || counts[t]).map((t) => (
-                  <span key={t} style={{ color: counts[t] ? TIER_COLORS[t.toLowerCase()] : colors.muted }}>
-                    {t.slice(0, 3)} {counts[t] ?? 0}
-                  </span>
-                ))}
-              </Focusable>
-            </PanelSectionRow>
+            <QamTally
+              onActivate={() => openWorld("fissures")}
+              items={TIERS.filter((t) => t !== "Omnia" || counts[t]).map((t) => ({
+                label: t.slice(0, 3),
+                value: counts[t] ?? 0,
+                color: counts[t] ? TIER_COLORS[t.toLowerCase()] : colors.muted,
+              }))}
+            />
           )}
-          {d.fissures.length === 0 && (
-            <PanelSectionRow>
-              <Field label="No fissures match" description="Change the tiers on the World page." />
-            </PanelSectionRow>
-          )}
+          {d.fissures.length === 0 && <QamMessage label="No fissures match" sub="Change the tiers on the World page." />}
           {d.fissures.map((f) => (
-            <PanelSectionRow key={f.id}>
-              <Field focusable padding="compact" label={<FissureLabel f={f} />} description={f.node} onActivate={() => openWorld("fissures")}>
-                <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{fmtShort(f.expiryMs, now)}</span>
-              </Field>
-            </PanelSectionRow>
+            <QamRow key={f.id} label={<FissureLabel f={f} />} sub={f.node} value={fmtShort(f.expiryMs, now)} onActivate={() => openWorld("fissures")} />
           ))}
         </PanelSection>
       )}
       {d && (
         <PanelSection title="Also">
-          {(d.arbitration.current || d.arbitration.next) && (
-            <PanelSectionRow>
-              {d.arbitration.current ? (
-                <Field
-                  focusable
-                  onActivate={() => openWorld("arbis")}
-                  label={`Arbitration: ${d.arbitration.current.node}`}
-                  description={`${d.arbitration.current.mission} · ${d.arbitration.current.faction} · ends in ${fmtShort(d.arbitration.current.epochMs + 3600000, now)}`}
-                />
-              ) : (
-                <Field
-                  focusable
-                  onActivate={() => openWorld("arbis")}
-                  label={`Next arbi ${fmtClock(d.arbitration.next!.epochMs)}`}
-                  description={`${d.arbitration.next!.node} · ${d.arbitration.next!.mission} · ${d.arbitration.next!.faction}`}
-                />
-              )}
-            </PanelSectionRow>
+          {d.arbitration.current ? (
+            <QamRow
+              label={`Arbitration: ${d.arbitration.current.node}`}
+              sub={`${d.arbitration.current.mission} · ${d.arbitration.current.faction}`}
+              value={fmtShort(d.arbitration.current.epochMs + 3600000, now)}
+              onActivate={() => openWorld("arbis")}
+            />
+          ) : (
+            d.arbitration.next && (
+              <QamRow
+                label={`Next arbi: ${d.arbitration.next.node}`}
+                sub={`${d.arbitration.next.mission} · ${d.arbitration.next.faction}`}
+                value={fmtClock(d.arbitration.next.epochMs)}
+                onActivate={() => openWorld("arbis")}
+              />
+            )
           )}
           {d.arbitration.nextFavorite && d.arbitration.nextFavorite.key !== d.arbitration.next?.key && (
-            <PanelSectionRow>
-              <Field
-                focusable
-                onActivate={() => openWorld("arbis")}
-                label={`★ ${d.arbitration.nextFavorite.node}`}
-                description={`${fmtDay(d.arbitration.nextFavorite.epochMs)} ${fmtClock(d.arbitration.nextFavorite.epochMs)} · in ${fmtShort(d.arbitration.nextFavorite.epochMs, now)}`}
-              />
-            </PanelSectionRow>
+            <QamRow
+              label={`★ ${d.arbitration.nextFavorite.node}`}
+              sub={`${fmtDay(d.arbitration.nextFavorite.epochMs)} ${fmtClock(d.arbitration.nextFavorite.epochMs)}`}
+              value={fmtShort(d.arbitration.nextFavorite.epochMs, now)}
+              onActivate={() => openWorld("arbis")}
+            />
           )}
           {d.baro && (
-            <PanelSectionRow>
-              <Field
-                focusable
-                onActivate={() => openWorld("baro")}
-                label={d.baro.active ? "Baro is here" : "Baro arrives"}
-                description={`${d.baro.location} · ${d.baro.active ? "leaves" : "in"} ${fmtShort(d.baro.targetMs, now)}`}
-              />
-            </PanelSectionRow>
+            <QamRow
+              label={d.baro.active ? "Baro is here" : "Baro arrives"}
+              sub={d.baro.location}
+              value={fmtShort(d.baro.targetMs, now)}
+              color={d.baro.active ? colors.ducat : undefined}
+              onActivate={() => openWorld("baro")}
+            />
           )}
           {d.circuit.hard.choices.length > 0 && (
             <PanelSectionRow>
-              <Field focusable onActivate={() => openWorld("steel")} label="Circuit SP" description={d.circuit.hard.choices.join(", ")} />
+              <Field focusable padding="compact" onActivate={() => openWorld("steel")} label="Circuit SP" description={d.circuit.hard.choices.join(", ")} />
             </PanelSectionRow>
           )}
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={() => openWorld("overview")}>
-              Open World
-            </ButtonItem>
-          </PanelSectionRow>
         </PanelSection>
       )}
     </>

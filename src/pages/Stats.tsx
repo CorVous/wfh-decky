@@ -1,11 +1,11 @@
 // Stats: daily resource deltas from inventory snapshots and the EE.log trade ledger
 // (backend: py_modules/wfh/menus/stats.py). Bars are plain divs, no chart library.
-import { ConfirmModal, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
+import { ConfirmModal, DialogButton, Dropdown, Focusable, ModalRoot, Navigation, PanelSection, ToggleField, showModal } from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
-import { Empty, FilterCell, Grid, Guard, Page, Pager, Row, Section, Stat, chip, colors } from "../components/ui";
+import { Empty, FilterCell, Grid, Guard, Page, Pager, QamMessage, QamRow, Row, Section, Stat, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 interface CatalogEntry {
@@ -367,34 +367,47 @@ export const Qam: FC = () => {
   if (!d)
     return (
       <PanelSection title="Today">
-        <PanelSectionRow>
-          <Field label={q.error ? "Error" : "Loading…"} description={q.error} />
-        </PanelSectionRow>
+        <QamMessage label={q.error ? "Error" : "Loading…"} sub={q.error} />
       </PanelSection>
     );
+  // Current amount right-aligned with today's change after it, one line per currency.
+  const delta = (n: number, text?: string, suffix = "") => (
+    <span style={{ display: "inline-block", minWidth: "52px", marginLeft: "8px", fontSize: "13px", color: deltaColor(n) }}>
+      {signed(n, text)}
+      {suffix}
+    </span>
+  );
   return (
     <PanelSection title="Today">
-      {!d.hasData && (
-        <PanelSectionRow>
-          <Field label="No inventory read yet today" />
-        </PanelSectionRow>
-      )}
+      {!d.hasData && <QamMessage label="No inventory read yet today" />}
       {d.hasData &&
         d.rows.map((r) => (
-          <PanelSectionRow key={r.id}>
-            <Field focusable padding="compact" label={r.label} description={r.currentText} onActivate={openStats}>
-              <span style={{ color: deltaColor(r.delta), whiteSpace: "nowrap" }}>{signed(r.delta, r.deltaText)}</span>
-            </Field>
-          </PanelSectionRow>
+          <QamRow
+            key={r.id}
+            label={r.label}
+            value={
+              <>
+                {r.currentText}
+                {delta(r.delta, r.deltaText)}
+              </>
+            }
+            onActivate={openStats}
+          />
         ))}
       {(d.relicsOpened > 0 || d.trades.count > 0) && (
-        <PanelSectionRow>
-          <Field focusable padding="compact" onActivate={openStats} label="Relics · trades" description={d.trades.count ? `${d.trades.sales} sold, ${d.trades.purchases} bought` : undefined}>
-            <span style={{ whiteSpace: "nowrap" }}>
-              {d.relicsOpened} · <span style={{ color: deltaColor(d.trades.net) }}>{signed(d.trades.net)}p</span>
-            </span>
-          </Field>
-        </PanelSectionRow>
+        <QamRow
+          label="Relics opened"
+          value={
+            <>
+              {d.relicsOpened}
+              <span style={{ display: "inline-block", minWidth: "52px", marginLeft: "8px" }} />
+            </>
+          }
+          onActivate={openStats}
+        />
+      )}
+      {d.trades.count > 0 && (
+        <QamRow label="Trades" sub={`${d.trades.sales} sold, ${d.trades.purchases} bought`} value={delta(d.trades.net, undefined, "p")} onActivate={openStats} />
       )}
     </PanelSection>
   );

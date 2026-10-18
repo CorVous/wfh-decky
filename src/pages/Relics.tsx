@@ -3,14 +3,12 @@
 // Backend: py_modules/wfh/menus/relics.py (relics.view/detail/top/push_filters) and
 // py_modules/wfh/features/relic_planner.py (relics.planner_*).
 import {
-  ButtonItem,
   DialogButton,
   Dropdown,
   DropdownItem,
   Field,
   Focusable,
   ModalRoot,
-  Navigation,
   PanelSection,
   PanelSectionRow,
   TextField,
@@ -19,9 +17,7 @@ import {
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, Section, Stat, chip, colors } from "../components/ui";
-import { openTab } from "../nav";
-import { ROUTE } from "../nav";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, QamButtons, QamMessage, QamNote, QamRow, Section, Stat, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 // ---- types (mirror menus/relics.py) ------------------------------------------------
@@ -682,16 +678,26 @@ export const Qam: FC = () => {
   // "auto": the list shows all tiers and the overlay detects the era; "all": all tiers in both;
   // a tier filters the list and forces that era on the overlay.
   const listEra = era === "auto" || era === "all" ? null : era;
-  const top = useRpc<TopResult>("relics.top", { limit: 8, squad, era: listEra }, [], 60000);
+  const top = useRpc<TopResult>("relics.top", { limit: 5, squad, era: listEra }, [], 60000);
   const [showStatus, setShowStatus] = useState<string>();
   const [planner, setPlanner] = useState<PlannerPayload>();
   useEvent("relics.planner", (p: PlannerPayload) => setPlanner(p));
   useEvent("inventory.updated", () => top.reload());
   const t = top.data;
+  const showOverlay = async () => {
+    try {
+      const r = await call<{ token: number | null; enabled: boolean }>("relics.planner_show", { era });
+      if (!r.enabled) setShowStatus("Relic planner is turned off in Settings.");
+      else if (r.token == null) setShowStatus("Planner did not open (try again in a moment).");
+      else setShowStatus(era === "auto" ? "Shown; detecting the era…" : `Shown: ${era === "all" ? "all tiers" : era}.`);
+    } catch (e) {
+      setShowStatus(`Failed: ${String((e as Error)?.message ?? e)}`);
+    }
+  };
   return (
-    <PanelSection title="Relics to crack">
+    <PanelSection>
       <PanelSectionRow>
-        <Field label="Squad" childrenLayout="below" focusable={false}>
+        <Field label="Squad" padding="compact" focusable={false}>
           <SquadPicker
             compact
             value={squad}
@@ -721,77 +727,40 @@ export const Qam: FC = () => {
           }}
         />
       </PanelSectionRow>
-      {top.error && !t && (
-        <PanelSectionRow>
-          <Field label="Error" description={top.error} />
-        </PanelSectionRow>
-      )}
-      {t && !t.hasInventory && (
-        <PanelSectionRow>
-          <Field label="No inventory yet" description="Sync it from the Inventory page." focusable />
-        </PanelSectionRow>
-      )}
+      {top.error && !t && <QamMessage label="Error" sub={top.error} />}
+      {t && !t.hasInventory && <QamMessage focusable label="No inventory yet" sub="Sync it from the Inventory page." />}
       {t?.rows.map((r) => (
-        <PanelSectionRow key={r.key}>
-          <Field
-            focusable
-            onActivate={() => openDetail(r.name, squad)}
-            label={
-              <span>
-                {r.name} <span style={{ color: colors.muted, fontSize: "12px" }}>{Q_SHORT[r.quality]} ×{r.count}</span>
-                {r.vaulted && <span style={{ color: colors.bad, fontSize: "11px", marginLeft: "4px" }}>V</span>}
-              </span>
-            }
-            childrenContainerWidth="min"
-            bottomSeparator="none"
-          >
-            <span style={{ whiteSpace: "nowrap", fontSize: "13px" }}>
-              <span style={{ color: colors.plat }}>{fmt1(r.plat, "p")}</span> <span style={{ color: colors.ducat }}>{r.ducat == null ? "" : `${Math.round(r.ducat)}d`}</span>
-            </span>
-          </Field>
-        </PanelSectionRow>
+        <QamRow
+          key={r.key}
+          onActivate={() => openDetail(r.name, squad)}
+          label={
+            <>
+              {r.name} <span style={{ color: colors.muted, fontSize: "12px" }}>{Q_SHORT[r.quality]} ×{r.count}</span>
+              {r.vaulted && <span style={{ color: colors.bad, fontSize: "11px", marginLeft: "4px" }}>V</span>}
+            </>
+          }
+          value={
+            <>
+              <span style={{ color: colors.plat }}>{fmt1(r.plat, "p")}</span>
+              {r.ducat != null && <span style={{ color: colors.ducat, display: "inline-block", minWidth: "36px", marginLeft: "6px" }}>{Math.round(r.ducat)}d</span>}
+            </>
+          }
+        />
       ))}
-      {t && t.total > t.rows.length && (
-        <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px", padding: "4px 0" }}>+{t.total - t.rows.length} more owned</div>
-        </PanelSectionRow>
-      )}
+      {t && t.total > t.rows.length && <QamNote>+{t.total - t.rows.length} more owned</QamNote>}
       {planner && planner.state === "rows" && (
-        <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px" }}>
-            Overlay: {planner.era ? planner.era.toUpperCase() : "all eras"} · {planner.count ?? planner.rows.length} relics
-            {planner.message ? ` · ${planner.message}` : ""}
-          </div>
-        </PanelSectionRow>
+        <QamNote>
+          Overlay: {planner.era ? planner.era.toUpperCase() : "all eras"} · {planner.count ?? planner.rows.length} relics
+          {planner.message ? ` · ${planner.message}` : ""}
+        </QamNote>
       )}
-      {/* Show / Hide side by side: one row instead of two full-width buttons. */}
-      <PanelSectionRow>
-        <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px" }}>
-          <DialogButton
-            style={{ flex: 1, minWidth: 0, width: "auto", padding: "8px 4px" }}
-            onClick={async () => {
-              try {
-                const r = await call<{ token: number | null; enabled: boolean }>("relics.planner_show", { era });
-                if (!r.enabled) setShowStatus("Relic planner is turned off in Settings.");
-                else if (r.token == null) setShowStatus("Planner did not open (try again in a moment).");
-                else setShowStatus(era === "auto" ? "Shown; detecting the era…" : `Shown: ${era === "all" ? "all tiers" : era}.`);
-              } catch (e) {
-                setShowStatus(`Failed: ${String((e as Error)?.message ?? e)}`);
-              }
-            }}
-          >
-            Show overlay
-          </DialogButton>
-          <DialogButton style={{ flex: 1, minWidth: 0, width: "auto", padding: "8px 4px" }} onClick={() => call("relics.planner_hide")}>
-            Hide overlay
-          </DialogButton>
-        </Focusable>
-      </PanelSectionRow>
-      {showStatus && (
-        <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px" }}>{showStatus}</div>
-        </PanelSectionRow>
-      )}
+      <QamButtons
+        buttons={[
+          { label: "Show overlay", onClick: showOverlay },
+          { label: "Hide overlay", onClick: () => call("relics.planner_hide") },
+        ]}
+      />
+      {showStatus && <QamNote>{showStatus}</QamNote>}
       {rp && (
         <PanelSectionRow>
           <ToggleField
@@ -804,18 +773,6 @@ export const Qam: FC = () => {
           />
         </PanelSectionRow>
       )}
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => {
-            openTab("relics");
-            Navigation.Navigate(ROUTE);
-            Navigation.CloseSideMenus();
-          }}
-        >
-          Open Relics
-        </ButtonItem>
-      </PanelSectionRow>
     </PanelSection>
   );
 };

@@ -3,7 +3,6 @@
 // (sold one / edit / hide / delete) and the online status. All network work is in the
 // backend (menus/market.py, data/wfm_auth.py); this file only holds UI state.
 import {
-  ButtonItem,
   ConfirmModal,
   DialogButton,
   DropdownItem,
@@ -18,7 +17,7 @@ import {
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useRef, useState } from "react";
 
-import { Badge, Empty, ErrorText, Grid, Loading, Page, Plat, Row, Section, Segmented, Stat, card, colors } from "../components/ui";
+import { Badge, Empty, ErrorText, Grid, Loading, Page, Plat, QamMessage, QamNote, QamRow, Row, Section, Segmented, Stat, card, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -919,71 +918,43 @@ export const Qam: FC = () => {
   useEvent("market.account", () => q.reload());
   const d = q.data;
   return (
-    <PanelSection title="Market">
-      {q.error && !d && (
-        <PanelSectionRow>
-          <Field label="Error" description={q.error} />
-        </PanelSectionRow>
-      )}
-      {!d && !q.error && (
-        <PanelSectionRow>
-          <Field label="Loading…" />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {q.error && !d && <QamMessage label="Error" sub={q.error} />}
+      {!d && !q.error && <QamMessage label="Loading…" />}
       {d && (
         <>
-          <PanelSectionRow>
-            {d.account.signedIn ? (
-              <Field
-                focusable
-                padding="compact"
-                label={d.account.userName ?? "warframe.market"}
-                description={d.counts ? `${d.counts.sell} selling · ${d.counts.buy} buying${d.counts.visible < d.counts.total ? ` · ${d.counts.total - d.counts.visible} hidden` : ""}` : d.ordersError ?? "Loading orders…"}
-                onActivate={() => openMarket("orders")}
-              >
-                <span style={{ color: STATUS_COLOR[d.account.status ?? "offline"], whiteSpace: "nowrap" }}>{STATUS_LABEL[d.account.status ?? "offline"]}</span>
-              </Field>
-            ) : (
-              <Field focusable padding="compact" label="warframe.market" description="Not signed in" onActivate={() => openMarket("account")} />
-            )}
-          </PanelSectionRow>
+          {d.account.signedIn ? (
+            <QamRow
+              label={d.account.userName ?? "warframe.market"}
+              sub={d.counts ? `${d.counts.sell} selling · ${d.counts.buy} buying${d.counts.visible < d.counts.total ? ` · ${d.counts.total - d.counts.visible} hidden` : ""}` : d.ordersError ?? "Loading orders…"}
+              onActivate={() => openMarket("orders")}
+            />
+          ) : (
+            <QamRow label="warframe.market" sub="Not signed in" value="Sign in" color={colors.accent} onActivate={() => openMarket("account")} />
+          )}
+          {/* The status dropdown shows (and sets) the warframe.market status. */}
           {d.account.signedIn && (
             <PanelSectionRow>
               <StatusControls compact account={d.account} onChange={() => q.reload()} />
             </PanelSectionRow>
           )}
-          {d.offline && (
-            <PanelSectionRow>
-              <div style={{ color: colors.warn, fontSize: "12px" }}>warframe.market unreachable: cached prices</div>
-            </PanelSectionRow>
-          )}
-          {d.recent.length === 0 && (
-            <PanelSectionRow>
-              <Field label="No recent items" description="Look an item up on the Market page." />
-            </PanelSectionRow>
-          )}
-          {d.recent.map((r) => (
-            <PanelSectionRow key={`${r.slug}-${r.rank}`}>
-              <Field
-                focusable
-                padding="compact"
-                label={r.name}
-                description={
-                  [r.rank != null ? `Rank ${r.rank}` : null, r.price ? `low ${r.price.lowSell ?? "–"}p · buy ${r.price.highBuy ?? "–"}p` : null]
-                    .filter(Boolean)
-                    .join(" · ") || undefined
-                }
-                onActivate={() => openMarket("browse", { slug: r.slug, rank: r.rank })}
-              >
-                <span style={{ color: r.fresh ? colors.plat : colors.muted, whiteSpace: "nowrap" }}>{r.price?.plat != null ? `${r.price.plat}p` : "…"}</span>
-              </Field>
-            </PanelSectionRow>
+          {d.offline && <QamNote color={colors.warn}>warframe.market unreachable: cached prices</QamNote>}
+          {d.recent.length === 0 && <QamMessage label="No recent items" sub="Look an item up on the Market page." />}
+          {d.recent.slice(0, 5).map((r) => (
+            <QamRow
+              key={`${r.slug}-${r.rank}`}
+              label={r.name}
+              sub={
+                [r.rank != null ? `Rank ${r.rank}` : null, r.price ? `low ${r.price.lowSell ?? "–"}p · buy ${r.price.highBuy ?? "–"}p` : null]
+                  .filter(Boolean)
+                  .join(" · ") || undefined
+              }
+              value={r.price?.plat != null ? `${r.price.plat}p` : "…"}
+              color={r.fresh ? colors.plat : colors.muted}
+              onActivate={() => openMarket("browse", { slug: r.slug, rank: r.rank })}
+            />
           ))}
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={() => openMarket("browse")}>
-              Look up an item
-            </ButtonItem>
-          </PanelSectionRow>
+          {d.recent.length > 5 && <QamNote>+{d.recent.length - 5} more recent</QamNote>}
         </>
       )}
     </PanelSection>

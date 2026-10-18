@@ -4,25 +4,20 @@
 // py_modules/wfh/inventory (inventory.status/refresh/import_file).
 import { openFilePicker } from "@decky/api";
 import {
-  ButtonItem,
   DialogButton,
   Dropdown,
   Field,
   Focusable,
   ModalRoot,
-  Navigation,
   PanelSection,
   PanelSectionRow,
-  SliderField,
   TextField,
   ToggleField,
   showModal,
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Pager, Plat, Section, Segmented, Stat, chip, colors } from "../components/ui";
-import { openTab } from "../nav";
-import { ROUTE } from "../nav";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Pager, Plat, QamButtons, QamMessage, QamNote, QamRow, Section, Segmented, Stat, chip, colors, ellipsis } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 // ---- types (mirror menus/inventory.py) -----------------------------------------------------
@@ -243,12 +238,6 @@ export function ago(ms: number | null | undefined): string {
   if (s < 5400) return `${Math.round(s / 60)} min ago`;
   if (s < 172800) return `${Math.round(s / 3600)} h ago`;
   return `${Math.round(s / 86400)} days ago`;
-}
-
-function openPage(id: string): void {
-  openTab(id);
-  Navigation.Navigate(ROUTE);
-  Navigation.CloseSideMenus();
 }
 
 // "No inventory yet": refresh from the game or import an exported JSON file.
@@ -769,111 +758,85 @@ export const Qam: FC = () => {
     st.reload();
   };
   const presets = q?.presets ?? [0, 5, 10, 15];
+  const refresh = async () => {
+    setMsg("Refreshing…");
+    try {
+      await call("inventory.refresh");
+      setMsg(undefined);
+    } catch (e) {
+      setMsg(String((e as Error)?.message ?? e));
+    }
+    st.reload();
+  };
+  const fetchPrices = async (scope: string) => {
+    const r = await call<{ queued: number }>("inventory.prefetch_prices", { tab: scope === "prime" ? "prime" : "everything" });
+    setMsg(r.queued > 0 ? `Fetching ${r.queued} prices…` : "Prices are cached.");
+    if (r.queued > 0) setTimeout(() => st.reload(), 15000);
+  };
   return (
-    <PanelSection title="Inventory value">
-      {st.error && !q && (
-        <PanelSectionRow>
-          <Field label="Error" description={st.error} />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {st.error && !q && <QamMessage label="Error" sub={st.error} />}
       {q && !q.hasInventory && (
         <>
-          <PanelSectionRow>
-            <Field label="No inventory yet" description="Log in to Warframe, or import a JSON file on the Inventory page." focusable />
-          </PanelSectionRow>
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              onClick={async () => {
-                setMsg("Refreshing…");
-                try {
-                  await call("inventory.refresh");
-                  setMsg(undefined);
-                } catch (e) {
-                  setMsg(String((e as Error)?.message ?? e));
-                }
-                st.reload();
-              }}
-            >
-              Refresh inventory
-            </ButtonItem>
-          </PanelSectionRow>
+          <QamMessage focusable label="No inventory yet" sub="Log in to Warframe, or import a JSON file on the Inventory page." />
+          <QamButtons buttons={[{ label: "Refresh inventory", onClick: refresh }]} />
         </>
       )}
       {q?.hasInventory && q.totals && (
         <>
-          <PanelSectionRow>
-            <Field
-              focusable
-              label={q.scope === "prime" ? "Prime parts" : "All tradables"}
-              description={`${q.totals.counted} items${q.totals.unpriced ? ` · ${q.totals.unpriced} unpriced` : ""}`}
-              childrenContainerWidth="min"
-              bottomSeparator="none"
-            >
-              <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                <div style={{ color: colors.plat, fontWeight: 700 }}>
+          <QamRow
+            label={q.scope === "prime" ? "Prime parts" : "All tradables"}
+            sub={`${q.totals.counted} items${q.totals.unpriced ? ` · ${q.totals.unpriced} unpriced` : ""}`}
+            separator={(q.top ?? []).length === 0}
+            value={
+              <>
+                <span style={{ display: "block", color: colors.plat, fontWeight: 700 }}>
                   {q.totals.platinumUnpriced ? "≥" : ""}
                   {fmtNum(q.totals.platinum)}p
-                </div>
+                </span>
                 {q.scope === "prime" && (
-                  <div style={{ color: colors.ducat, fontSize: "13px" }}>
+                  <span style={{ display: "block", color: colors.ducat, fontSize: "13px" }}>
                     {q.totals.ducatsUnpriced ? "≥" : ""}
                     {fmtNum(q.totals.ducats)}d
-                  </div>
+                  </span>
                 )}
-              </div>
-            </Field>
-          </PanelSectionRow>
-          {(q.top ?? []).map((t) => (
-            <PanelSectionRow key={t.name}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: colors.muted }}>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {t.name} ×{t.amount}
-                </span>
-                <span style={{ color: colors.plat, flexShrink: 0 }}>{Math.round(t.platinum)}p</span>
+              </>
+            }
+          />
+          {/* The most valuable stacks, as a small list under the total (not separate rows). */}
+          {(q.top ?? []).length > 0 && (
+            <PanelSectionRow>
+              <div style={{ padding: "0 0 6px", borderBottom: `1px solid ${colors.border}`, fontSize: "13px", lineHeight: "18px" }}>
+                {(q.top ?? []).map((t) => (
+                  <div key={t.name} style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                    <span style={{ color: colors.muted, ...ellipsis }}>
+                      {t.name} ×{t.amount}
+                    </span>
+                    <span style={{ color: colors.plat, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{Math.round(t.platinum)}p</span>
+                  </div>
+                ))}
               </div>
             </PanelSectionRow>
-          ))}
+          )}
           <PanelSectionRow>
             <ToggleField label="Count all tradables" checked={q.scope === "tradable"} onChange={(b) => setPrefs({ value_scope: b ? "tradable" : "prime" })} />
           </PanelSectionRow>
+          {/* Min price as chips on one line: the notched slider took two rows. */}
           <PanelSectionRow>
-            <SliderField
-              label="Min price per unit"
-              value={Math.max(0, presets.indexOf(q.minPlat))}
-              min={0}
-              max={presets.length - 1}
-              step={1}
-              notchCount={presets.length}
-              notchLabels={presets.map((p, i) => ({ notchIndex: i, label: p === 0 ? "Any" : `${p}p`, value: i }))}
-              notchTicksVisible
-              onChange={(i) => setPrefs({ value_min_plat: presets[i] ?? 0 })}
-            />
+            <Field label="Min price" padding="compact" focusable={false}>
+              <Focusable flow-children="horizontal" style={{ display: "flex", gap: "4px" }}>
+                {presets.map((p) => (
+                  <DialogButton key={p} onClick={() => setPrefs({ value_min_plat: p })} style={{ ...chip(p === q.minPlat), padding: "4px 8px", fontWeight: p === q.minPlat ? 700 : 400 }}>
+                    {p === 0 ? "Any" : `${p}p`}
+                  </DialogButton>
+                ))}
+              </Focusable>
+            </Field>
           </PanelSectionRow>
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              onClick={async () => {
-                const r = await call<{ queued: number }>("inventory.prefetch_prices", { tab: q.scope === "prime" ? "prime" : "everything" });
-                setMsg(r.queued > 0 ? `Fetching ${r.queued} prices…` : "Prices are cached.");
-                if (r.queued > 0) setTimeout(() => st.reload(), 15000);
-              }}
-            >
-              Fetch missing prices
-            </ButtonItem>
-          </PanelSectionRow>
+          <QamButtons buttons={[{ label: "Fetch missing prices", onClick: () => fetchPrices(q.scope) }]} />
         </>
       )}
-      {msg && (
-        <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px" }}>{msg}</div>
-        </PanelSectionRow>
-      )}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => openPage("inventory")}>
-          Open Inventory
-        </ButtonItem>
-      </PanelSectionRow>
+      {msg && <QamNote>{msg}</QamNote>}
     </PanelSection>
   );
 };

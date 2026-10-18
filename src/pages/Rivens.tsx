@@ -3,11 +3,9 @@
 // the inventory with their grades. QAM: the last scan, Rescan / Close.
 // Backend: py_modules/wfh/features/riven_scanner.py (riven.*), menus/rivens.py (rivens.*).
 import {
-  ButtonItem,
   DialogButton,
   Dropdown,
   DropdownItem,
-  Field,
   Focusable,
   ModalRoot,
   Navigation,
@@ -20,9 +18,7 @@ import {
 import { toaster } from "@decky/api";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Empty, ErrorText, Grid, Loading, Page, Paged, Row, Section, Stat, chip, colors } from "../components/ui";
-import { openTab } from "../nav";
-import { ROUTE } from "../nav";
+import { Badge, Empty, ErrorText, Grid, Loading, Page, Paged, QamButtons, QamMessage, QamRow, Row, Section, Stat, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 // ---- types (mirror features/riven_scanner.py, riven_grading.py, riven_market.py) ----------
@@ -793,17 +789,9 @@ export const Qam: FC = () => {
   }, []);
   const age = s?.lastScan ? Math.round((now - s.lastScan.at) / 60000) : null;
   return (
-    <PanelSection title="Riven scanner">
-      {st.error && !s && (
-        <PanelSectionRow>
-          <Field label="Error" description={st.error} />
-        </PanelSectionRow>
-      )}
-      {s && !s.active && !s.lastResult && (
-        <PanelSectionRow>
-          <Field label="No riven on screen" description="Open a riven's Cycle screen or a chat link; Rescan reads the card on screen now." focusable />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {st.error && !s && <QamMessage label="Error" sub={st.error} />}
+      {s && !s.active && !s.lastResult && <QamMessage focusable label="No riven on screen" sub="Open a riven's Cycle screen or a chat link; Rescan reads the card on screen now." />}
       {s && !s.active && s.lastResult && (
         <PanelSectionRow>
           <LastResultCards r={s.lastResult} compact />
@@ -811,19 +799,13 @@ export const Qam: FC = () => {
       )}
       {s && s.active && (
         <>
-          <PanelSectionRow>
-            <Field
-              focusable
-              label={
-                <span>
-                  {s.weapon ?? "Unknown weapon"}
-                  {s.layout === "reroll" && s.rollCount > 0 && <span style={{ color: colors.muted, fontSize: "12px" }}> · roll {s.rollCount}</span>}
-                </span>
-              }
-              description={age != null ? `Last scan ${age < 1 ? "just now" : `${age} min ago`}` : undefined}
-              bottomSeparator="none"
-            />
-          </PanelSectionRow>
+          <QamRow
+            label={s.weapon ?? "Unknown weapon"}
+            sub={age != null ? `Last scan ${age < 1 ? "just now" : `${age} min ago`}` : undefined}
+            value={s.layout === "reroll" && s.rollCount > 0 ? `Roll ${s.rollCount}` : undefined}
+            color={colors.muted}
+            separator={false}
+          />
           <PanelSectionRow>
             <div style={{ width: "100%" }}>
               <CardHeader title="Current" grade={s.left.grade} />
@@ -840,30 +822,12 @@ export const Qam: FC = () => {
           )}
         </>
       )}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => scannerAction("riven.rescan")}>
-          Rescan riven
-        </ButtonItem>
-      </PanelSectionRow>
-      {s?.active && (
-        <PanelSectionRow>
-          <ButtonItem layout="below" onClick={() => scannerAction("riven.close")}>
-            Close riven overlay
-          </ButtonItem>
-        </PanelSectionRow>
-      )}
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => {
-            openTab("rivens");
-            Navigation.Navigate(ROUTE);
-            Navigation.CloseSideMenus();
-          }}
-        >
-          Open Rivens
-        </ButtonItem>
-      </PanelSectionRow>
+      <QamButtons
+        buttons={[
+          { label: "Rescan riven", onClick: () => scannerAction("riven.rescan") },
+          s?.active && { label: "Close overlay", onClick: () => scannerAction("riven.close") },
+        ]}
+      />
     </PanelSection>
   );
 };

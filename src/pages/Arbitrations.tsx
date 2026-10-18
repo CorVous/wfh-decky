@@ -4,22 +4,19 @@
 // Backend: py_modules/wfh/menus/arbitrations.py (arbi.*), features/arbitration.py,
 // data/arbi_schedule.py (world.arbi_*).
 import {
-  ButtonItem,
   ConfirmModal,
   DialogButton,
   Dropdown,
-  Field,
   Focusable,
   Navigation,
   PanelSection,
-  PanelSectionRow,
   TextField,
   ToggleField,
   showModal,
 } from "@decky/ui";
 import { CSSProperties, Children, FC, ReactNode, useEffect, useMemo, useState } from "react";
 
-import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Paged, Row, Section, Segmented, Stat, chip, colors, countdown } from "../components/ui";
+import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Paged, QamButtons, QamMessage, QamRow, Row, Section, Segmented, Stat, chip, colors, countdown } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -1116,99 +1113,43 @@ export const Qam: FC = () => {
   useEvent("arbi.summary", () => q.reload());
   const d = q.data;
   const last = d?.lastRun;
+  const summary = async (rpc: string) => {
+    await call(rpc);
+    q.reload();
+  };
   return (
-    <PanelSection title="Arbitration">
-      {q.error && !d && (
-        <PanelSectionRow>
-          <Field label="Error" description={q.error} />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {q.error && !d && <QamMessage label="Error" sub={q.error} />}
       {d?.current && (
-        <PanelSectionRow>
-          <Field
-            focusable
-            label={d.current.node}
-            description={`${d.current.mission} · ${d.current.faction} · ends in ${countdown(d.current.epochMs + 3600000, now)}`}
-            onActivate={() => openPage("schedule")}
-          />
-        </PanelSectionRow>
+        <QamRow label={d.current.node} sub={`${d.current.mission} · ${d.current.faction}`} value={countdown(d.current.epochMs + 3600000, now)} onActivate={() => openPage("schedule")} />
       )}
-      {d?.next && (
-        <PanelSectionRow>
-          <Field
-            focusable
-            label={`Next: ${d.next.node}`}
-            description={`${d.next.mission} · in ${countdown(d.next.epochMs, now)}`}
-            onActivate={() => openPage("schedule")}
-          />
-        </PanelSectionRow>
-      )}
+      {d?.next && <QamRow label={`Next: ${d.next.node}`} sub={d.next.mission} value={countdown(d.next.epochMs, now)} color={colors.muted} onActivate={() => openPage("schedule")} />}
       {d?.nextFavorite && d.nextFavorite.key !== d.next?.key && (
-        <PanelSectionRow>
-          <Field
-            focusable
-            label={`★ ${d.nextFavorite.node}`}
-            description={`in ${countdown(d.nextFavorite.epochMs, now)}`}
-            onActivate={() => openPage("schedule")}
-          />
-        </PanelSectionRow>
+        <QamRow label={`★ ${d.nextFavorite.node}`} sub={d.nextFavorite.mission} value={countdown(d.nextFavorite.epochMs, now)} color={colors.muted} onActivate={() => openPage("schedule")} />
       )}
       {d?.status.active && (
-        <PanelSectionRow>
-          <Field
-            focusable
-            label="Recording"
-            description={`${d.status.active.node}: ${d.status.active.rotations} rot · ${d.status.active.drones} drones`}
-          />
-        </PanelSectionRow>
+        <QamRow label="Recording" sub={d.status.active.node} value={`${d.status.active.rotations} rot · ${d.status.active.drones} drones`} color={colors.good} />
       )}
       {last && (
-        <PanelSectionRow>
-          <Field
-            focusable
-            label={`Last: ${last.node}`}
-            description={`${last.rotations} rot · ${last.drones} drones · ${last.vitusActual ?? `~${num(last.expectedVitusMean)}`} vitus · ${fmtDuration(last.durationSec)}`}
-            onActivate={() => openPage("runs", last.id)}
-          />
-        </PanelSectionRow>
+        <QamRow
+          label={`Last: ${last.node}`}
+          sub={`${last.rotations} rot · ${last.drones} drones · ${last.vitusActual ?? `~${num(last.expectedVitusMean)}`} vitus`}
+          value={fmtDuration(last.durationSec)}
+          color={colors.muted}
+          onActivate={() => openPage("runs", last.id)}
+        />
       )}
-      {!last && d && (
-        <PanelSectionRow>
-          <Field focusable label="No runs yet" description={d.status.lastSkip ? `Not saved: ${d.status.lastSkip.reason}` : "Host or solo, 2+ rotations"} />
-        </PanelSectionRow>
-      )}
+      {!last && d && <QamMessage focusable label="No runs yet" sub={d.status.lastSkip ? `Not saved: ${d.status.lastSkip.reason}` : "Host or solo, 2+ rotations"} />}
       {d?.status.summaryVisible ? (
-        <PanelSectionRow>
-          <ButtonItem
-            layout="below"
-            onClick={async () => {
-              await call("arbi.summary_dismiss");
-              q.reload();
-            }}
-          >
-            Dismiss summary
-          </ButtonItem>
-        </PanelSectionRow>
+        <QamButtons
+          buttons={[
+            { label: "Dismiss summary", onClick: () => summary("arbi.summary_dismiss") },
+            d.lastSummary && { label: "View run", onClick: () => openPage("runs", d.lastSummary?.id ?? null) },
+          ]}
+        />
       ) : (
-        d?.lastSummary && (
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              onClick={async () => {
-                await call("arbi.summary_show");
-                q.reload();
-              }}
-            >
-              Show last summary
-            </ButtonItem>
-          </PanelSectionRow>
-        )
+        d?.lastSummary && <QamButtons buttons={[{ label: "Show last summary", onClick: () => summary("arbi.summary_show") }]} />
       )}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => openPage("runs", d?.status.summaryVisible ? d.lastSummary?.id ?? null : null)}>
-          Open Arbitrations
-        </ButtonItem>
-      </PanelSectionRow>
     </PanelSection>
   );
 };

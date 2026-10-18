@@ -2,10 +2,10 @@
 // whole crafting chains from owned blueprints) and blueprints missing parts; pinned blueprints
 // with summed credits / resources. QAM: counts, the actionable rows, pinned shortfall.
 // Backend: py_modules/wfh/menus/foundry.py (foundry.view/pin/qam).
-import { ButtonItem, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, TextField, showModal } from "@decky/ui";
+import { DialogButton, Dropdown, Focusable, ModalRoot, Navigation, PanelSection, TextField, showModal } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Pager, Section, Segmented, chip, colors, countdown } from "../components/ui";
+import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Pager, QamMessage, QamNote, QamRow, QamTally, Section, Segmented, chip, colors, countdown } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -426,63 +426,51 @@ export default Foundry;
 // ---- QAM section ------------------------------------------------------------------------------
 
 export const Qam: FC = () => {
-  const st = useRpc<FoundryQam>("foundry.qam", { limit: 6 }, [], 60000);
+  const st = useRpc<FoundryQam>("foundry.qam", { limit: 5 }, [], 60000);
   useEvent("inventory.updated", () => st.reload());
   const now = useNow();
   const q = st.data;
   const c = q?.counts;
   const pt = q?.pinnedTotals;
+  const rows = q?.rows ?? [];
   return (
-    <PanelSection title="Foundry">
-      {st.error && !q && (
-        <PanelSectionRow>
-          <Field label="Error" description={st.error} />
-        </PanelSectionRow>
-      )}
-      {q && !q.hasInventory && (
-        <PanelSectionRow>
-          <Field label="No inventory yet" description="Sync it from the Inventory page." focusable />
-        </PanelSectionRow>
-      )}
+    <PanelSection>
+      {st.error && !q && <QamMessage label="Error" sub={st.error} />}
+      {q && !q.hasInventory && <QamMessage focusable label="No inventory yet" sub="Sync it from the Inventory page." />}
       {c && (
-        <PanelSectionRow>
-          <div style={{ display: "flex", gap: "10px", fontSize: "13px" }}>
-            <span style={{ color: STATUS_COLOR.claimable }}>Claim {c.claimable}</span>
-            <span style={{ color: STATUS_COLOR["in-progress"] }}>Building {c.building}</span>
-            <span style={{ color: STATUS_COLOR["ready-to-build"] }}>Ready {c.ready}</span>
-          </div>
-        </PanelSectionRow>
+        <QamTally
+          onActivate={() => openPage("foundry")}
+          items={[
+            { label: "Claim", value: c.claimable, color: c.claimable ? STATUS_COLOR.claimable : colors.muted },
+            { label: "Building", value: c.building, color: c.building ? STATUS_COLOR["in-progress"] : colors.muted },
+            { label: "Ready", value: c.ready, color: c.ready ? STATUS_COLOR["ready-to-build"] : colors.muted },
+          ]}
+        />
       )}
-      {(q?.rows ?? []).map((r) => (
-        <PanelSectionRow key={r.key}>
-          <Field
-            focusable
-            onActivate={() => openPage("foundry")}
-            label={<span style={{ fontSize: "13px" }}>{r.name}{r.count != null && r.count > 1 ? <span style={{ color: colors.muted }}> ×{r.count}</span> : null}</span>}
-            childrenContainerWidth="min"
-            bottomSeparator="none"
-          >
-            <span style={{ color: STATUS_COLOR[r.status], fontWeight: 700, fontSize: "12px", whiteSpace: "nowrap" }}>{statusLabel(r, now)}</span>
-          </Field>
-        </PanelSectionRow>
+      {rows.map((r) => (
+        <QamRow
+          key={r.key}
+          onActivate={() => openPage("foundry")}
+          label={
+            <>
+              {r.name}
+              {r.count != null && r.count > 1 && <span style={{ color: colors.muted, fontSize: "12px" }}> ×{r.count}</span>}
+            </>
+          }
+          value={statusLabel(r, now)}
+          color={STATUS_COLOR[r.status]}
+        />
       ))}
-      {q?.hasInventory && (q.rows ?? []).length === 0 && (
-        <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px" }}>Nothing to claim or build.</div>
-        </PanelSectionRow>
-      )}
+      {q?.hasInventory && rows.length === 0 && <QamNote>Nothing to claim or build.</QamNote>}
       {pt && pt.count > 0 && (
-        <PanelSectionRow>
-          <Field label={`Pinned (${pt.count}) · ${fmtNum(pt.credits)} cr`} focusable bottomSeparator="none" description={
-            pt.missing.length === 0 ? "All resources in stock" : `Missing: ${pt.missing.slice(0, 3).map((m) => `${fmtNum(m.needed - m.owned)} ${m.name}`).join(", ")}${pt.missing.length > 3 ? ` +${pt.missing.length - 3}` : ""}`
-          } />
-        </PanelSectionRow>
+        <QamRow
+          label={`Pinned (${pt.count})`}
+          sub={pt.missing.length === 0 ? "All resources in stock" : `Missing: ${pt.missing.slice(0, 3).map((m) => `${fmtNum(m.needed - m.owned)} ${m.name}`).join(", ")}${pt.missing.length > 3 ? ` +${pt.missing.length - 3}` : ""}`}
+          value={`${fmtNum(pt.credits)} cr`}
+          color={colors.muted}
+          onActivate={() => openPage("foundry")}
+        />
       )}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => openPage("foundry")}>
-          Open Foundry
-        </ButtonItem>
-      </PanelSectionRow>
     </PanelSection>
   );
 };

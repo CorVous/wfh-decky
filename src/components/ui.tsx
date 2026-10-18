@@ -1,5 +1,5 @@
 // Shared building blocks so every page looks and navigates the same way.
-import { DialogButton, Focusable } from "@decky/ui";
+import { DialogButton, Field, Focusable, PanelSectionRow } from "@decky/ui";
 import { Component, CSSProperties, FC, ReactNode, useState } from "react";
 
 export const colors = {
@@ -283,3 +283,83 @@ export function Segmented<T extends string | number>({ value, options, onChange,
     </Focusable>
   );
 }
+
+// ---- Quick Access Menu ---------------------------------------------------------------------------
+// The QAM panel is ~310px wide (~278px inside PanelSection's padding). Every section builds its
+// rows from these so they share one look: Steam Field rows, label and a muted second line on the
+// left, the value right-aligned in tabular figures.
+
+const qamValue: CSSProperties = { whiteSpace: "nowrap", textAlign: "right", fontVariantNumeric: "tabular-nums" };
+
+// One compact QAM row. Focusable by default so long sections stay reachable (and scroll) with
+// the d-pad; `onActivate` usually opens the matching full-screen view.
+export const QamRow: FC<{
+  label: ReactNode;
+  sub?: ReactNode;
+  value?: ReactNode;
+  color?: string;
+  onActivate?: () => void;
+  focusable?: boolean;
+  separator?: boolean;
+}> = ({ label, sub, value, color, onActivate, focusable = true, separator = true }) => (
+  <PanelSectionRow>
+    <Field
+      focusable={focusable}
+      padding="compact"
+      label={<span style={{ display: "block", ...ellipsis }}>{label}</span>}
+      description={sub}
+      onActivate={onActivate}
+      childrenContainerWidth="min"
+      bottomSeparator={separator ? "standard" : "none"}
+    >
+      {value != null && value !== false && <span style={{ ...qamValue, color: color ?? colors.text }}>{value}</span>}
+    </Field>
+  </PanelSectionRow>
+);
+
+// Loading / error / empty placeholder row.
+export const QamMessage: FC<{ label: string; sub?: ReactNode; focusable?: boolean }> = ({ label, sub, focusable }) => (
+  <PanelSectionRow>
+    <Field label={label} description={sub} focusable={focusable} padding="compact" />
+  </PanelSectionRow>
+);
+
+// Small muted line: "+12 more", status messages, stale-data warnings (pass colors.warn).
+export const QamNote: FC<{ children: ReactNode; color?: string }> = ({ children, color }) => (
+  <PanelSectionRow>
+    <div style={{ fontSize: "12px", lineHeight: "16px", padding: "4px 0", color: color ?? colors.muted, wordBreak: "break-word" }}>{children}</div>
+  </PanelSectionRow>
+);
+
+// Counts on one line ("Claim 4  Building 3  Ready 6"), spread across the panel. Zero counts dim.
+export const QamTally: FC<{ items: { label: ReactNode; value: ReactNode; color?: string }[]; onActivate?: () => void }> = ({ items, onActivate }) => (
+  <PanelSectionRow>
+    <Focusable
+      onActivate={onActivate}
+      focusClassName="gpfocus"
+      style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "13px", padding: "6px 0", borderBottom: `1px solid ${colors.border}` }}
+    >
+      {items.map((it, i) => (
+        <span key={i} style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ color: colors.muted }}>{it.label}</span> <span style={{ color: it.color ?? colors.text }}>{it.value}</span>
+        </span>
+      ))}
+    </Focusable>
+  </PanelSectionRow>
+);
+
+// One to three buttons side by side: a single d-pad row instead of a full-width button each.
+export const QamButtons: FC<{ buttons: ({ label: ReactNode; onClick: () => void; disabled?: boolean } | false | null | undefined)[] }> = ({ buttons }) => (
+  <PanelSectionRow>
+    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", padding: "6px 0" }}>
+      {buttons.filter(Boolean).map((b, i) => {
+        const x = b as { label: ReactNode; onClick: () => void; disabled?: boolean };
+        return (
+          <DialogButton key={i} disabled={x.disabled} onClick={x.onClick} style={{ flex: 1, minWidth: 0, width: "auto", padding: "8px 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {x.label}
+          </DialogButton>
+        );
+      })}
+    </Focusable>
+  </PanelSectionRow>
+);

@@ -1,10 +1,10 @@
 // Settings: every overlay/tracking option (generic form from settings.view), the PROTON_LOG
 // launch option helper, data refresh and diagnostics (backend: py_modules/wfh/menus/settings_view.py).
-import { ButtonItem, ConfirmModal, DialogButton, DropdownItem, Field, Focusable, PanelSection, PanelSectionRow, SliderField, TextField, ToggleField, showModal } from "@decky/ui";
+import { ConfirmModal, DialogButton, DropdownItem, Focusable, PanelSection, PanelSectionRow, SliderField, TextField, ToggleField, showModal } from "@decky/ui";
 import { toaster } from "@decky/api";
 import { FC, useEffect, useRef, useState } from "react";
 
-import { Badge, Columns, ErrorText, Guard, Loading, Page, Section, chip, colors } from "../components/ui";
+import { Badge, Columns, ErrorText, Guard, Loading, Page, QamButtons, QamMessage, QamNote, Section, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 interface FieldDef {
@@ -599,9 +599,7 @@ export const Qam: FC = () => {
   if (!d)
     return (
       <PanelSection title="Overlays">
-        <PanelSectionRow>
-          <Field label={s.error ? "Error" : "Loading…"} description={s.error} />
-        </PanelSectionRow>
+        <QamMessage label={s.error ? "Error" : "Loading…"} sub={s.error} />
       </PanelSection>
     );
   return (
@@ -625,43 +623,39 @@ export const Qam: FC = () => {
       ))}
       <PanelSectionRow>
         <SliderField
-          label="Opacity"
+          label={`Opacity ${Math.round((opacity ?? d.overlay_opacity) * 100)}%`}
           value={opacity ?? d.overlay_opacity}
           min={0.3}
           max={1}
           step={0.05}
-          showValue
+          showValue={false}
           onChange={(v) => {
             setOpacity(v);
             set("overlay_opacity", v, 400, () => setOpacity(undefined));
           }}
         />
       </PanelSectionRow>
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          disabled={scanBusy}
-          description={scanMsg}
-          onClick={async () => {
-            setScanBusy(true);
-            try {
-              const r = await call<{ started: boolean }>("rewards.scan_now");
-              setScanMsg(r?.started ? "Scanning the reward screen…" : "Relic reward prices are turned off.");
-            } catch (e: any) {
-              setScanMsg(`Scan failed: ${errText(e)}`);
-            } finally {
-              setScanBusy(false);
-            }
-          }}
-        >
-          Scan rewards now
-        </ButtonItem>
-      </PanelSectionRow>
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => call("overlay.clear")}>
-          Hide overlays now
-        </ButtonItem>
-      </PanelSectionRow>
+      <QamButtons
+        buttons={[
+          {
+            label: "Scan rewards",
+            disabled: scanBusy,
+            onClick: async () => {
+              setScanBusy(true);
+              try {
+                const r = await call<{ started: boolean }>("rewards.scan_now");
+                setScanMsg(r?.started ? "Scanning the reward screen…" : "Relic reward prices are turned off.");
+              } catch (e: any) {
+                setScanMsg(`Scan failed: ${errText(e)}`);
+              } finally {
+                setScanBusy(false);
+              }
+            },
+          },
+          { label: "Hide overlays", onClick: () => call("overlay.clear") },
+        ]}
+      />
+      {scanMsg && <QamNote>{scanMsg}</QamNote>}
     </PanelSection>
   );
 };

@@ -1,10 +1,10 @@
 // Missions: rewards of each mission with platinum / ducat value, from inventory diffs taken
 // after every mission end (docs/port/menus.md §7). Data: missions.* RPCs
 // (py_modules/wfh/menus/missions.py); event missions.updated after each recorded mission.
-import { ButtonItem, DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
+import { DialogButton, Dropdown, Focusable, PanelSection } from "@decky/ui";
 import { FC, useState } from "react";
 
-import { Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, Row, Section, Segmented, Stat, card, chip, colors } from "../components/ui";
+import { Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, QamMessage, QamNote, QamRow, Row, Section, Segmented, Stat, card, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 import { openPage, useThrottled } from "./Mastery";
 
@@ -292,70 +292,51 @@ export const Qam: FC = () => {
   const s = d?.latest;
   return (
     <PanelSection title="Last mission">
-      {q.error && !d && (
-        <PanelSectionRow>
-          <Field label="Error" description={q.error} />
-        </PanelSectionRow>
-      )}
-      {!d && !q.error && (
-        <PanelSectionRow>
-          <Field label="Loading…" />
-        </PanelSectionRow>
-      )}
+      {q.error && !d && <QamMessage label="Error" sub={q.error} />}
+      {!d && !q.error && <QamMessage label="Loading…" />}
       {d && !s && (
-        <PanelSectionRow>
-          <Field label="No mission recorded yet" description={d.status.blocked ? BLOCKED[d.status.blocked] : d.status.pendingMissions ? "Reading rewards…" : "Rewards appear a few seconds after a mission ends."} />
-        </PanelSectionRow>
+        <QamMessage label="No mission recorded yet" sub={d.status.blocked ? BLOCKED[d.status.blocked] : d.status.pendingMissions ? "Reading rewards…" : "Rewards appear a few seconds after a mission ends."} />
       )}
       {s && (
         <>
-          <PanelSectionRow>
-            <Field
-              focusable
-              padding="compact"
-              label={title(s)}
-              description={[s.platinum > 0 ? `+${fmt(s.platinum)}p` : "", s.ducats > 0 ? `+${s.ducats}d` : "", s.credits > 0 ? `+${fmt(s.credits)} cr` : "", s.endo > 0 ? `+${fmt(s.endo)} endo` : ""].filter(Boolean).join("  ") || `${s.itemCount} items`}
-              onActivate={openMissions}
-            >
-              <span style={{ color: colors.muted, whiteSpace: "nowrap" }}>{timeText(s.endedAt)}</span>
-            </Field>
-          </PanelSectionRow>
+          <QamRow
+            label={title(s)}
+            sub={[s.platinum > 0 ? `+${fmt(s.platinum)}p` : "", s.ducats > 0 ? `+${s.ducats}d` : "", s.credits > 0 ? `+${fmt(s.credits)} cr` : "", s.endo > 0 ? `+${fmt(s.endo)} endo` : ""].filter(Boolean).join(" · ") || `${s.itemCount} items`}
+            value={timeText(s.endedAt)}
+            color={colors.muted}
+            onActivate={openMissions}
+          />
           {(s.rows ?? []).map((r) => (
-            <PanelSectionRow key={r.uniqueName}>
-              <Field focusable padding="compact" label={<span style={{ color: r.unpriced ? colors.muted : colors.text }}>{r.name}</span>} onActivate={openMissions}>
-                <span style={{ whiteSpace: "nowrap" }}>
-                  x{fmt(r.count)} {r.platinum != null && <Plat value={r.platinum} />}
-                </span>
-              </Field>
-            </PanelSectionRow>
+            <QamRow
+              key={r.uniqueName}
+              label={<span style={{ color: r.unpriced ? colors.muted : colors.text }}>{r.name}</span>}
+              value={
+                <>
+                  ×{fmt(r.count)}
+                  {r.platinum != null && (
+                    <span style={{ display: "inline-block", minWidth: "40px", marginLeft: "6px" }}>
+                      <Plat value={r.platinum} />
+                    </span>
+                  )}
+                </>
+              }
+              onActivate={openMissions}
+            />
           ))}
-          {s.itemCount > (s.rows?.length ?? 0) && (
-            <PanelSectionRow>
-              <div style={{ fontSize: "12px", color: colors.muted }}>+{s.itemCount - (s.rows?.length ?? 0)} more</div>
-            </PanelSectionRow>
-          )}
+          {s.itemCount > (s.rows?.length ?? 0) && <QamNote>+{s.itemCount - (s.rows?.length ?? 0)} more</QamNote>}
         </>
       )}
+      {d && d.status.pendingMissions > 0 && s && <QamNote>Reading the latest mission…</QamNote>}
       {d && (
-        <>
-          {d.status.pendingMissions > 0 && s && (
-            <PanelSectionRow>
-              <div style={{ fontSize: "12px", color: colors.muted }}>Reading the latest mission…</div>
-            </PanelSectionRow>
-          )}
-          <PanelSectionRow>
-            <Field focusable padding="compact" label="Today" onActivate={openMissions}>
-              <span style={{ whiteSpace: "nowrap" }}>
-                {d.today.missions} missions <Plat value={d.today.platinum} />
-              </span>
-            </Field>
-          </PanelSectionRow>
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={openMissions}>
-              Open missions
-            </ButtonItem>
-          </PanelSectionRow>
-        </>
+        <QamRow
+          label="Today"
+          value={
+            <>
+              {d.today.missions} missions · <Plat value={d.today.platinum} />
+            </>
+          }
+          onActivate={openMissions}
+        />
       )}
     </PanelSection>
   );

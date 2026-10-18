@@ -1,11 +1,11 @@
 // Mastery: MR progress, collection by category/status, the "easy mastery" roadmap and pinned
 // goals (docs/port/menus.md §5). Data: mastery.* RPCs (py_modules/wfh/menus/mastery.py), which
 // compute everything from the inventory snapshot; this file only keeps tab/filter state.
-import { ButtonItem, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
+import { DialogButton, Dropdown, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
 
-import { Badge, Bar, Empty, ErrorText, Grid, Loading, Page, Pager, Plat, Row, Section, Segmented, Stat, colors } from "../components/ui";
+import { Badge, Bar, Empty, ErrorText, Grid, Loading, Page, Pager, Plat, QamMessage, QamRow, Row, Section, Segmented, Stat, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -608,63 +608,44 @@ export default Mastery;
 // ---- QAM ------------------------------------------------------------------------------------
 
 export const Qam: FC = () => {
-  const q = useRpc<QamView>("mastery.qam", { limit: 5 }, [], 120000);
+  const q = useRpc<QamView>("mastery.qam", { limit: 4 }, [], 120000);
   useEvent("mastery.updated", () => q.reload());
   const d = q.data;
   const s = d?.summary;
   return (
-    <PanelSection title="Mastery">
-      {q.error && !d && (
-        <PanelSectionRow>
-          <Field label="Error" description={q.error} />
-        </PanelSectionRow>
-      )}
-      {!d && !q.error && (
-        <PanelSectionRow>
-          <Field label="Loading…" />
-        </PanelSectionRow>
-      )}
-      {d && !s && (
-        <PanelSectionRow>
-          <Field label="No mastery data" description={!d.data ? "data/mastery.json.gz missing" : "Waiting for the inventory"} />
-        </PanelSectionRow>
-      )}
-      {s && (
-        <>
-          <PanelSectionRow>
-            <Field focusable padding="compact" label={mrText(s)} description={s.projection?.text ?? undefined} onActivate={() => openMastery("roadmap")} bottomSeparator="none" />
-          </PanelSectionRow>
-          {s.profile?.percentToNext != null && (
-            <PanelSectionRow>
-              <Bar value={s.profile.percentToNext / 100} color={s.profile.testReady ? colors.good : colors.accent} />
-            </PanelSectionRow>
-          )}
-          <PanelSectionRow>
-            <Field focusable padding="compact" label="Mastered" onActivate={() => openMastery("collection")}>
-              <span style={{ whiteSpace: "nowrap" }}>
-                {fmt(s.mastered)} / {fmt(s.total)} ({s.percent}%)
-              </span>
-            </Field>
-          </PanelSectionRow>
-          {d.easy.length > 0 && (
-            <PanelSectionRow>
-              <div style={{ fontSize: "12px", color: colors.muted, textTransform: "uppercase", marginTop: "8px" }}>Easy mastery ({d.easyCount})</div>
-            </PanelSectionRow>
-          )}
+    <>
+      <PanelSection>
+        {q.error && !d && <QamMessage label="Error" sub={q.error} />}
+        {!d && !q.error && <QamMessage label="Loading…" />}
+        {d && !s && <QamMessage label="No mastery data" sub={!d.data ? "data/mastery.json.gz missing" : "Waiting for the inventory"} />}
+        {s && (
+          <>
+            <QamRow
+              label={mrText(s)}
+              sub={s.projection?.text ?? undefined}
+              value={s.profile?.percentToNext != null ? `${Math.floor(s.profile.percentToNext)}%` : undefined}
+              color={s.profile?.testReady ? colors.good : colors.muted}
+              separator={s.profile?.percentToNext == null}
+              onActivate={() => openMastery("roadmap")}
+            />
+            {s.profile?.percentToNext != null && (
+              <PanelSectionRow>
+                <div style={{ padding: "0 0 8px", borderBottom: `1px solid ${colors.border}` }}>
+                  <Bar value={s.profile.percentToNext / 100} color={s.profile.testReady ? colors.good : colors.accent} />
+                </div>
+              </PanelSectionRow>
+            )}
+            <QamRow label="Mastered" value={`${fmt(s.mastered)} / ${fmt(s.total)} · ${s.percent}%`} onActivate={() => openMastery("collection")} />
+          </>
+        )}
+      </PanelSection>
+      {s && d.easy.length > 0 && (
+        <PanelSection title={`Easy mastery (${d.easyCount})`}>
           {d.easy.map((r) => (
-            <PanelSectionRow key={r.uniqueName}>
-              <Field focusable padding="compact" label={r.name} description={r.accessLabel} onActivate={() => openMastery("roadmap")}>
-                <span style={{ color: colors.good, whiteSpace: "nowrap" }}>+{fmt(r.masteryXpRemaining)}</span>
-              </Field>
-            </PanelSectionRow>
+            <QamRow key={r.uniqueName} label={r.name} sub={r.accessLabel} value={`+${fmt(r.masteryXpRemaining)}`} color={colors.good} onActivate={() => openMastery("roadmap")} />
           ))}
-          <PanelSectionRow>
-            <ButtonItem layout="below" onClick={() => openMastery("roadmap")}>
-              Open mastery
-            </ButtonItem>
-          </PanelSectionRow>
-        </>
+        </PanelSection>
       )}
-    </PanelSection>
+    </>
   );
 };
