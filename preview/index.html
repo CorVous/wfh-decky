@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WFHelper preview</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0e141b; color: #fff; }
+  body { font-family: "Motiva Sans", "Liberation Sans", Arial, Helvetica, sans-serif; font-size: 16px; -webkit-font-smoothing: antialiased; }
+  #root { min-height: 100vh; }
+  /* Steam's game-mode UI shows no scrollbars */
+  *::-webkit-scrollbar { width: 0; height: 0; }
+  * { scrollbar-width: none; }
+  .pv-screen { position: relative; width: 1280px; height: 100vh; overflow: hidden; background: #0e141b; }
+  .pv-steamheader { position: absolute; top: 0; left: 0; right: 0; height: 40px; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
+    background: linear-gradient(#171d25, #10151c); color: #dcdedf; font-size: 14px; z-index: 10; }
+  .pv-qam { width: 310px; min-height: 100vh; background: #23262e; box-sizing: border-box; padding-bottom: 16px; }
+  body[data-mode="qam"] { background: #0b0e12; }
+  .pv-qam-title { height: 48px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .pv-static-Title { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+  .pv-ring:focus, .pv-input:focus { outline: 2px solid #fff; outline-offset: -2px; box-shadow: 0 0 10px rgba(255,255,255,.35); }
+  .pv-btn.pv-ring:focus { background: #dcdedf !important; color: #23262e !important; }
+  .pv-btn:hover { filter: brightness(1.12); }
+  .pv-field.pv-ring:focus { background: rgba(255,255,255,.08); }
+  .pv-toast { position: fixed; right: 16px; bottom: 16px; z-index: 9000; background: #3d4450; color: #fff; padding: 12px 16px; border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.6); font-size: 14px; max-width: 360px; }
+  @keyframes pv-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="entry.js"></script>
+</body>
+</html>

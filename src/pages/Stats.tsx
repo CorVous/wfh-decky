@@ -1,0 +1,414 @@
+// Stats: daily resource deltas from inventory snapshots and the EE.log trade ledger
+// (backend: py_modules/wfh/menus/stats.py). Bars are plain divs, no chart library.
+import { ConfirmModal, DialogButton, Dropdown, Focusable, ModalRoot, Navigation, PanelSection, ToggleField, showModal } from "@decky/ui";
+import { FC, useEffect, useState } from "react";
+
+import { openTab } from "../nav";
+import { ROUTE } from "../nav";
+import { Empty, FilterCell, Grid, Guard, Page, Pager, QamMessage, QamRow, Row, Section, Stat, chip, colors } from "../components/ui";
+import { call, useEvent, useRpc } from "../rpc";
+
+interface CatalogEntry {
+  id: string;
+  label: string;
+  compact: boolean;
+}
+
+interface StripEntry {
+  id: string;
+  label: string;
+  current: number | null;
+  delta: number;
+  currentText: string;
+  deltaText: string;
+}
+
+interface Flow {
+  count: number;
+  sales: number;
+  purchases: number;
+  swaps: number;
+  platIn: number;
+  platOut: number;
+  net: number;
+}
+
+interface Trade {
+  id: string;
+  ts: number;
+  date: string;
+  type: "sale" | "purchase" | "trade";
+  platChange: number;
+  partner: string;
+  items: { name: string; count: number; direction: "given" | "received" }[];
+}
+
+interface StatsView {
+  catalog: CatalogEntry[];
+  chart: string[];
+  days: number;
+  dayChoices: number[];
+  strip: StripEntry[];
+  today: { date: string; relicsOpened: number; dailyTrades: number; hasData: boolean };
+  series: { dates: string[]; values: Record<string, number[]>; relicsOpened: number[]; dailyTrades: number[]; played: boolean[] };
+  totals: Record<string, number>;
+  trades: { today: Flow; month: Flow; total: number; recent: Trade[] };
+  hasData: boolean;
+  tradeTracking: boolean;
+}
+
+interface QamView {
+  hasData: boolean;
+  date: string;
+  rows: { id: string; label: string; delta: number; deltaText: string; currentText: string }[];
+  relicsOpened: number;
+  trades: Flow;
+}
+
+const COLORS: Record<string, string> = {
+  plat: colors.plat,
+  ducats: colors.ducat,
+  credits: "#c8d2e6",
+  endo: "#d29be6",
+  kuva: "#ff7a6e",
+  aya: "#7ad7c8",
+  vitus: "#9ad06a",
+};
+
+function compact(v: number): string {
+  const a = Math.abs(v);
+  if (a >= 1e9) return `${(v / 1e9).toFixed(1).replace(/\.0$/, "")}B`;
+  if (a >= 1e6) return `${(v / 1e6).toFixed(1).replace(/\.0$/, "")}M`;
+  if (a >= 1e4) return `${(v / 1e3).toFixed(1).replace(/\.0$/, "")}k`;
+  return Math.round(v).toLocaleString();
+}
+
+function signed(v: number, text?: string): string {
+  const t = text ?? compact(v);
+  return v > 0 ? `+${t}` : v < 0 ? (t.startsWith("-") ? t : `-${t}`) : "±0";
+}
+
+function deltaColor(v: number): string {
+  return v > 0 ? colors.good : v < 0 ? colors.bad : colors.muted;
+}
+
+// Vertical bars around a zero line; negative days hang below it.
+export const BarChart: FC<{ title: string; values: number[]; dates: string[]; played?: boolean[]; color?: string; total?: number }> = ({ title, values, dates, played, color, total }) => {
+  const max = Math.max(1, ...values.map((v) => Math.max(0, v)));
+  const min = Math.min(0, ...values);
+  const span = max - min || 1;
+  const height = 72;
+  const zero = (max / span) * height;
+  const best = values.reduce((bi, v, i) => (v > values[bi] ? i : bi), 0);
+  const [sel, setSel] = useState<number | null>(null);
+  const i = sel ?? values.length - 1;
+  return (
+    <Focusable
+      focusClassName="gpfocus"
+      onActivate={() => setSel(sel === null ? best : null)}
+      style={{ minWidth: 0, padding: "8px 10px", borderRadius: "6px", background: colors.panel, border: `1px solid ${colors.border}` }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+        <span style={{ fontWeight: 600, color: color ?? colors.accent, whiteSpace: "nowrap" }}>{title}</span>
+        <span style={{ color: colors.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {dates[i]}: <span style={{ color: deltaColor(values[i] ?? 0) }}>{signed(values[i] ?? 0)}</span>
+          {total !== undefined && <> · {dates.length}d total <span style={{ color: deltaColor(total) }}>{signed(total)}</span></>}
+          {sel !== null ? " · best day" : ""}
+        </span>
+      </div>
+      <div style={{ position: "relative", height: `${height}px`, display: "flex", alignItems: "stretch", gap: values.length > 45 ? "1px" : "3px" }}>
+        <div style={{ position: "absolute", left: 0, right: 0, top: `${zero}px`, borderTop: `1px solid ${colors.border}` }} />
+        {values.map((v, k) => {
+          const h = (Math.abs(v) / span) * height;
+          const isSel = k === i;
+          return (
+            <div key={k} style={{ flex: 1, position: "relative", minWidth: "2px" }}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: v >= 0 ? `${zero - h}px` : `${zero}px`,
+                  height: `${Math.max(v === 0 ? 0 : 2, h)}px`,
+                  background: v < 0 ? colors.bad : color ?? colors.accent,
+                  opacity: played && !played[k] ? 0.25 : isSel ? 1 : 0.75,
+                  outline: isSel ? `1px solid ${colors.text}` : undefined,
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: colors.muted, marginTop: "4px" }}>
+        <span>{dates[0]}</span>
+        <span>max {compact(max)}{min < 0 ? ` · min ${compact(min)}` : ""}</span>
+        <span>{dates[dates.length - 1]}</span>
+      </div>
+    </Focusable>
+  );
+};
+
+function ResourcePicker({ catalog, chart, onSave, closeModal }: { catalog: CatalogEntry[]; chart: string[]; onSave: (ids: string[]) => void; closeModal?: () => void }) {
+  const [sel, setSel] = useState<string[]>(chart);
+  return (
+    <ModalRoot
+      closeModal={closeModal}
+      onOK={() => {
+        onSave(sel.length ? sel : chart);
+        closeModal?.();
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: "8px" }}>Charted resources</div>
+      <div style={{ maxHeight: "420px", overflowY: "auto" }}>
+        {catalog.map((c) => (
+          <ToggleField
+            key={c.id}
+            label={c.label}
+            checked={sel.includes(c.id)}
+            onChange={(v) => setSel(v ? [...sel, c.id] : sel.filter((x) => x !== c.id))}
+          />
+        ))}
+      </div>
+      <DialogButton
+        style={{ marginTop: "10px" }}
+        onClick={() => {
+          onSave(sel.length ? sel : chart);
+          closeModal?.();
+        }}
+      >
+        Save
+      </DialogButton>
+    </ModalRoot>
+  );
+}
+
+function tradeLabel(t: Trade): string {
+  const given = t.items.filter((i) => i.direction === "given");
+  const got = t.items.filter((i) => i.direction === "received");
+  const list = (t.type === "purchase" ? got : given).length ? (t.type === "purchase" ? got : given) : t.items;
+  const names = list.map((i) => (i.count > 1 ? `${i.name} x${i.count}` : i.name)).join(", ");
+  return names || "(no items)";
+}
+
+const TYPE_LABEL: Record<Trade["type"], string> = { sale: "Sold", purchase: "Bought", trade: "Traded" };
+
+const TradeRow: FC<{ t: Trade; onDeleted: () => void }> = ({ t, onDeleted }) => (
+  <Row
+    label={tradeLabel(t)}
+    sub={`${TYPE_LABEL[t.type]} · ${t.partner || "unknown"} · ${new Date(t.ts * 1000).toLocaleString()}`}
+    value={
+      t.platChange ? (
+        <span style={{ color: t.type === "purchase" ? colors.bad : colors.good }}>
+          {t.type === "purchase" ? "-" : "+"}
+          {t.platChange}p
+        </span>
+      ) : (
+        <span style={{ color: colors.muted }}>swap</span>
+      )
+    }
+    onActivate={() =>
+      showModal(
+        <ConfirmModal
+          strTitle="Delete this trade?"
+          strDescription={`${TYPE_LABEL[t.type]} ${tradeLabel(t)} with ${t.partner || "unknown"}. It is removed from the ledger (the day's trade count stays).`}
+          strOKButtonText="Delete"
+          bDestructiveWarning
+          onOK={async () => {
+            await call("stats.trade_delete", { id: t.id });
+            onDeleted();
+          }}
+        />,
+      )
+    }
+  />
+);
+
+const Ledger: FC<{ version: number }> = ({ version }) => {
+  const [offset, setOffset] = useState(0);
+  const limit = 15;
+  const page = useRpc<{ rows: Trade[]; total: number; offset?: number }>("stats.trades", { offset, limit }, [version]);
+  // The backend clamps past-the-end offsets (last row of the last page deleted); follow it.
+  const served = page.data?.offset;
+  useEffect(() => {
+    if (served !== undefined && served !== offset) setOffset(served);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [served]);
+  return (
+    <Guard state={page}>
+      {(p) =>
+        p.total === 0 ? (
+          <Empty text="No trades recorded yet. Trades are read from the in-game trade dialog in EE.log." />
+        ) : (
+          <>
+            <Grid cols={2} gap="0 12px" items={p.rows} render={(t) => <TradeRow key={t.id} t={t} onDeleted={page.reload} />} />
+            {p.total > limit && <Pager page={Math.floor(offset / limit)} pages={Math.ceil(p.total / limit)} onPage={(n) => setOffset(n * limit)} label={`${p.total} trades`} />}
+          </>
+        )
+      }
+    </Guard>
+  );
+};
+
+const FlowLine: FC<{ label: string; f: Flow }> = ({ label, f }) => (
+  <div style={{ margin: "4px 0" }}>
+    <Stat label={label} value={<span style={{ color: deltaColor(f.net) }}>{signed(f.net)}p</span>} />
+    <Stat label="Sales" value={`${f.sales} · +${f.platIn}p`} />
+    <Stat label="Purchases" value={`${f.purchases} · -${f.platOut}p`} />
+    <Stat label="Swaps" value={f.swaps} />
+  </div>
+);
+
+const Stats: FC = () => {
+  const [days, setDays] = useState<number | undefined>(undefined);
+  const [version, setVersion] = useState(0);
+  const view = useRpc<StatsView>("stats.view", days ? { days } : {}, [version]);
+  useEvent("stats.updated", () => setVersion((v) => v + 1));
+  return (
+    <Page>
+      <Guard state={view}>
+        {(v) => (
+          <>
+            <Focusable style={{ display: "flex", gap: "12px", alignItems: "flex-end", margin: "8px 0 0" }} flow-children="horizontal">
+              <FilterCell label="Days" width="180px">
+                <Dropdown
+                  rgOptions={v.dayChoices.map((d) => ({ data: d, label: `${d} days` }))}
+                  selectedOption={v.days}
+                  onChange={async (o) => {
+                    setDays(o.data);
+                    await call("stats.configure", { days: o.data });
+                  }}
+                />
+              </FilterCell>
+              <DialogButton
+                style={chip(false)}
+                onClick={() =>
+                  showModal(
+                    <ResourcePicker
+                      catalog={v.catalog}
+                      chart={v.chart}
+                      onSave={async (ids) => {
+                        await call("stats.configure", { chart: ids });
+                        view.reload();
+                      }}
+                    />,
+                  )
+                }
+              >
+                Choose resources
+              </DialogButton>
+            </Focusable>
+            <Section title={`Today (${v.today.date})`}>
+              {!v.today.hasData && <div style={{ color: colors.muted, marginBottom: "6px" }}>Waiting for an inventory read. Deltas start from the first read of the day.</div>}
+              <Focusable focusClassName="gpfocus" style={{ display: "flex", flexWrap: "wrap", rowGap: "8px" }}>
+                {v.strip.map((s) => (
+                  <Stat
+                    key={s.id}
+                    label={s.label}
+                    value={
+                      <span>
+                        {s.currentText} <span style={{ fontSize: "13px", color: deltaColor(s.delta) }}>{signed(s.delta, s.deltaText)}</span>
+                      </span>
+                    }
+                  />
+                ))}
+                <Stat label="Relics opened" value={v.today.relicsOpened} />
+                <Stat label="Trades" value={v.today.dailyTrades} />
+              </Focusable>
+            </Section>
+            {!v.hasData && <Empty text="No history yet. Stats are recorded from each inventory read while you play." />}
+            <Grid
+              cols={2}
+              gap="10px 12px"
+              render={(el) => el}
+              items={[
+                ...v.chart.map((id) => (
+                  <BarChart
+                    key={id}
+                    title={v.catalog.find((c) => c.id === id)?.label ?? id}
+                    values={v.series.values[id] ?? []}
+                    dates={v.series.dates}
+                    played={v.series.played}
+                    color={COLORS[id]}
+                    total={v.totals[id]}
+                  />
+                )),
+                <BarChart key="relicsOpened" title="Relics opened" values={v.series.relicsOpened} dates={v.series.dates} played={v.series.played} color="#e6c86e" total={v.series.relicsOpened.reduce((a, b) => a + b, 0)} />,
+                <BarChart key="dailyTrades" title="Trades" values={v.series.dailyTrades} dates={v.series.dates} played={v.series.played} color={colors.accent} total={v.series.dailyTrades.reduce((a, b) => a + b, 0)} />,
+              ]}
+            />
+            <Section title="Trades" right={<span style={{ color: colors.muted, fontSize: "12px" }}>{v.trades.total} recorded</span>}>
+              {!v.tradeTracking && <div style={{ color: colors.warn, marginBottom: "6px" }}>Trade recording is off (Settings &gt; Tracking).</div>}
+              <Focusable focusClassName="gpfocus" style={{ display: "flex", flexWrap: "wrap", columnGap: "40px", marginBottom: "6px" }}>
+                <FlowLine label="Today" f={v.trades.today} />
+                <FlowLine label="This month" f={v.trades.month} />
+              </Focusable>
+              <Ledger version={version} />
+            </Section>
+          </>
+        )}
+      </Guard>
+    </Page>
+  );
+};
+
+export default Stats;
+
+function openStats(): void {
+  openTab("stats");
+  Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
+}
+
+// QAM: today's deltas from memory only (stats.qam never reads files or the network).
+export const Qam: FC = () => {
+  const q = useRpc<QamView>("stats.qam", {});
+  useEvent("stats.updated", () => q.reload());
+  const d = q.data;
+  if (!d)
+    return (
+      <PanelSection title="Today">
+        <QamMessage label={q.error ? "Error" : "Loading…"} sub={q.error} />
+      </PanelSection>
+    );
+  // Current amount right-aligned with today's change after it, one line per currency.
+  const delta = (n: number, text?: string, suffix = "") => (
+    <span style={{ display: "inline-block", minWidth: "52px", marginLeft: "8px", fontSize: "13px", color: deltaColor(n) }}>
+      {signed(n, text)}
+      {suffix}
+    </span>
+  );
+  return (
+    <PanelSection title="Today">
+      {!d.hasData && <QamMessage label="No inventory read yet today" />}
+      {d.hasData &&
+        d.rows.map((r) => (
+          <QamRow
+            key={r.id}
+            label={r.label}
+            value={
+              <>
+                {r.currentText}
+                {delta(r.delta, r.deltaText)}
+              </>
+            }
+            onActivate={openStats}
+          />
+        ))}
+      {(d.relicsOpened > 0 || d.trades.count > 0) && (
+        <QamRow
+          label="Relics opened"
+          value={
+            <>
+              {d.relicsOpened}
+              <span style={{ display: "inline-block", minWidth: "52px", marginLeft: "8px" }} />
+            </>
+          }
+          onActivate={openStats}
+        />
+      )}
+      {d.trades.count > 0 && (
+        <QamRow label="Trades" sub={`${d.trades.sales} sold, ${d.trades.purchases} bought`} value={delta(d.trades.net, undefined, "p")} onActivate={openStats} />
+      )}
+    </PanelSection>
+  );
+};

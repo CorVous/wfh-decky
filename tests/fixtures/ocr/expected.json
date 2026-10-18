@@ -1,0 +1,19 @@
+{
+  "_source": "Expected reads from docs/port/relic-rewards.md 6.4/12 and docs/port/riven-scanner.md 7.5/17 (WFHelper manifest.json and run-check.cjs, MIT).",
+  "slot_frames": {
+    "2": {"cards_1080": [721, 965], "expected": ["Braton Prime Stock", "Trumna Prime Blueprint"]},
+    "3": {"cards_1080": [599, 843, 1087], "expected": ["Forma Blueprint", "Caliban Prime Neuroptics Blueprint", "Nautilus Prime Systems"]},
+    "4": {"cards_1080": [470, 714, 958, 1202], "expected": ["Epitaph Prime Receiver", "Forma Blueprint", "Zephyr Prime Neuroptics Blueprint", "Wukong Prime Chassis Blueprint"]}
+  },
+  "public_frames": {
+    "real-full-2p.png": {"cards": 2, "expected": ["Khora Prime Systems Blueprint", "Fang Prime Handle"], "exact": true},
+    "real-full-4p-fps.png": {"cards": 4, "expected": ["Xaku Prime Chassis Blueprint", "Bronco Prime Receiver", "Paris Prime Lower Limb", "Vadarya Prime Barrel"], "exact": true},
+    "real-full-4p-1080x607.png": {"cards": 4, "expected": ["Okina Prime Handle", "Velox Prime Barrel", "Caliban Prime Blueprint", "Grendel Prime Blueprint"], "exact": false},
+    "real-full-4p-16x10.png": {"cards": 4, "expected": ["2 X Forma Blueprint", "2 X Forma Blueprint", "2 X Forma Blueprint", "2 X Forma Blueprint"], "exact": false}
+  },
+  "riven": {
+    "chat-card-angstrum-stats.png": {"upscale": 2, "lines": ["Angstrum Sati-", "visidra", "+159% Multishot", "+276,2% Damage", "+93,2% Fire Rate", "-90,9% Projectile Speed"]},
+    "mod-card-angstrum-stats.png": {"upscale": 2, "lines": ["Angstrum Sati-", "visidra", "+159% Multishot", "+276,2% Damage", "+93,2% Fire Rate", "-90,9% Projectile Speed"]},
+    "roll-card-boar-argi.png": {"upscale": 1, "lines": ["Boar Argi-visitak", "x1,49 Damage to Grineer", "+49,2% Reload Speed"]}
+  }
+}

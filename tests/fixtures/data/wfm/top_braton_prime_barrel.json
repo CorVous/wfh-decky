@@ -1,0 +1,35 @@
+{
+ "apiVersion": "0.18.3",
+ "data": {
+  "sell": [],
+  "buy": [
+   {
+    "id": "66f0c0ffee00000000000009",
+    "type": "buy",
+    "platinum": 6,
+    "quantity": 2,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_lowballer",
+     "ingameName": "Lowballer",
+     "slug": "lowballer",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   }
+  ]
+ },
+ "error": null
+}

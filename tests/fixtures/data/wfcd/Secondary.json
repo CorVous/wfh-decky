@@ -1,0 +1,320 @@
+[
+ {
+  "name": "Akstiletto Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Pistols/PrimeAkstiletto/PrimeAkstiletto",
+  "codexSecret": false,
+  "damagePerShot": [
+   21.6,
+   3.6000001,
+   10.799998,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 36,
+  "criticalChance": 0.15000001,
+  "criticalMultiplier": 2,
+  "procChance": 0.30000001,
+  "fireRate": 7.0833335,
+  "masteryReq": 10,
+  "productCategory": "Pistols",
+  "slot": 0,
+  "accuracy": 23.529411,
+  "omegaAttenuation": 0.85000002,
+  "noise": "Alarming",
+  "trigger": "Auto",
+  "magazineSize": 40,
+  "reloadTime": 1.1,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeBarrel",
+    "itemCount": 2
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/AkstilettoPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeLink",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/AkstilettoPrimeReceiver",
+    "itemCount": 2
+   }
+  ],
+  "type": "Pistol",
+  "imageName": "AkstiletoPrime.png",
+  "category": "Secondary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime"
+  ],
+  "exilusPolarity": "madurai",
+  "disposition": 2,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Hikou Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/ThrowingWeapons/PrimeThrowingStar/PrimeHikou",
+  "codexSecret": false,
+  "damagePerShot": [
+   3.6000001,
+   30.6,
+   1.7999983,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 36,
+  "criticalChance": 0.059999999,
+  "criticalMultiplier": 1.8,
+  "procChance": 0.27999997,
+  "fireRate": 5.8333335,
+  "masteryReq": 4,
+  "productCategory": "Pistols",
+  "slot": 0,
+  "accuracy": 100,
+  "omegaAttenuation": 1.25,
+  "noise": "Silent",
+  "trigger": "Auto",
+  "magazineSize": 26,
+  "reloadTime": 0.5,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/PrimeHikouBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 8
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeHikouHolster",
+    "itemCount": 2
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/PrimeHikouStars",
+    "itemCount": 2
+   }
+  ],
+  "type": "Throwing",
+  "imageName": "HikouPrime.png",
+  "category": "Secondary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Never Vaulted"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 4,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Sicarus Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Pistols/PrimeSicarus/PrimeSicarusPistol",
+  "codexSecret": false,
+  "damagePerShot": [
+   20,
+   15.000001,
+   14.999998,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 50,
+  "criticalChance": 0.25,
+  "criticalMultiplier": 2,
+  "procChance": 0.19999999,
+  "fireRate": 9.375,
+  "masteryReq": 14,
+  "productCategory": "Pistols",
+  "slot": 0,
+  "accuracy": 25,
+  "omegaAttenuation": 1.15,
+  "noise": "Alarming",
+  "trigger": "Burst",
+  "magazineSize": 24,
+  "reloadTime": 2,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/SicarusPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/SicarusPrimeReceiver",
+    "itemCount": 1
+   }
+  ],
+  "type": "Pistol",
+  "imageName": "SicarusPrime.png",
+  "category": "Secondary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 4,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true
+ },
+ {
+  "name": "Vasto Prime",
+  "uniqueName": "/Lotus/Weapons/Tenno/Pistols/PrimeVasto/PrimeVastoPistol",
+  "codexSecret": false,
+  "damagePerShot": [
+   16.5,
+   16.5,
+   77,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "totalDamage": 110,
+  "criticalChance": 0.22,
+  "criticalMultiplier": 2.4000001,
+  "procChance": 0.22000003,
+  "fireRate": 2.5000002,
+  "masteryReq": 10,
+  "productCategory": "Pistols",
+  "slot": 0,
+  "accuracy": 16,
+  "omegaAttenuation": 1.35,
+  "noise": "Alarming",
+  "trigger": "Semi",
+  "magazineSize": 6,
+  "reloadTime": 1,
+  "multishot": 1,
+  "buildPrice": 15000,
+  "buildTime": 43200,
+  "skipBuildTimePrice": 50,
+  "buildQuantity": 1,
+  "consumeOnBuild": true,
+  "components": [
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeBarrel",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/VastoPrimeBlueprint",
+    "itemCount": 1
+   },
+   {
+    "uniqueName": "/Lotus/Types/Items/MiscItems/OrokinCell",
+    "itemCount": 10
+   },
+   {
+    "uniqueName": "/Lotus/Types/Recipes/Weapons/WeaponParts/VastoPrimeReceiver",
+    "itemCount": 1
+   }
+  ],
+  "type": "Pistol",
+  "imageName": "VastoPrime.png",
+  "category": "Secondary",
+  "tradable": false,
+  "wikiAvailable": true,
+  "tags": [
+   "Prime",
+   "Vaulted"
+  ],
+  "exilusPolarity": "naramon",
+  "disposition": 5,
+  "isPrime": true,
+  "vaulted": true,
+  "masterable": true,
+  "parentUniqueNames": [
+   "/Lotus/Weapons/Tenno/Pistols/PrimeVasto/AkPrimeVasto/AkPrimeVastoPistol"
+  ]
+ }
+]

@@ -1,0 +1,190 @@
+{
+ "apiVersion": "0.18.3",
+ "data": [
+  {
+   "id": "5751ebf43a3eba7b41a0a2c5",
+   "slug": "ash_prime_set",
+   "gameRef": "/Lotus/Powersuits/Ninja/AshPrime",
+   "tags": [
+    "prime",
+    "set",
+    "warframe"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Ash Prime Set",
+     "icon": "items/images/en/ash_prime_set.1a2b3c4d5e6f708192a3b4c5d6e7f809.png",
+     "thumb": "items/images/en/thumbs/ash_prime_set.1a2b3c4d5e6f708192a3b4c5d6e7f809.128x128.png"
+    }
+   },
+   "setRoot": true,
+   "ducats": 0
+  },
+  {
+   "id": "5751ebf43a3eba7b41a0a2c3",
+   "slug": "ash_prime_chassis_blueprint",
+   "gameRef": "/Lotus/Types/Recipes/WarframeRecipes/AshPrimeChassisBlueprint",
+   "tags": [
+    "prime",
+    "blueprint",
+    "component",
+    "warframe"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Ash Prime Chassis Blueprint",
+     "icon": "items/images/en/ash_prime_chassis_blueprint.0f1e2d3c4b5a69788796a5b4c3d2e1f0.png",
+     "thumb": "items/images/en/thumbs/ash_prime_chassis_blueprint.0f1e2d3c4b5a69788796a5b4c3d2e1f0.128x128.png"
+    }
+   },
+   "ducats": 15,
+   "vaulted": true
+  },
+  {
+   "id": "54a73e65e779893a797fff32",
+   "slug": "braton_prime_barrel",
+   "gameRef": "/Lotus/Types/Recipes/Weapons/WeaponParts/BratonPrimeBarrel",
+   "tags": [
+    "prime",
+    "component",
+    "weapon",
+    "primary"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Braton Prime Barrel",
+     "icon": "items/images/en/braton_prime_barrel.aa11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/braton_prime_barrel.aa11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   },
+   "ducats": 15
+  },
+  {
+   "id": "54a73e65e779893a797fff33",
+   "slug": "braton_prime_set",
+   "gameRef": "/Lotus/Weapons/Tenno/Rifle/BratonPrime",
+   "tags": [
+    "prime",
+    "set",
+    "weapon",
+    "primary"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Braton Prime Set",
+     "icon": "items/images/en/braton_prime_set.aa11bb22cc33dd44ee55ff6600778890.png",
+     "thumb": "items/images/en/thumbs/braton_prime_set.aa11bb22cc33dd44ee55ff6600778890.128x128.png"
+    }
+   },
+   "setRoot": true
+  },
+  {
+   "id": "5526aec0e779896bd2ab9c76",
+   "slug": "rhino_prime_blueprint",
+   "gameRef": "/Lotus/Types/Recipes/WarframeRecipes/RhinoPrimeBlueprint",
+   "tags": [
+    "prime",
+    "blueprint",
+    "warframe"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Rhino Prime Blueprint",
+     "icon": "items/images/en/rhino_prime_blueprint.bb11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/rhino_prime_blueprint.bb11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   },
+   "ducats": 100,
+   "vaulted": true
+  },
+  {
+   "id": "54e644ffe779897594fa68d2",
+   "slug": "serration",
+   "gameRef": "/Lotus/Upgrades/Mods/Rifle/WeaponDamageAmountMod",
+   "tags": [
+    "mod",
+    "rare",
+    "primary"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Serration",
+     "icon": "items/images/en/serration.cc11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/serration.cc11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   },
+   "maxRank": 10
+  },
+  {
+   "id": "6054de4e5221e30057501057",
+   "slug": "lith_a1_relic",
+   "gameRef": "/Lotus/Types/Game/Projections/T1VoidProjectionGBronze",
+   "tags": [
+    "relic",
+    "lith"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Lith A1 Relic",
+     "icon": "items/images/en/lith_a1_relic.dd11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/lith_a1_relic.dd11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   },
+   "vaulted": true,
+   "subtypes": [
+    "intact",
+    "exceptional",
+    "flawless",
+    "radiant"
+   ]
+  },
+  {
+   "id": "54aae292e7798909064f1575",
+   "slug": "secura_dual_cestra",
+   "gameRef": "/Lotus/Weapons/Syndicates/PerrinSequence/Pistols/PSDualCestra",
+   "tags": [
+    "syndicate",
+    "weapon",
+    "secondary"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Secura Dual Cestra",
+     "icon": "items/images/en/secura_dual_cestra.ee11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/secura_dual_cestra.ee11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   }
+  },
+  {
+   "id": "5b00231bac0f7e006fd6f7b4",
+   "slug": "axi_a1_relic_key",
+   "gameRef": "/Lotus/Types/Keys/Fake",
+   "tags": [
+    "key"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Axi Vault Key (Key)",
+     "icon": "items/images/en/axi_a1_relic_key.ff11bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/axi_a1_relic_key.ff11bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   }
+  },
+  {
+   "id": "5c196fe5a1e8f9003fb80f3b",
+   "slug": "zid-an_asheir",
+   "gameRef": "/Lotus/Types/Fake/ZidAnAsheir",
+   "tags": [
+    "misc"
+   ],
+   "i18n": {
+    "en": {
+     "name": "Zid-an Asheir",
+     "icon": "items/images/en/zid-an_asheir.0011bb22cc33dd44ee55ff6600778899.png",
+     "thumb": "items/images/en/thumbs/zid-an_asheir.0011bb22cc33dd44ee55ff6600778899.128x128.png"
+    }
+   }
+  }
+ ],
+ "error": null
+}

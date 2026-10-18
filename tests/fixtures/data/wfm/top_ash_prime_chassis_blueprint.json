@@ -1,0 +1,218 @@
+{
+ "apiVersion": "0.18.3",
+ "data": {
+  "sell": [
+   {
+    "id": "66f0c0ffee00000000000001",
+    "type": "sell",
+    "platinum": 12,
+    "quantity": 2,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_glaive_tenno",
+     "ingameName": "Glaive_Tenno",
+     "slug": "glaive_tenno",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000002",
+    "type": "sell",
+    "platinum": 13,
+    "quantity": 1,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_relicrunner",
+     "ingameName": "RelicRunner",
+     "slug": "relicrunner",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000003",
+    "type": "sell",
+    "platinum": 14,
+    "quantity": 5,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_baro_fan",
+     "ingameName": "Baro_Fan",
+     "slug": "baro_fan",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "online",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000004",
+    "type": "sell",
+    "platinum": 14,
+    "quantity": 1,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_ash_main",
+     "ingameName": "ash_main",
+     "slug": "ash_main",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000005",
+    "type": "sell",
+    "platinum": 16,
+    "quantity": 1,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_lotus_kid",
+     "ingameName": "Lotus_Kid",
+     "slug": "lotus_kid",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   }
+  ],
+  "buy": [
+   {
+    "id": "66f0c0ffee00000000000006",
+    "type": "buy",
+    "platinum": 10,
+    "quantity": 3,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_cheapskate",
+     "ingameName": "CheapSkate",
+     "slug": "cheapskate",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000007",
+    "type": "buy",
+    "platinum": 9,
+    "quantity": 1,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_ducatfarmer",
+     "ingameName": "DucatFarmer",
+     "slug": "ducatfarmer",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "online",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   },
+   {
+    "id": "66f0c0ffee00000000000008",
+    "type": "buy",
+    "platinum": 8,
+    "quantity": 10,
+    "visible": true,
+    "createdAt": "2026-10-10T08:00:00Z",
+    "updatedAt": "2026-10-17T11:00:00Z",
+    "itemId": "5751ebf43a3eba7b41a0a2c3",
+    "user": {
+     "id": "u_bulkbuyer",
+     "ingameName": "BulkBuyer",
+     "slug": "bulkbuyer",
+     "avatar": null,
+     "reputation": 10,
+     "platform": "pc",
+     "crossplay": true,
+     "locale": "en",
+     "status": "ingame",
+     "activity": {
+      "type": "UNKNOWN",
+      "details": "unknown"
+     },
+     "lastSeen": "2026-10-17T11:58:02Z"
+    }
+   }
+  ]
+ },
+ "error": null
+}
