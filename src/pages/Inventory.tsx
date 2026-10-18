@@ -247,8 +247,8 @@ export function ago(ms: number | null | undefined): string {
 
 function openPage(id: string): void {
   openTab(id);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 // "No inventory yet": refresh from the game or import an exported JSON file.

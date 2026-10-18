@@ -132,8 +132,8 @@ function statusLabel(r: { status: Status; endMs: number | null; chainOnly?: bool
 
 function openPage(id: string): void {
   openTab(id);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 // One-second clock for countdowns between server refreshes.

@@ -21,9 +21,12 @@ export function openTab(id: string): void {
   setter?.(id);
 }
 
-// Closes the side menus and shows the full-screen page on the given tab.
+// Shows the full-screen page on the given tab, then closes the side menus.
+// Navigate first, like Decky's own settings/store buttons: closing the QAM
+// while a game runs hands the controller back to the game, so a page opened
+// after that is shown but never gets d-pad input.
 export function openPage(id: string): void {
   openTab(id);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }

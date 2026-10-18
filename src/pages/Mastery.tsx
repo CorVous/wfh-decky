@@ -158,8 +158,8 @@ export function useThrottled(fn: () => void, ms: number): () => void {
 
 export function openPage(tab: string): void {
   openTab(tab);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 const ROAD_PAGE = 20;

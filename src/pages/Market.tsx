@@ -157,8 +157,8 @@ export function openMarket(tab: Tab = "browse", item?: { slug: string; rank: num
   // A mounted Market page read lastTab/lastItem only at mount; its listener applies them now.
   window.dispatchEvent(new CustomEvent("wfh-market-tab", { detail: tab }));
   openTab("market");
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 const STATUS_LABEL: Record<string, string> = { ingame: "In game", online: "Online", invisible: "Invisible", offline: "Offline" };

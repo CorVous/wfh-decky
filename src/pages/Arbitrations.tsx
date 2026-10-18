@@ -1101,8 +1101,8 @@ function openPage(view: "runs" | "schedule", runId: string | null = null): void 
     pendingRunId = runId;
   }
   openTab("arbitrations");
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 export const Qam: FC = () => {

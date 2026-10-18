@@ -355,8 +355,8 @@ export default Stats;
 
 function openStats(): void {
   openTab("stats");
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 // QAM: today's deltas from memory only (stats.qam never reads files or the network).

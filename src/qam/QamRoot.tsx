@@ -83,8 +83,8 @@ class SectionBoundary extends Component<{ id: string; children: ReactNode }, { e
 
 function openPage(id: string): void {
   openTab(id);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 const QamRoot: FC = () => {

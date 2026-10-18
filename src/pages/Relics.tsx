@@ -809,8 +809,8 @@ export const Qam: FC = () => {
           layout="below"
           onClick={() => {
             openTab("relics");
-            Navigation.CloseSideMenus();
             Navigation.Navigate(ROUTE);
+            Navigation.CloseSideMenus();
           }}
         >
           Open Relics

@@ -290,8 +290,8 @@ export function cycleText(c: Cycle, now: number): string {
 // rows therefore never link to other FullPage tabs (only World's own sub-tabs, via openWorld).
 export function openPage(tab: string): void {
   openTab(tab);
-  Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);
+  Navigation.CloseSideMenus();
 }
 
 let lastWorldTab: WorldTab = "overview";

@@ -857,8 +857,8 @@ export const Qam: FC = () => {
           layout="below"
           onClick={() => {
             openTab("rivens");
-            Navigation.CloseSideMenus();
             Navigation.Navigate(ROUTE);
+            Navigation.CloseSideMenus();
           }}
         >
           Open Rivens

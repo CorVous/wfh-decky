@@ -65,8 +65,8 @@ function pct(v: number): string {
 }
 
 function openWeb(url: string): void {
-  Navigation.CloseSideMenus();
   Navigation.NavigateToExternalWeb(url);
+  Navigation.CloseSideMenus();
 }
 
 const RelicModal: FC<{ name: string; closeModal?: () => void }> = ({ name, closeModal }) => {
