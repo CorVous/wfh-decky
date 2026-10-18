@@ -23,7 +23,9 @@ DEFAULTS: dict[str, Any] = {
                       # label when EE.log has no fissure tag; squad_size: overlay squad before the
                       # Relics page pushes filters; filters: pushed RelicOverlayFilterPush or None
                       "auto_trigger": True, "ocr_fallback": True, "squad_size": 4, "show_rewards": False,
-                      "max_height": 720, "prefetch_prices": True, "filters": None},
+                      "max_height": 720, "prefetch_prices": True, "filters": None,
+                      # relics holding a part of gear never crafted nor mastered rank first
+                      "prioritize_mastery": True},
     "riven_scanner": {"enabled": True,
                       # auctions_shown: include auctions (not only direct sales) in similar listings;
                       # ui_scale_auto: EE.cfg interface scale (else ui_scale); canvas: "16:9" menu band

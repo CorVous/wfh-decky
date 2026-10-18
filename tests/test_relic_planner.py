@@ -455,6 +455,9 @@ def test_planner_preview_png(bundle):
             owned[(r.name, "radiant")] = 1 + i % 3
     val = sample_valuer({chosen[0].rewards[0].item_unique: 1} if chosen else {})
     rows = [rv.public(r) for r in rv.rank_by_ev(rv.build_rows(db, owned, squad=4, era="axi", best_quality=True, valuer=val))]
+    # Show the mastery marks: pretend the second relic holds a part never crafted.
+    rows[1]["masteryParts"] = [rows[1]["rewards"][1]["name"]] if rows[1].get("rewards") else ["x"]
+    rows = [rows[1]] + rows[:1] + rows[2:]
     payload = {"state": "rows", "era": "axi", "eraSource": "eelog", "rows": rows, "squadSize": 4,
                "totalOwnedCount": sum(r["ownedTotal"] for r in rows)}
     panel = rp.render_panel(payload, show_rewards=False)
@@ -739,3 +742,64 @@ def test_panel_prices_loading_line():
     plain = rp.render_panel(base)
     noted = rp.render_panel({**base, "pricesMissing": 40})
     assert noted.height == plain.height + 32
+
+
+def test_mastery_first_moves_relics_with_needed_parts_up(monkeypatch):
+    from types import SimpleNamespace
+
+    from wfh.features import reward_enrich
+
+    class Needs:
+        def __init__(self, db, inv):
+            pass
+
+        def needed(self, name):
+            return name == "Vadarya Prime Barrel"
+
+    monkeypatch.setattr(reward_enrich, "MasteryNeeds", Needs)
+    monkeypatch.setattr("wfh.data.items.items", lambda: None)
+    relic = lambda *names: SimpleNamespace(rewards=[SimpleNamespace(item_name=n) for n in names])  # noqa: E731
+    rows = [
+        {"name": "A", "_relic": relic("Forma Blueprint", "Bronco Prime Receiver")},
+        {"name": "B", "_relic": relic("Vadarya Prime Barrel")},
+        {"name": "C", "_relic": relic("Paris Prime Lower Limb")},
+        {"name": "D", "_relic": relic("Vadarya Prime Barrel", "Forma Blueprint")},
+    ]
+    out = rp.RelicPlanner._mastery_first(rows, inv=object())
+    assert [r["name"] for r in out] == ["B", "D", "A", "C"]  # stable within each half
+    assert out[0]["masteryParts"] == ["Vadarya Prime Barrel"] and out[2]["masteryParts"] == []
+
+
+def test_mastery_needs_by_name():
+    from types import SimpleNamespace
+
+    from wfh.features.reward_enrich import MasteryNeeds
+
+    comp = SimpleNamespace(unique_name="/Lotus/Types/Recipes/Weapons/WeaponParts/VadaryaPrimeBarrel", item_count=1)
+    parent = SimpleNamespace(unique_name="/Lotus/Weapons/VadaryaPrime", category="Melee", components=[comp])
+    part = SimpleNamespace(unique_name=comp.unique_name, parent=parent.unique_name)
+
+    class Db:
+        def by_name(self, n):
+            return part if n == "Vadarya Prime Barrel" else None
+
+        def by_unique(self, u):
+            return parent if u == parent.unique_name else None
+
+    class Inv:
+        def __init__(self, owned=None, xp=0):
+            self._owned = owned or {}
+            self.data = {"XPInfo": [{"ItemType": parent.unique_name, "XP": xp}] if xp else []}
+
+        def owned_count(self, u):
+            return self._owned.get(u, 0)
+
+        def pending_recipes(self):
+            return {}
+
+    assert MasteryNeeds(Db(), Inv()).needed("Vadarya Prime Barrel") is True
+    assert MasteryNeeds(Db(), Inv({parent.unique_name: 1})).needed("Vadarya Prime Barrel") is False  # crafted
+    assert MasteryNeeds(Db(), Inv({comp.unique_name: 1})).needed("Vadarya Prime Barrel") is False    # part held
+    assert MasteryNeeds(Db(), Inv(xp=10**7)).needed("Vadarya Prime Barrel") is False                 # mastered
+    assert MasteryNeeds(Db(), Inv()).needed("Forma Blueprint") is None
+    assert MasteryNeeds(Db(), None).needed("Vadarya Prime Barrel") is None

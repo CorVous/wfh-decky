@@ -279,6 +279,40 @@ def needed_for_mastery(e: RewardEntry) -> bool:
             and e.owned is not None and e.owned < e.required)
 
 
+class MasteryNeeds:
+    """needed_for_mastery() by item name, for rewards that are not on screen
+    (the relic planner ranks relics by whether they hold one)."""
+
+    def __init__(self, db, inv):
+        self.db, self.inv = db, inv
+        self.xp = _xp_by_type(inv) if inv is not None else None
+        self.pending = _pending(inv)
+        self._cache: dict[str, bool | None] = {}
+
+    def needed(self, name: str) -> bool | None:
+        if name not in self._cache:
+            self._cache[name] = self._needed(name)
+        return self._cache[name]
+
+    def _needed(self, name: str) -> bool | None:
+        if self.db is None or self.inv is None or _is_forma(name):
+            return None
+        entry = self.db.by_name(name)
+        if entry is None or not entry.unique_name or not entry.parent:
+            return None
+        parent = self.db.by_unique(entry.parent)
+        mastered = mastered_of(parent, self.xp)
+        crafted = crafted_of(parent, self.inv, self.pending)
+        if mastered is None or crafted is None:
+            return None
+        aliases = component_aliases(entry.unique_name)
+        comp = next((c for c in (parent.components or []) if c.unique_name in aliases), None)
+        required = (_positive_int(comp.item_count) if comp else None) or 1
+        return needed_for_mastery(RewardEntry(
+            slot=0, name=name, mastered=mastered, crafted=crafted, required=required,
+            owned=_owned(self.inv, entry.unique_name), building=_in_foundry(entry.unique_name, self.pending)))
+
+
 def best_mastery(entries: list[RewardEntry]) -> int | None:
     """Slot of the most valuable part needed for mastery; ties go to the lower slot."""
     best = None

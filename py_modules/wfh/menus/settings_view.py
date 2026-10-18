@@ -74,6 +74,7 @@ SCHEMA: list[dict] = [
     {"id": "relic_planner", "title": "Relic recommendations", "fields": [
         _toggle("relic_planner.enabled", "Show relic picker overlay"),
         _toggle("relic_planner.auto_trigger", "Open automatically", "When the relic selection screen opens"),
+        _toggle("relic_planner.prioritize_mastery", "Prioritize mastery", "Relics with a part of gear you have never crafted or mastered rank first"),
         _toggle("relic_planner.ocr_fallback", "Read the era from the screen", "When EE.log does not name the fissure tier"),
         _slider("relic_planner.duration_s", "Show for", 5, 60, 1, "s"),
         _slider("relic_planner.squad_size", "Squad size", 1, 4, 1, "", "Used until the Relics page pushes filters"),

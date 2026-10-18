@@ -466,14 +466,22 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
         dtxt = _fmt(r.get("ducat"), "d")
         d.text((x2, ly - 1), dtxt, font=draw.font(14, True), fill=draw.DUCAT)
         rank = f"#{i + 1}"
-        d.text((width - pad - 8 - draw.text_width(rank, 12), ly), rank, font=draw.font(12), fill=draw.MUTED)
+        rank_x = width - pad - 8 - draw.text_width(rank, 12)
+        d.text((rank_x, ly), rank, font=draw.font(12), fill=draw.MUTED)
+        if r.get("masteryParts"):
+            mf = draw.font(10, True)
+            mw = int(mf.getlength("MASTERY")) + 10
+            _pill(d, rank_x - 8 - mw, ly + 1, "MASTERY", draw.ACCENT)
         if show_rewards and r.get("rewards"):
             ry = y + card_h - 2
             for rw in r["rewards"]:
                 chance = f"{rw.get('chance', 0):.0f}%" if rw.get("chance", 0) >= 10 else f"{rw.get('chance', 0):.1f}%"
                 owned = rw.get("owned")
-                own_txt = "need" if rw.get("needed") else ("?" if owned is None else f"own {owned}")
-                own_col = draw.GOOD if rw.get("needed") else draw.MUTED
+                if rw.get("name") in (r.get("masteryParts") or ()):
+                    own_txt, own_col = "mastery", draw.ACCENT
+                else:
+                    own_txt = "need" if rw.get("needed") else ("?" if owned is None else f"own {owned}")
+                    own_col = draw.GOOD if rw.get("needed") else draw.MUTED
                 price = rw.get("platinum")
                 ptx = f"{price:.0f}p" if price is not None else ""
                 right_w = 118
@@ -846,7 +854,7 @@ class RelicPlanner:
             return [], 0, False
         filters = self._filters()
         squad = self.squad_size()
-        key = f"{era or 'all'}|{squad}|{rv.fingerprint(owned)}|{sorted((filters or {}).items(), key=str)!r}|{self.setting('show_rewards', False)}"
+        key = f"{era or 'all'}|{squad}|{rv.fingerprint(owned)}|{sorted((filters or {}).items(), key=str)!r}|{self.setting('show_rewards', False)}|{self.setting('prioritize_mastery', True)}"
         now = self.clock()
         with self._lock:
             if self._cache and self._cache[0] == key and now - self._cache[1] < RECOMMENDATION_CACHE_TTL_S:
@@ -862,6 +870,8 @@ class RelicPlanner:
         else:
             rows = rv.rank_by_ev(rv.build_rows(db, owned, squad=squad, era=era, best_quality=True, valuer=valuer))
             total = sum(r["ownedTotal"] for r in rows)
+        if self.setting("prioritize_mastery", True):
+            rows = self._mastery_first(rows, inv_mod.inventory())
         rows = [rv.public(r) for r in rows]
         missing = len(valuer.missing)
         self.prices_missing = missing
@@ -871,6 +881,24 @@ class RelicPlanner:
         with self._lock:
             self._cache = (key, now, rows, total, missing)
         return rows, total, True
+
+    @staticmethod
+    def _mastery_first(rows: list[dict], inv) -> list[dict]:
+        """Relics holding a part of gear never crafted or mastered move to the
+        top (stable, so EV or the pushed sort still orders each half)."""
+        from ..data.items import items
+        from .reward_enrich import MasteryNeeds
+
+        try:
+            needs = MasteryNeeds(items(), inv)
+        except Exception as e:  # noqa: BLE001 - ranking must not fail on item data
+            _log.warning("mastery ranking unavailable: %s", e)
+            return rows
+        for r in rows:
+            relic = r.get("_relic")
+            names_ = sorted({rw.item_name for rw in (relic.rewards if relic else []) if rw.item_name})
+            r["masteryParts"] = [n for n in names_ if needs.needed(n)]
+        return sorted(rows, key=lambda r: not r["masteryParts"])
 
     def _prefetch(self, slugs) -> None:
         try:
