@@ -6,6 +6,7 @@ import FullPage from "./FullPage";
 import QamRoot from "./qam/QamRoot";
 import { ROUTE } from "./registry";
 import { onEvent, startEvents, stopEvents } from "./rpc";
+import { installShortcuts } from "./shortcuts";
 
 export default definePlugin(() => {
   startEvents();
@@ -13,6 +14,7 @@ export default definePlugin(() => {
     toaster.toast({ title: d.title, body: d.body ?? "" });
   });
   routerHook.addRoute(ROUTE, FullPage, { exact: true });
+  const removeShortcuts = installShortcuts({ title: "WFHelper", route: ROUTE, icon: <GiCrystalGrowth />, panel: <QamRoot /> });
 
   return {
     name: "WFHelper",
@@ -20,6 +22,7 @@ export default definePlugin(() => {
     content: <QamRoot />,
     icon: <GiCrystalGrowth />,
     onDismount() {
+      removeShortcuts();
       offToast();
       stopEvents();
       routerHook.removeRoute(ROUTE);

@@ -16,6 +16,10 @@ In-game overlays, drawn on top of Warframe by gamescope:
   new stats with grades and market value.
 - **Arbitration summary**: your run stats as soon as the mission ends.
 
+WFHelper adds its own icon to the Quick Access bar and a WFHelper entry to the
+Steam main menu (it is still under Decky's tab too, in case a Steam update
+breaks those shortcuts).
+
 In the Quick Access Menu (one summary at a time, picked from a dropdown) and as
 full-screen pages: Dashboard, World (cycles, fissures, invasions, sortie,
 archon, nightwave, Baro, Circuit), Arbitrations (schedule, favourite-node
