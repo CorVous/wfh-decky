@@ -1,12 +1,12 @@
 // Syndicates: rank, standing to next rank, today's remaining standing per pool and rank-up
 // goals with their credits / items / days (docs/port/menus.md §11). Data: syndicates.* RPCs
 // (py_modules/wfh/menus/syndicates.py).
-import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
-import { FC, useState } from "react";
+import { ButtonItem, DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
+import { FC, ReactNode, useState } from "react";
 
-import { Empty, ErrorText, Loading, Page, Row, Section, Stat, colors } from "../components/ui";
+import { Bar, Empty, ErrorText, Grid, Loading, Page, Section, Stat, card, colors, ellipsis } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
-import { Bar, openPage } from "./Mastery";
+import { openPage } from "./Mastery";
 
 // ---- types (mirror menus/syndicates.py) -------------------------------------------------------
 
@@ -85,45 +85,83 @@ export function openSyndicates(): void {
 
 // ---- page -------------------------------------------------------------------------------------
 
-const SyndicateRow: FC<{ r: SynRow; onGoal: (tag: string, level: number | null) => void }> = ({ r, onGoal }) => {
+// One syndicate: name and rank, progress to the next rank and the goal picker (the card's only
+// d-pad stop; max-rank cards keep a focusable label so every card can be reached).
+const SyndicateCard: FC<{ r: SynRow; onGoal: (tag: string, level: number | null) => void }> = ({ r, onGoal }) => {
   const top = r.nextLevel == null;
   return (
-    <div style={{ borderBottom: `1px solid ${colors.border}`, padding: "4px 0" }}>
-      <Focusable style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr) 260px", gap: "12px", alignItems: "center" }} flow-children="horizontal">
-        <Focusable focusClassName="gpfocus" onActivate={() => {}} style={{ minWidth: 0 }}>
-          <div style={{ color: r.joined ? colors.text : colors.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.name}</div>
-          <div style={{ fontSize: "12px", color: r.level < 0 ? colors.bad : colors.muted }}>
-            {r.joined ? rankText(r) : "Not joined"} · {fmt(r.standing)} standing
-          </div>
-        </Focusable>
-        <div>
-          <Bar value={r.progress} color={top ? colors.good : r.level < 0 ? colors.bad : colors.accent} />
-          <div style={{ fontSize: "12px", color: colors.muted, marginTop: "2px" }}>
-            {top ? "Max rank" : `${fmt(r.standingToNext)} to rank ${r.nextLevel}${r.nextTitle ? ` ${r.nextTitle}` : ""}`}
-          </div>
+    <div style={{ ...card, display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "8px" }}>
+        <span style={{ ...ellipsis, fontWeight: 600, color: r.joined ? colors.text : colors.muted }}>{r.name}</span>
+        <span style={{ fontSize: "12px", flexShrink: 0, color: colors.muted }}>{fmt(r.standing)} st</span>
+      </div>
+      <div style={{ ...ellipsis, fontSize: "12px", color: r.level < 0 ? colors.bad : r.joined ? colors.text : colors.muted }}>{r.joined ? rankText(r) : "Not joined"}</div>
+      <Bar value={top ? 1 : r.joined ? r.progress : 0} color={top ? colors.good : r.level < 0 ? colors.bad : colors.accent} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+        <span style={{ ...ellipsis, fontSize: "12px", color: colors.muted, minWidth: 0 }}>
+          {top ? "" : `${fmt(r.standingToNext)} to rank ${r.nextLevel}${r.nextTitle ? ` ${r.nextTitle}` : ""}`}
+        </span>
+        <div style={{ width: "150px", flexShrink: 0 }}>
+          {top ? (
+            <Focusable focusClassName="gpfocus" onActivate={() => {}} style={{ textAlign: "center", fontSize: "13px", color: colors.good, padding: "6px 0" }}>
+              Max rank
+            </Focusable>
+          ) : (
+            <Dropdown
+              menuLabel={`${r.name} goal`}
+              strDefaultLabel="No goal"
+              rgOptions={[{ data: null, label: "No goal" }, ...r.goalOptions.map((o) => ({ data: o.level, label: rankText(o) }))]}
+              selectedOption={r.goal}
+              renderButtonValue={() => (r.goal == null ? "No goal" : `Goal: rank ${r.goal}`)}
+              onChange={(o) => onGoal(r.tag, o.data)}
+            />
+          )}
         </div>
-        <DropdownItem
-          label="Goal"
-          strDefaultLabel="None"
-          disabled={top}
-          rgOptions={[{ data: null, label: "None" }, ...r.goalOptions.map((o) => ({ data: o.level, label: `${o.level}${o.title ? ` ${o.title}` : ""}` }))]}
-          selectedOption={r.goal}
-          onChange={(o) => onGoal(r.tag, o.data)}
-        />
-      </Focusable>
+      </div>
     </div>
   );
 };
 
+// Small focusable card for one goal requirement.
+const NeedCard: FC<{ label: ReactNode; sub?: ReactNode; value: ReactNode }> = ({ label, sub, value }) => (
+  <Focusable focusClassName="gpfocus" onActivate={() => {}} style={{ ...card, padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+    <div style={{ minWidth: 0 }}>
+      <div style={ellipsis}>{label}</div>
+      {sub && <div style={{ ...ellipsis, fontSize: "12px", color: colors.muted }}>{sub}</div>}
+    </div>
+    <div style={{ flexShrink: 0, textAlign: "right" }}>{value}</div>
+  </Focusable>
+);
+
 const NeedsPanel: FC<{ v: View; onClear: () => void }> = ({ v, onClear }) => {
   const n = v.needs;
-  if (!n) {
-    return (
-      <Section title="Goals">
-        <Empty text="Pick a target rank on a syndicate to see the standing, credits and items it takes." />
-      </Section>
-    );
-  }
+  // no goal yet: the hint sits in the standing section above, so the page starts with the cards
+  if (!n) return null;
+  const cards: { key: string; label: ReactNode; sub?: ReactNode; value: ReactNode }[] = [
+    ...n.standing.map((p) => ({
+      key: `st:${p.bin}`,
+      label: `${p.label} standing`,
+      sub: `${fmt(p.remainingToday)} left today · cap ${fmt(p.dailyCap)}/day`,
+      value: (
+        <span>
+          {fmt(p.needed)}
+          <div style={{ fontSize: "12px", color: p.daysEstimate === 0 ? colors.good : colors.muted }}>{p.daysEstimate === 0 ? "today" : `~${p.daysEstimate} day${p.daysEstimate > 1 ? "s" : ""}`}</div>
+        </span>
+      ),
+    })),
+    {
+      key: "credits",
+      label: "Credits",
+      sub: `${fmt(n.credits.owned)} owned`,
+      value: <span style={{ color: n.credits.missing > 0 ? colors.bad : colors.good }}>{fmt(n.credits.needed)}</span>,
+    },
+    ...n.items.map((it) => ({
+      key: `it:${it.itemType}`,
+      label: it.name,
+      sub: `${fmt(it.owned)} owned`,
+      value: <span style={{ color: it.missing > 0 ? colors.bad : colors.good }}>{it.missing > 0 ? `${fmt(it.missing)} missing` : `${fmt(it.needed)} ✓`}</span>,
+    })),
+  ];
   return (
     <Section title="Goals" right={<DialogButton style={{ width: "auto", minWidth: 0, padding: "4px 12px" }} onClick={onClear}>Clear</DialogButton>}>
       {v.conflicts.length > 0 && (
@@ -131,49 +169,28 @@ const NeedsPanel: FC<{ v: View; onClear: () => void }> = ({ v, onClear }) => {
           Opposed: {v.conflicts.map((c) => `${c.aName} / ${c.bName}`).join(", ")} (gaining one costs the other)
         </div>
       )}
-      {n.standing.map((p) => (
-        <Row
-          key={p.bin}
-          label={`${p.label} standing`}
-          sub={`${fmt(p.remainingToday)} left today · cap ${fmt(p.dailyCap)}/day`}
-          value={
-            <span>
-              {fmt(p.needed)}
-              <div style={{ fontSize: "12px", color: p.daysEstimate === 0 ? colors.good : colors.muted }}>{p.daysEstimate === 0 ? "today" : `~${p.daysEstimate} day${p.daysEstimate > 1 ? "s" : ""}`}</div>
-            </span>
-          }
-        />
-      ))}
-      <Row
-        label="Credits"
-        sub={`${fmt(n.credits.owned)} owned`}
-        value={<span style={{ color: n.credits.missing > 0 ? colors.bad : colors.good }}>{fmt(n.credits.needed)}</span>}
-      />
-      {n.items.map((it) => (
-        <Row
-          key={it.itemType}
-          label={it.name}
-          sub={`${fmt(it.owned)} owned`}
-          value={<span style={{ color: it.missing > 0 ? colors.bad : colors.good }}>{it.missing > 0 ? `${fmt(it.missing)} missing` : `${fmt(it.needed)} ✓`}</span>}
-        />
-      ))}
+      <Grid cols={3} items={cards} render={(c) => <NeedCard key={c.key} label={c.label} sub={c.sub} value={c.value} />} />
       {v.plans.map((p) => (
-        <div key={p.tag} style={{ marginTop: "8px" }}>
-          <div style={{ color: colors.accent, fontSize: "13px" }}>
+        <div key={p.tag} style={{ marginTop: "10px" }}>
+          <div style={{ color: colors.accent, fontSize: "13px", marginBottom: "4px" }}>
             {p.name} → rank {p.targetLevel}
           </div>
-          {p.steps.map((s) => (
-            <Row
-              key={s.level}
-              label={`Rank ${s.level}${s.title ? ` ${s.title}` : ""}${s.initiation ? " (+ initiation)" : ""}`}
-              sub={s.items.map((i) => `${i.count}x ${i.name}`).join(", ") || undefined}
-              value={
-                <span style={{ fontSize: "13px" }}>
-                  {fmt(s.standingNeeded)} st · {short(s.credits)} cr
-                </span>
-              }
-            />
-          ))}
+          <Grid cols={3}
+            items={p.steps}
+            render={(s) => (
+              <NeedCard
+                key={s.level}
+                label={`Rank ${s.level}${s.title ? ` ${s.title}` : ""}${s.initiation ? " (+ initiation)" : ""}`}
+                sub={s.items.map((i) => `${i.count}x ${i.name}`).join(", ") || undefined}
+                value={
+                  <span style={{ fontSize: "13px" }}>
+                    {fmt(s.standingNeeded)} st
+                    <div style={{ fontSize: "12px", color: colors.muted }}>{short(s.credits)} cr</div>
+                  </span>
+                }
+              />
+            )}
+          />
         </div>
       ))}
     </Section>
@@ -215,19 +232,16 @@ const Syndicates: FC = () => {
                 ))}
               {v.pools.every((p) => p.remaining == null) && <span style={{ color: colors.muted }}>Not reported by the inventory</span>}
             </Focusable>
+            {!v.needs && (
+              <div style={{ color: colors.muted, fontSize: "13px", marginTop: "6px" }}>Pick a goal rank on a syndicate below to see the standing, credits and items it takes.</div>
+            )}
           </Section>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 360px", gap: "16px", alignItems: "start" }}>
-            <div>
-              {v.groups.map((g) => (
-                <Section key={g.kind} title={g.label}>
-                  {g.rows.map((r) => (
-                    <SyndicateRow key={r.tag} r={r} onGoal={setGoal} />
-                  ))}
-                </Section>
-              ))}
-            </div>
-            <NeedsPanel v={v} onClear={() => run("syndicates.clear_goals")} />
-          </div>
+          <NeedsPanel v={v} onClear={() => run("syndicates.clear_goals")} />
+          {v.groups.map((g) => (
+            <Section key={g.kind} title={g.label}>
+              <Grid cols={3} items={g.rows} render={(r) => <SyndicateCard key={r.tag} r={r} onGoal={setGoal} />} />
+            </Section>
+          ))}
         </>
       )}
     </Page>
@@ -273,15 +287,17 @@ export const Qam: FC = () => {
                 padding="compact"
                 label={r.name}
                 description={
-                  <div>
-                    <div>
-                      {rankText(r)}
-                      {r.goal != null && <span style={{ color: colors.accent }}> → {r.goal}</span>}
+                  <div style={{ width: "260px", maxWidth: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "6px" }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {rankText(r)}
+                        {r.goal != null && <span style={{ color: colors.accent }}> → {r.goal}</span>}
+                      </span>
+                      <span style={{ flexShrink: 0 }}>{r.nextLevel == null ? "Max" : `${short(r.standingToNext)} to go`}</span>
                     </div>
-                    <div style={{ margin: "3px 0" }}>
-                      <Bar value={r.progress} color={r.nextLevel == null ? colors.good : r.level < 0 ? colors.bad : colors.accent} />
+                    <div style={{ marginTop: "3px" }}>
+                      <Bar value={r.nextLevel == null ? 1 : r.progress} color={r.nextLevel == null ? colors.good : r.level < 0 ? colors.bad : colors.accent} />
                     </div>
-                    <div>{r.nextLevel == null ? "Max rank" : `${fmt(r.standingToNext)} to next`}</div>
                   </div>
                 }
                 onActivate={openSyndicates}

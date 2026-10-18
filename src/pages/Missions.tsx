@@ -1,12 +1,12 @@
 // Missions: rewards of each mission with platinum / ducat value, from inventory diffs taken
 // after every mission end (docs/port/menus.md §7). Data: missions.* RPCs
 // (py_modules/wfh/menus/missions.py); event missions.updated after each recorded mission.
-import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
+import { ButtonItem, DialogButton, Dropdown, Field, Focusable, PanelSection, PanelSectionRow } from "@decky/ui";
 import { FC, useState } from "react";
 
-import { Ducats, Empty, ErrorText, Loading, Page, Plat, Row, Section, Stat, colors } from "../components/ui";
+import { Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, Row, Section, Segmented, Stat, card, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
-import { openPage, Segmented, useThrottled } from "./Mastery";
+import { openPage, useThrottled } from "./Mastery";
 
 // ---- types (mirror menus/missions.py) ---------------------------------------------------------
 
@@ -132,6 +132,32 @@ const RewardList: FC<{ rows: RewardRow[] }> = ({ rows }) => (
   </>
 );
 
+// Top rewards as a card grid: one horizontal Focusable per row inside a vertical one,
+// so the d-pad moves in all four directions.
+const GRID_COLS = 4;
+const TOP = 12;
+
+const RewardCell: FC<{ r: RewardRow }> = ({ r }) => (
+  <Focusable
+    focusClassName="gpfocus"
+    onActivate={() => {}}
+    style={card}
+  >
+    <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: r.unpriced ? colors.muted : colors.text }}>
+      {r.name}
+      {r.count > 1 && <span style={{ color: colors.muted }}> x{fmt(r.count)}</span>}
+    </div>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "13px" }}>
+      <span style={{ color: colors.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {r.unpriced ? "no cached price yet" : r.each != null && r.count > 1 ? `${r.each}p each` : ""}
+      </span>
+      <span style={{ whiteSpace: "nowrap", flexShrink: 0 }}>
+        {r.platinum != null && <Plat value={r.platinum} />} {r.ducats != null && <Ducats value={r.ducats} />}
+      </span>
+    </div>
+  </Focusable>
+);
+
 const MissionItem: FC<{ s: Summary; open: boolean; toggle: () => void }> = ({ s, open, toggle }) => (
   <div>
     <Row
@@ -172,23 +198,26 @@ const Missions: FC = () => {
   const reloadSoon = useThrottled(q.reload, 2000);
   useEvent("market.price", reloadSoon);
   const d = q.data;
+  const top = d ? d.totals.items.slice(0, TOP) : [];
   return (
     <Page>
-      <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap", marginTop: "8px" }}>
-        <Segmented
-          value={period}
-          onChange={setPeriod}
-          options={[
-            { id: "today", label: "Today" },
-            { id: "7d", label: "7 days" },
-            { id: "30d", label: "30 days" },
-            { id: "all", label: "All" },
-          ]}
-        />
+      {/* Compact filter bar on top; everything below gets the full width. */}
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap", marginTop: "8px" }}>
+        <FilterCell label="Period">
+          <Segmented
+            value={period}
+            onChange={setPeriod}
+            options={[
+              { id: "today", label: "Today" },
+              { id: "7d", label: "7 days" },
+              { id: "30d", label: "30 days" },
+              { id: "all", label: "All" },
+            ]}
+          />
+        </FilterCell>
         {d && d.missionTypes.length > 0 && (
-          <div style={{ minWidth: "280px" }}>
-            <DropdownItem
-              label="Type"
+          <FilterCell label="Mission type" width="240px">
+            <Dropdown
               rgOptions={[{ data: null, label: "All types" }, ...d.missionTypes.map((t) => ({ data: t.id, label: t.label }))]}
               selectedOption={type}
               onChange={(o) => {
@@ -196,65 +225,56 @@ const Missions: FC = () => {
                 setOffset(0);
               }}
             />
-          </div>
+          </FilterCell>
         )}
-      </div>
+        {d && (
+          <FilterCell label="Tracking">
+            <DialogButton
+              style={{ ...chip(d.status.enabled), width: "auto" }}
+              onClick={async () => {
+                await call("missions.set_enabled", { enabled: !d.status.enabled });
+                q.reload();
+              }}
+            >
+              {d.status.enabled ? "Recording rewards" : "Recording off"}
+            </DialogButton>
+          </FilterCell>
+        )}
+      </Focusable>
       {q.error && !d && <ErrorText error={q.error} />}
       {!d && !q.error && <Loading />}
       {d && (
         <>
-          {d.status.blocked && <div style={{ color: colors.warn, margin: "8px 0" }}>{BLOCKED[d.status.blocked] ?? d.status.blocked}</div>}
+          {d.status.blocked && <div style={{ color: colors.warn, margin: "8px 0 0" }}>{BLOCKED[d.status.blocked] ?? d.status.blocked}</div>}
           {d.status.pendingMissions > 0 && (
-            <div style={{ color: colors.muted, margin: "8px 0" }}>
+            <div style={{ color: colors.muted, margin: "8px 0 0" }}>
               Reading rewards of {d.status.pendingMissions} mission{d.status.pendingMissions > 1 ? "s" : ""}…{d.status.lastFailure ? ` (last read: ${d.status.lastFailure})` : ""}
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 340px", gap: "16px", alignItems: "start" }}>
-            <Section title={`${d.matched} recorded`}>
-              {d.summaries.length === 0 && <Empty text={d.recorded === 0 ? "No missions recorded yet. Finish a mission with Warframe running; rewards appear a few seconds after the end screen." : "No missions in this period."} />}
-              {d.summaries.map((s) => (
-                <MissionItem key={s.id} s={s} open={open === s.id} toggle={() => setOpen(open === s.id ? null : s.id)} />
-              ))}
-              {d.matched > PAGE && (
-                <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
-                  <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE))}>
-                    Prev
-                  </DialogButton>
-                  <span style={{ color: colors.muted }}>
-                    {Math.floor(offset / PAGE) + 1} / {Math.ceil(d.matched / PAGE)}
-                  </span>
-                  <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset + PAGE >= d.matched} onClick={() => setOffset(offset + PAGE)}>
-                    Next
-                  </DialogButton>
-                </Focusable>
-              )}
+          <Section
+            title="Period totals"
+            right={d.totals.unpriced > 0 ? <span style={{ fontSize: "12px", color: colors.muted }}>{d.totals.unpriced} item types not priced yet</span> : undefined}
+          >
+            <Focusable style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px" }} focusClassName="gpfocus" onActivate={() => {}}>
+              <Stat label="Missions" value={fmt(d.totals.missions)} />
+              <Stat label="Platinum" value={`${fmt(d.totals.platinum)}p`} color={colors.plat} />
+              <Stat label="Ducats" value={`${fmt(d.totals.ducats)}d`} color={colors.ducat} />
+              <Stat label="Credits" value={fmt(d.totals.credits)} />
+              <Stat label="Endo" value={fmt(d.totals.endo)} />
+            </Focusable>
+          </Section>
+          {top.length > 0 && (
+            <Section title={`Top rewards (${d.totals.itemTypes})`} right={d.totals.itemTypes > top.length ? <span style={{ fontSize: "12px", color: colors.muted }}>top {top.length} by value</span> : undefined}>
+              <Grid items={top} cols={GRID_COLS} render={(r) => <RewardCell key={r.uniqueName} r={r} />} />
             </Section>
-            <div>
-              <Section title="Period totals">
-                <Focusable style={{ display: "flex", flexWrap: "wrap", gap: "6px 0" }} focusClassName="gpfocus" onActivate={() => {}}>
-                  <Stat label="Missions" value={fmt(d.totals.missions)} />
-                  <Stat label="Platinum" value={`${fmt(d.totals.platinum)}p`} color={colors.plat} />
-                  <Stat label="Ducats" value={`${fmt(d.totals.ducats)}d`} color={colors.ducat} />
-                  <Stat label="Credits" value={fmt(d.totals.credits)} />
-                  <Stat label="Endo" value={fmt(d.totals.endo)} />
-                </Focusable>
-                {d.totals.unpriced > 0 && <div style={{ fontSize: "12px", color: colors.muted, marginTop: "4px" }}>{d.totals.unpriced} item types not priced yet</div>}
-              </Section>
-              <Section title={`Top rewards (${d.totals.itemTypes})`}>
-                <RewardList rows={d.totals.items.slice(0, 12)} />
-              </Section>
-              <Section title="Tracking">
-                <ToggleField
-                  label="Record mission rewards"
-                  checked={d.status.enabled}
-                  onChange={async (v) => {
-                    await call("missions.set_enabled", { enabled: v });
-                    q.reload();
-                  }}
-                />
-              </Section>
-            </div>
-          </div>
+          )}
+          <Section title={`${d.matched} recorded`} right={d.summaries.length > 0 ? <span style={{ fontSize: "12px", color: colors.muted }}>Press A on a mission for its rewards</span> : undefined}>
+            {d.summaries.length === 0 && <Empty text={d.recorded === 0 ? "No missions recorded yet. Finish a mission with Warframe running; rewards appear a few seconds after the end screen." : "No missions in this period."} />}
+            {d.summaries.map((s) => (
+              <MissionItem key={s.id} s={s} open={open === s.id} toggle={() => setOpen(open === s.id ? null : s.id)} />
+            ))}
+            {d.matched > PAGE && <Pager page={Math.floor(offset / PAGE)} pages={Math.ceil(d.matched / PAGE)} onPage={(n) => setOffset(n * PAGE)} label={`${d.matched} missions`} />}
+          </Section>
         </>
       )}
     </Page>

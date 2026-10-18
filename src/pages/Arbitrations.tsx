@@ -7,7 +7,7 @@ import {
   ButtonItem,
   ConfirmModal,
   DialogButton,
-  DropdownItem,
+  Dropdown,
   Field,
   Focusable,
   Navigation,
@@ -17,9 +17,9 @@ import {
   ToggleField,
   showModal,
 } from "@decky/ui";
-import { FC, ReactNode, useEffect, useMemo, useState } from "react";
+import { CSSProperties, Children, FC, ReactNode, useEffect, useMemo, useState } from "react";
 
-import { Badge, Empty, ErrorText, Loading, Page, Paged, Row, Section, Stat, colors, countdown } from "../components/ui";
+import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Paged, Row, Section, Segmented, Stat, chip, colors, countdown } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -310,8 +310,8 @@ const ButtonRow: FC<{ children: ReactNode }> = ({ children }) => (
   </Focusable>
 );
 
-const Btn: FC<{ onClick: () => void; disabled?: boolean; children: ReactNode; width?: string }> = ({ onClick, disabled, children, width }) => (
-  <DialogButton style={{ minWidth: 0, width: width ?? "auto", padding: "6px 14px" }} disabled={disabled} onClick={onClick}>
+const Btn: FC<{ onClick: () => void; disabled?: boolean; children: ReactNode; width?: string; on?: boolean }> = ({ onClick, disabled, children, width, on }) => (
+  <DialogButton style={{ ...chip(!!on), ...(width ? { width } : {}) }} disabled={disabled} onClick={onClick}>
     {children}
   </DialogButton>
 );
@@ -388,70 +388,79 @@ const RunList: FC<{ onOpen: (id: string) => void }> = ({ onOpen }) => {
     <>
       {d && <StatusNotice s={d.status} />}
       <Section title="Runs" right={d && <span style={{ color: colors.muted, fontSize: "12px" }}>{d.total} runs · logs {fmtBytes(d.diskUsageBytes)}</span>}>
-        <ButtonRow>
-          <Btn
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await call("arbi.refresh");
-                runs.reload();
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            Refresh
+        {/* Compact filter bar: dropdowns side by side, actions at the end. */}
+        <Focusable
+          flow-children="horizontal"
+          style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr)) auto auto auto", gap: "8px", alignItems: "end", marginBottom: "6px" }}
+        >
+          <FilterCell label="Mission type">
+            <Dropdown
+              rgOptions={[
+                { data: "all", label: "All types" },
+                { data: "defense", label: "Defense" },
+                { data: "interception", label: "Interception" },
+                { data: "disruption", label: "Disruption" },
+                { data: "other", label: "Other" },
+              ]}
+              selectedOption={f.type}
+              onChange={(o) => update({ type: o.data })}
+            />
+          </FilterCell>
+          <FilterCell label="Source">
+            <Dropdown
+              rgOptions={[
+                { data: "all", label: "Live and imported" },
+                { data: "live", label: "Live" },
+                { data: "imported", label: "Imported" },
+              ]}
+              selectedOption={f.source}
+              onChange={(o) => update({ source: o.data })}
+            />
+          </FilterCell>
+          <FilterCell label="Min rotations">
+            <Dropdown
+              rgOptions={[0, 2, 4, 6, 8, 10, 15, 20].map((n) => ({ data: n, label: n === 0 ? "Any" : `${n}+` }))}
+              selectedOption={f.minRot}
+              onChange={(o) => update({ minRot: o.data })}
+            />
+          </FilterCell>
+          <Btn on={f.dups} onClick={() => update({ dups: !f.dups })}>
+            {f.dups ? "Duplicates shown" : "Duplicates hidden"}
           </Btn>
-          <Btn
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              setMsg("Importing the current EE.log…");
-              try {
-                const r = await call<{ imported: RunSlim[]; skipped: number; error?: string }>("arbi.import_log", {});
-                setMsg(r.error ?? `Imported ${r.imported.length} run(s), skipped ${r.skipped}.`);
-                runs.reload();
-              } catch (e) {
-                setMsg(String(e));
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            Import current EE.log
-          </Btn>
-        </ButtonRow>
-        {msg && <div style={{ color: colors.muted, fontSize: "13px" }}>{msg}</div>}
-        <DropdownItem
-          label="Mission type"
-          rgOptions={[
-            { data: "all", label: "All" },
-            { data: "defense", label: "Defense" },
-            { data: "interception", label: "Interception" },
-            { data: "disruption", label: "Disruption" },
-            { data: "other", label: "Other" },
-          ]}
-          selectedOption={f.type}
-          onChange={(o) => update({ type: o.data })}
-        />
-        <DropdownItem
-          label="Source"
-          rgOptions={[
-            { data: "all", label: "All" },
-            { data: "live", label: "Live" },
-            { data: "imported", label: "Imported" },
-          ]}
-          selectedOption={f.source}
-          onChange={(o) => update({ source: o.data })}
-        />
-        <DropdownItem
-          label="Min rotations"
-          rgOptions={[0, 2, 4, 6, 8, 10, 15, 20].map((n) => ({ data: n, label: n === 0 ? "Any" : `${n}+` }))}
-          selectedOption={f.minRot}
-          onChange={(o) => update({ minRot: o.data })}
-        />
-        <ToggleField label="Show duplicates" checked={f.dups} onChange={(v) => update({ dups: v })} />
+            <Btn
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await call("arbi.refresh");
+                  runs.reload();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Refresh
+            </Btn>
+            <Btn
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setMsg("Importing the current EE.log…");
+                try {
+                  const r = await call<{ imported: RunSlim[]; skipped: number; error?: string }>("arbi.import_log", {});
+                  setMsg(r.error ?? `Imported ${r.imported.length} run(s), skipped ${r.skipped}.`);
+                  runs.reload();
+                } catch (e) {
+                  setMsg(String(e));
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Import current EE.log
+            </Btn>
+        </Focusable>
+        {msg && <div style={{ color: colors.muted, fontSize: "13px", marginBottom: "4px" }}>{msg}</div>}
         {runs.error && !d && <ErrorText error={runs.error} />}
         {!d && !runs.error && <Loading />}
         {d && list.length === 0 && (
@@ -520,31 +529,34 @@ const SummarySettings: FC = () => {
     s.reload();
   };
   return (
-    <>
-      <DropdownItem
-        label="Summary position"
-        rgOptions={[
-          { data: "top-center", label: "Top center" },
-          { data: "top-right", label: "Top right (over minimap)" },
-          { data: "top-left", label: "Top left" },
-          { data: "left-middle", label: "Left middle" },
-        ]}
-        selectedOption={a?.summary_position ?? "top-center"}
-        onChange={(o) => set({ summary_position: o.data })}
-      />
-      <DropdownItem
-        label="Summary size"
-        rgOptions={[0.75, 0.9, 1, 1.1, 1.25].map((v) => ({ data: v, label: `${Math.round(v * 100)}%` }))}
-        selectedOption={a?.summary_scale ?? 1}
-        onChange={(o) => set({ summary_scale: o.data })}
-      />
-      <DropdownItem
-        label="Summary shows for"
-        rgOptions={[10, 15, 25, 40, 60].map((v) => ({ data: v, label: `${v} s` }))}
-        selectedOption={a?.duration_s ?? 25}
-        onChange={(o) => set({ duration_s: o.data })}
-      />
-    </>
+    <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px", marginTop: "8px" }}>
+      <FilterCell label="Summary position">
+        <Dropdown
+          rgOptions={[
+            { data: "top-center", label: "Top center" },
+            { data: "top-right", label: "Top right (over minimap)" },
+            { data: "top-left", label: "Top left" },
+            { data: "left-middle", label: "Left middle" },
+          ]}
+          selectedOption={a?.summary_position ?? "top-center"}
+          onChange={(o) => set({ summary_position: o.data })}
+        />
+      </FilterCell>
+      <FilterCell label="Summary size">
+        <Dropdown
+          rgOptions={[0.75, 0.9, 1, 1.1, 1.25].map((v) => ({ data: v, label: `${Math.round(v * 100)}%` }))}
+          selectedOption={a?.summary_scale ?? 1}
+          onChange={(o) => set({ summary_scale: o.data })}
+        />
+      </FilterCell>
+      <FilterCell label="Summary shows for">
+        <Dropdown
+          rgOptions={[10, 15, 25, 40, 60].map((v) => ({ data: v, label: `${v} s` }))}
+          selectedOption={a?.duration_s ?? 25}
+          onChange={(o) => set({ duration_s: o.data })}
+        />
+      </FilterCell>
+    </Focusable>
   );
 };
 
@@ -572,6 +584,40 @@ const Grid: FC<{ head: string[]; rows: ReactNode[][] }> = ({ head, rows }) => (
     {rows.map((r, i) => r.map((c, j) => <div key={`${i}-${j}`}>{c}</div>))}
   </div>
 );
+
+// Two sections side by side at equal width (or one at full width when the other is
+// absent). The row is a horizontal Focusable so left/right moves between them.
+const PAIR: CSSProperties = { margin: 0, height: "100%", boxSizing: "border-box", minWidth: 0 };
+const Pair: FC<{ children: ReactNode[] }> = ({ children }) => {
+  const parts = Children.toArray(children);
+  if (parts.length === 0) return null;
+  if (parts.length === 1) return <div style={{ margin: "12px 0" }}>{parts[0]}</div>;
+  return (
+    <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px", margin: "12px 0", alignItems: "stretch" }}>
+      {/* Each half is its own vertical group, so up/down stays inside it. */}
+      {parts.map((part, i) => (
+        <Focusable key={i} style={{ minWidth: 0 }}>
+          {part}
+        </Focusable>
+      ))}
+    </Focusable>
+  );
+};
+
+// Long wave lists wrap into side-by-side columns of up to 10 rows instead of one tall table.
+const WaveColumns: FC<{ waves: Wave[] }> = ({ waves }) => {
+  const cols = Math.min(4, Math.ceil(waves.length / 10));
+  const per = Math.ceil(waves.length / cols);
+  const chunks: Wave[][] = [];
+  for (let i = 0; i < waves.length; i += per) chunks.push(waves.slice(i, i + per));
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "24px" }}>
+      {chunks.map((c) => (
+        <Grid key={c[0].index} head={["#", "Clear", "15+ enemies"]} rows={c.map((w) => [w.index, fmtClock(w.durationSec), w.saturationPct == null ? "–" : `${w.saturationPct.toFixed(0)}%`])} />
+      ))}
+    </div>
+  );
+};
 
 const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => void }> = ({ id, onBack, onOpen }) => {
   const det = useRpc<Detail>("arbi.run", { id }, [id]);
@@ -651,17 +697,19 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
         {!st && <div style={{ color: colors.muted, marginTop: "6px" }}>No detailed stats for this mission type.</div>}
       </Section>
 
+      <Pair>
       {st && a.scenarios && (
-        <Section title="Vitus essence">
+        <Section title="Vitus essence" style={PAIR}>
           <Block>
             <div>
               Expected <b style={{ color: colors.accent }}>{st.expectedVitusMean.toFixed(1)}</b> ± {st.expectedVitusStd.toFixed(1)}
               {a.expectedVitusPerMin != null && <span style={{ color: colors.muted }}> · {a.expectedVitusPerMin.toFixed(2)}/min</span>}
             </div>
+            <div style={{ height: "6px" }} />
             <Grid head={a.scenarios.map((s) => s.label)} rows={[a.scenarios.map((s) => <b key={s.key}>{s.total}</b>), a.scenarios.map((s) => <span key={s.key} style={{ color: colors.muted }}>{s.prob}</span>)]} />
           </Block>
-          <TextField label="Actual vitus" description="What you got (opens the keyboard)" mustBeNumeric value={vitus} onChange={(e) => setVitus(e.target.value)} />
-          <ButtonRow>
+          <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "8px", alignItems: "end" }}>
+            <TextField label="Actual vitus" description="What you got (opens the keyboard)" mustBeNumeric value={vitus} onChange={(e) => setVitus(e.target.value)} />
             <Btn
               onClick={async () => {
                 const v = vitus.trim() === "" ? null : Number(vitus);
@@ -672,7 +720,7 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
             >
               Save vitus
             </Btn>
-          </ButtonRow>
+          </Focusable>
           {a.luck && (
             <div style={{ color: a.luck.color, fontWeight: 600 }}>
               {a.luck.text}
@@ -682,19 +730,8 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
         </Section>
       )}
 
-      {a.saturationBuckets && a.saturationBuckets.length > 0 && (
-        <Section title="Enemies alive (share of fight time)">
-          <Block>
-            <Bars rows={a.saturationBuckets.map((b, i) => ({ label: b.label, pct: b.pct, color: `color-mix(in srgb, ${colors.good} ${Math.max(0, 100 - 15 * i)}%, ${colors.bad})` }))} />
-            <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
-              Reward screens {fmtClock(a.pauseSec ?? 0)} · load/stall gaps {fmtClock(a.idleSec ?? 0)} excluded
-            </div>
-          </Block>
-        </Section>
-      )}
-
       {a.rotations && a.rotations.length > 0 && (
-        <Section title="Rotations">
+        <Section title="Rotations" style={PAIR}>
           <Block>
             <Grid
               head={["#", "Clear", "Drones", "Drones/min", "15+ enemies"]}
@@ -710,19 +747,22 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
         </Section>
       )}
 
-      {a.waves && a.waves.length > 0 && (
-        <Section title={run.missionType === "disruption" ? "Rounds" : "Waves"}>
+      </Pair>
+
+      <Pair>
+      {a.saturationBuckets && a.saturationBuckets.length > 0 && (
+        <Section title="Enemies alive (share of fight time)" style={PAIR}>
           <Block>
-            <Grid
-              head={["#", "Clear", "15+ enemies"]}
-              rows={a.waves.map((w) => [w.index, fmtClock(w.durationSec), w.saturationPct == null ? "–" : `${w.saturationPct.toFixed(0)}%`])}
-            />
+            <Bars rows={a.saturationBuckets.map((b, i) => ({ label: b.label, pct: b.pct, color: `color-mix(in srgb, ${colors.good} ${Math.max(0, 100 - 15 * i)}%, ${colors.bad})` }))} />
+            <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
+              Reward screens {fmtClock(a.pauseSec ?? 0)} · load/stall gaps {fmtClock(a.idleSec ?? 0)} excluded
+            </div>
           </Block>
         </Section>
       )}
 
       {a.cadence && (
-        <Section title="Waiting between drones">
+        <Section title="Waiting between drones" style={PAIR}>
           <Block>
             <Bars rows={a.cadence.buckets.map((b) => ({ label: b.label, pct: b.pct, color: b.label === "12s+" ? colors.bad : colors.accent }))} />
             <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
@@ -733,8 +773,19 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
         </Section>
       )}
 
+      </Pair>
+
+      {a.waves && a.waves.length > 0 && (
+        <Section title={run.missionType === "disruption" ? "Rounds" : "Waves"}>
+          <Block>
+            <WaveColumns waves={a.waves} />
+          </Block>
+        </Section>
+      )}
+
+      <Pair>
       {a.spawns && a.spawns.total > 0 && (
-        <Section title="Spawn points">
+        <Section title="Spawn points" style={PAIR}>
           <Block>
             <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
               <svg viewBox="0 0 100 100" style={{ width: "220px", height: "220px", background: "rgba(255,255,255,0.03)", borderRadius: "4px", flexShrink: 0 }}>
@@ -757,9 +808,11 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
         </Section>
       )}
 
-      <Section title="Notes">
-        <TextField label="Tags" description="Comma separated, up to 12" value={tags} onChange={(e) => setTags(e.target.value)} />
-        <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+      <Section title="Notes" style={PAIR}>
+        <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "12px" }}>
+          <TextField label="Tags" description="Comma separated, up to 12" value={tags} onChange={(e) => setTags(e.target.value)} />
+          <TextField label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+        </Focusable>
         <ButtonRow>
           <Btn
             onClick={async () => {
@@ -773,6 +826,8 @@ const RunDetail: FC<{ id: string; onBack: () => void; onOpen: (id: string) => vo
           </Btn>
         </ButtonRow>
       </Section>
+
+      </Pair>
 
       <Section title="Log">
         <div style={{ color: colors.muted, fontSize: "13px" }}>
@@ -883,48 +938,54 @@ const ScheduleView: FC = () => {
             value={<span style={{ color: colors.muted }}>ends in {countdown(s.current.epochMs + 3600000, now)}</span>}
           />
         )}
-        <DropdownItem
-          label="Days ahead"
-          rgOptions={[7, 14, 30, 60].map((d) => ({ data: d, label: `${d} days` }))}
-          selectedOption={days}
-          onChange={(o) => {
-            savedDays = o.data;
-            setDays(o.data);
-          }}
-        />
-        <DropdownItem
-          label="Alert lead time"
-          rgOptions={[1, 2, 5, 10, 15, 30, 60, 120].map((m) => ({ data: m, label: `${m} min before` }))}
-          selectedOption={al?.minutesBefore ?? 5}
-          onChange={async (o) => {
-            const r = await call<Alerts | null>("world.arbi_set_lead", { minutes: o.data });
-            if (r) setAlerts(r);
-          }}
-        />
-        <ToggleField
-          label="Favourite nodes only"
-          checked={favOnly}
-          onChange={(v) => {
-            savedFavOnly = v;
-            setFavOnly(v);
-          }}
-        />
-        <ButtonRow>
+        <Focusable
+          flow-children="horizontal"
+          style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "flex-end", margin: "8px 0 6px" }}
+        >
+          <FilterCell label="Days ahead" width="240px">
+            <Dropdown
+              rgOptions={[7, 14, 30, 60].map((d) => ({ data: d, label: `${d} days` }))}
+              selectedOption={days}
+              onChange={(o) => {
+                savedDays = o.data;
+                setDays(o.data);
+              }}
+            />
+          </FilterCell>
+          <FilterCell label="Alert lead time" width="240px">
+            <Dropdown
+              rgOptions={[1, 2, 5, 10, 15, 30, 60, 120].map((m) => ({ data: m, label: `${m} min before` }))}
+              selectedOption={al?.minutesBefore ?? 5}
+              onChange={async (o) => {
+                const r = await call<Alerts | null>("world.arbi_set_lead", { minutes: o.data });
+                if (r) setAlerts(r);
+              }}
+            />
+          </FilterCell>
           <Btn
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await call("world.arbi_refresh", { days });
-                sched.reload();
-              } finally {
-                setBusy(false);
-              }
+            on={favOnly}
+            onClick={() => {
+              savedFavOnly = !favOnly;
+              setFavOnly(!favOnly);
             }}
           >
-            Refresh schedule
+            Favourite nodes only
           </Btn>
-        </ButtonRow>
+            <Btn
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await call("world.arbi_refresh", { days });
+                  sched.reload();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Refresh schedule
+            </Btn>
+        </Focusable>
         {favNodes.length > 0 && (
           <div style={{ fontSize: "13px", color: colors.muted }}>
             Favourites: {favNodes.map((e) => e.node).join(", ")}. Alerts arrive as Steam notifications.
@@ -1003,14 +1064,18 @@ const Arbitrations: FC = () => {
   };
   return (
     <Page>
-      <ButtonRow>
-        <Btn width="140px" onClick={() => { go("runs"); setRunId(null); }}>
-          {view === "runs" ? "● Runs" : "Runs"}
-        </Btn>
-        <Btn width="140px" onClick={() => go("schedule")}>
-          {view === "schedule" ? "● Schedule" : "Schedule"}
-        </Btn>
-      </ButtonRow>
+      <Segmented
+        value={view}
+        onChange={(v) => {
+          go(v);
+          if (v === "runs") setRunId(null);
+        }}
+        options={[
+          { id: "runs", label: "Runs" },
+          { id: "schedule", label: "Schedule" },
+        ]}
+        style={{ marginTop: "8px" }}
+      />
       {view === "schedule" ? (
         <ScheduleView />
       ) : runId ? (

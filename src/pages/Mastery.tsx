@@ -1,11 +1,11 @@
 // Mastery: MR progress, collection by category/status, the "easy mastery" roadmap and pinned
 // goals (docs/port/menus.md §5). Data: mastery.* RPCs (py_modules/wfh/menus/mastery.py), which
 // compute everything from the inventory snapshot; this file only keeps tab/filter state.
-import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
-import { CSSProperties, FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ButtonItem, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegStar, FaStar } from "react-icons/fa";
 
-import { Badge, Empty, ErrorText, Loading, Page, Plat, Row, Section, Stat, colors } from "../components/ui";
+import { Badge, Bar, Empty, ErrorText, Grid, Loading, Page, Pager, Plat, Row, Section, Segmented, Stat, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -162,42 +162,13 @@ export function openPage(tab: string): void {
   Navigation.Navigate(ROUTE);
 }
 
-// Gamepad tab strip (one row of buttons, the active one highlighted). Shared by the
-// Mastery / Syndicates / Missions pages.
-export function Segmented<T extends string>({ value, options, onChange, style }: {
-  value: T;
-  options: { id: T; label: ReactNode }[];
-  onChange: (v: T) => void;
-  style?: CSSProperties;
-}) {
-  return (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", ...style }}>
-      {options.map((o) => (
-        <DialogButton
-          key={o.id}
-          onClick={() => onChange(o.id)}
-          style={{
-            minWidth: 0,
-            width: "auto",
-            padding: "6px 14px",
-            flex: "0 0 auto",
-            background: o.id === value ? colors.accent : undefined,
-            color: o.id === value ? "#0e121e" : undefined,
-            fontWeight: o.id === value ? 700 : 400,
-          }}
-        >
-          {o.label}
-        </DialogButton>
-      ))}
-    </Focusable>
-  );
+const ROAD_PAGE = 20;
+
+// Item rows two to a line, so a 1280px page is not one long thin list.
+function ItemGrid<T>({ items, render, pageSize }: { items: T[]; render: (item: T) => ReactNode; pageSize?: number }) {
+  return <Grid items={items} cols={2} gap="0 20px" rowGap="0" rows={pageSize ? Math.ceil(pageSize / 2) : undefined} render={(it) => render(it)} />;
 }
 
-export const Bar: FC<{ value: number; color?: string; width?: string | number }> = ({ value, color, width = "100%" }) => (
-  <div style={{ width, height: "6px", background: "rgba(255,255,255,0.10)", borderRadius: "3px", overflow: "hidden" }}>
-    <div style={{ width: `${Math.max(0, Math.min(100, value * 100))}%`, height: "100%", background: color ?? colors.accent }} />
-  </div>
-);
 
 const NoData: FC<{ s: DataStatus }> = ({ s }) =>
   !s.data ? (
@@ -382,7 +353,7 @@ const CollectionTab: FC<{ categories: string[]; byCategory: Summary["byCategory"
   return (
     <>
       <Segmented value={cat} onChange={setCat} options={[{ id: "all", label: "All" }, ...categories.map((c) => ({ id: c, label: `${c}${count(c)}` }))]} />
-      <div style={{ display: "flex", gap: "12px", alignItems: "center", marginTop: "8px", flexWrap: "wrap" }}>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "16px", alignItems: "center", marginTop: "8px", flexWrap: "wrap" }}>
         <Segmented
           value={status}
           onChange={setStatus}
@@ -393,31 +364,20 @@ const CollectionTab: FC<{ categories: string[]; byCategory: Summary["byCategory"
             { id: "all", label: "All" },
           ]}
         />
-        <div style={{ minWidth: "260px", flex: 1 }}>
-          <DropdownItem label="Sort" rgOptions={SORTS} selectedOption={sort} onChange={(o) => setSort(o.data)} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "12px", color: colors.muted, textTransform: "uppercase" }}>Sort</span>
+          <div style={{ width: "220px" }}>
+            <Dropdown rgOptions={SORTS} selectedOption={sort} onChange={(o) => setSort(o.data)} />
+          </div>
         </div>
-      </div>
+      </Focusable>
       {q.error && <ErrorText error={q.error} />}
       {!q.data && !q.error && <Loading />}
       {q.data && (
         <Section title={`${q.data.matched} items`}>
           {q.data.rows.length === 0 && <Empty text="Nothing here." />}
-          {q.data.rows.map((r) => (
-            <ItemRow key={r.uniqueName} r={r} onActivate={() => open(r.uniqueName)} />
-          ))}
-          {q.data.matched > PAGE && (
-            <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
-              <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE))}>
-                Prev
-              </DialogButton>
-              <span style={{ color: colors.muted }}>
-                {Math.floor(offset / PAGE) + 1} / {Math.ceil(q.data.matched / PAGE)}
-              </span>
-              <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset + PAGE >= q.data.matched} onClick={() => setOffset(offset + PAGE)}>
-                Next
-              </DialogButton>
-            </Focusable>
-          )}
+          <ItemGrid items={q.data.rows} render={(r) => <ItemRow key={r.uniqueName} r={r} onActivate={() => open(r.uniqueName)} />} />
+          {q.data.matched > PAGE && <Pager page={Math.floor(offset / PAGE)} pages={Math.ceil(q.data.matched / PAGE)} onPage={(n) => setOffset(n * PAGE)} label={`${q.data.matched} items`} />}
         </Section>
       )}
     </>
@@ -458,7 +418,7 @@ const RoadmapTab: FC<{ open: (u: string) => void; tick: number; profile: Profile
           }
         >
           {d.easy.length === 0 && <Empty text="Nothing easy left: everything you own is mastered." />}
-          {d.easy.map((r) => (
+          <ItemGrid key="easy" items={d.easy} pageSize={ROAD_PAGE} render={(r) => (
             <ItemRow
               key={r.uniqueName}
               r={r}
@@ -471,13 +431,13 @@ const RoadmapTab: FC<{ open: (u: string) => void; tick: number; profile: Profile
                 </span>
               }
             />
-          ))}
+          )} />
         </Section>
       )}
       {d && list === "relics" && (
         <Section title="Chance your owned relics finish the missing parts">
           {d.relics.length === 0 && <Empty text="No unmastered item can be completed from relics you own." />}
-          {d.relics.map((r) => (
+          <ItemGrid key="relics" items={d.relics} pageSize={ROAD_PAGE} render={(r) => (
             <ItemRow
               key={r.uniqueName}
               r={r}
@@ -490,13 +450,13 @@ const RoadmapTab: FC<{ open: (u: string) => void; tick: number; profile: Profile
                 </span>
               }
             />
-          ))}
+          )} />
         </Section>
       )}
       {d && list === "platinum" && (
         <Section title="Cheapest mastery to buy (cached warframe.market prices)">
           {d.platinum.length === 0 && <Empty text="No priced items yet; prices load in the background, check back in a minute." />}
-          {d.platinum.map((r) => (
+          <ItemGrid key="platinum" items={d.platinum} pageSize={ROAD_PAGE} render={(r) => (
             <ItemRow
               key={r.uniqueName}
               r={r}
@@ -509,7 +469,7 @@ const RoadmapTab: FC<{ open: (u: string) => void; tick: number; profile: Profile
                 </span>
               }
             />
-          ))}
+          )} />
         </Section>
       )}
     </>
@@ -524,7 +484,7 @@ const PlannedTab: FC<{ open: (u: string) => void; tick: number }> = ({ open, tic
   return (
     <Section title={`Pinned ${d.rows.length} / ${d.limit}`}>
       {d.rows.length === 0 && <Empty text="Nothing pinned. Open an item in Collection or Roadmap and pin it." />}
-      {d.rows.map((r) => (
+      <ItemGrid items={d.rows} render={(r) => (
         <ItemRow
           key={r.uniqueName}
           r={r}
@@ -540,7 +500,7 @@ const PlannedTab: FC<{ open: (u: string) => void; tick: number }> = ({ open, tic
             </span>
           }
         />
-      ))}
+      )} />
     </Section>
   );
 };
@@ -579,7 +539,6 @@ const Mastery: FC = () => {
       {d && !d.summary && <NoData s={d} />}
       {d?.summary && (
         <>
-          <SummaryStrip s={d.summary} />
           <Segmented
             value={tab}
             onChange={setTab}
@@ -589,49 +548,54 @@ const Mastery: FC = () => {
               { id: "planned", label: "Planned" },
               { id: "account", label: "Account" },
             ]}
-            style={{ marginBottom: "8px" }}
+            style={{ margin: "8px 0 0" }}
           />
+          <SummaryStrip s={d.summary} />
           {tab === "collection" && <CollectionTab categories={d.categories ?? []} byCategory={d.summary.byCategory} open={setDetail} tick={tick} />}
           {tab === "roadmap" && <RoadmapTab open={setDetail} tick={tick} profile={d.summary.profile} />}
           {tab === "planned" && <PlannedTab open={setDetail} tick={tick} />}
           {tab === "account" && (
-            <>
-              <CompletionPanel s={d.summary} />
-              <Section title="Options">
-                <ToggleField
-                  label="Hide Founder items"
-                  description="Leave Excalibur Prime, Lato Prime and Skana Prime (no longer obtainable) out of the totals and lists."
-                  checked={!!d.hideFounder}
-                  onChange={async (v) => {
-                    try {
-                      await call("mastery.configure", { hide_founder: v });
-                    } catch (e) {
-                      console.error("mastery.configure", e);
-                    }
-                    setTick((n) => n + 1);
-                  }}
-                />
-              </Section>
-              <Section title="By category">
-                {(d.summary.byCategory ?? []).map((c) => (
-                  <Row
-                    key={c.category}
-                    label={c.category}
-                    sub={<Bar value={c.total ? c.mastered / c.total : 0} color={colors.good} width="220px" />}
-                    value={
-                      <span>
-                        {fmt(c.mastered)} / {fmt(c.total)}
-                      </span>
-                    }
-                    onActivate={() => {
-                      lastCat = c.category;
-                      lastOffset = 0;
-                      setTab("collection");
+            <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", columnGap: "12px", alignItems: "start" }}>
+              <Focusable style={{ minWidth: 0 }}>
+                <CompletionPanel s={d.summary} />
+                <Section title="Options">
+                  <ToggleField
+                    label="Hide Founder items"
+                    description="Leave Excalibur Prime, Lato Prime and Skana Prime (no longer obtainable) out of the totals and lists."
+                    checked={!!d.hideFounder}
+                    onChange={async (v) => {
+                      try {
+                        await call("mastery.configure", { hide_founder: v });
+                      } catch (e) {
+                        console.error("mastery.configure", e);
+                      }
+                      setTick((n) => n + 1);
                     }}
                   />
-                ))}
+                </Section>
+              </Focusable>
+              <Focusable style={{ minWidth: 0 }}>
+                <Section title="By category">
+                  {(d.summary.byCategory ?? []).map((c) => (
+                    <Row
+                      key={c.category}
+                      label={c.category}
+                      sub={<Bar value={c.total ? c.mastered / c.total : 0} color={colors.good} width="260px" />}
+                      value={
+                        <span>
+                          {fmt(c.mastered)} / {fmt(c.total)}
+                        </span>
+                      }
+                      onActivate={() => {
+                        lastCat = c.category;
+                        lastOffset = 0;
+                        setTab("collection");
+                      }}
+                    />
+                  ))}
               </Section>
-            </>
+              </Focusable>
+            </Focusable>
           )}
         </>
       )}
@@ -684,7 +648,7 @@ export const Qam: FC = () => {
           </PanelSectionRow>
           {d.easy.length > 0 && (
             <PanelSectionRow>
-              <div style={{ fontSize: "12px", color: colors.muted, textTransform: "uppercase", marginTop: "4px" }}>Easy mastery ({d.easyCount})</div>
+              <div style={{ fontSize: "12px", color: colors.muted, textTransform: "uppercase", marginTop: "8px" }}>Easy mastery ({d.easyCount})</div>
             </PanelSectionRow>
           )}
           {d.easy.map((r) => (

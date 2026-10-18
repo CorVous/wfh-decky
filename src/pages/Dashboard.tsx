@@ -6,7 +6,7 @@
 import { Focusable, SliderField, ToggleField } from "@decky/ui";
 import { FC, useEffect, useRef, useState } from "react";
 
-import { Badge, Ducats, Guard, Page, Plat, Section, colors } from "../components/ui";
+import { Badge, Columns, Ducats, Guard, Page, Plat, Section, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 import {
   ArbiEntry,
@@ -101,6 +101,8 @@ const WIDGETS: { id: string; label: string }[] = [
   { id: "arbitration", label: "Next arbitration" },
 ];
 
+const TOGGLE_ROWS = [WIDGETS.slice(0, 3), WIDGETS.slice(3, 6), WIDGETS.slice(6)];
+
 function ago(sec: number, nowMs: number): string {
   const m = Math.max(0, Math.round((nowMs / 1000 - sec) / 60));
   if (m < 1) return "just now";
@@ -131,7 +133,16 @@ function foundryHeader(f: NonNullable<Summary["foundry"]>): string {
 // ---- widgets ----------------------------------------------------------------------------------
 
 const ResetsWidget: FC<{ s: Summary; now: number }> = ({ s, now }) => (
-  <Section title="Resets" right={s.dailies ? <span style={{ color: colors.muted }}>Dailies {s.dailies.done}/{s.dailies.total}</span> : undefined}>
+  <Section
+    title="Resets"
+    right={
+      s.dailies ? (
+        <span style={{ color: colors.muted }}>
+          Dailies {s.dailies.done}/{s.dailies.total}
+        </span>
+      ) : undefined
+    }
+  >
     {s.resets.map((t) => {
       const done = t.key === "sortie" ? s.dailies?.sortieDone : t.key === "archon" ? s.dailies?.archonDone : null;
       const who = t.key === "sortie" ? s.sortie?.boss : t.key === "archon" ? s.archon?.boss : t.key === "steelPath" ? s.steelPath?.name : null;
@@ -275,14 +286,14 @@ const ArbiWidget: FC<{ s: Summary; now: number; showRun: boolean; showNext: bool
   const a = s.arbitration;
   return (
     <Section title="Arbitration">
-      {showNext && a.current && (
-        <Row label={a.current.node} sub={`${a.current.mission} · ${a.current.faction} · running now`} value={<Countdown to={a.current.epochMs + 3600000} now={now} />} />
-      )}
-      {showNext && a.next && (
-        <Row label={`Next ${fmtClock(a.next.epochMs)}: ${a.next.node}`} sub={`${a.next.mission} · ${a.next.faction}`} value={<Countdown to={a.next.epochMs} now={now} />} />
-      )}
+      {showNext && a.current && <Row label={a.current.node} sub={`${a.current.mission} · ${a.current.faction} · running now`} value={<Countdown to={a.current.epochMs + 3600000} now={now} />} />}
+      {showNext && a.next && <Row label={`Next ${fmtClock(a.next.epochMs)}: ${a.next.node}`} sub={`${a.next.mission} · ${a.next.faction}`} value={<Countdown to={a.next.epochMs} now={now} />} />}
       {showNext && a.nextFavorite && a.nextFavorite.key !== a.next?.key && (
-        <Row label={<span style={{ color: colors.ducat }}>Favourite: {a.nextFavorite.node}</span>} sub={`${a.nextFavorite.mission} · ${fmtClock(a.nextFavorite.epochMs)}`} value={<Countdown to={a.nextFavorite.epochMs} now={now} />} />
+        <Row
+          label={<span style={{ color: colors.ducat }}>Favourite: {a.nextFavorite.node}</span>}
+          sub={`${a.nextFavorite.mission} · ${fmtClock(a.nextFavorite.epochMs)}`}
+          value={<Countdown to={a.nextFavorite.epochMs} now={now} />}
+        />
       )}
       {showNext && !a.current && !a.next && <div style={{ color: colors.muted }}>{a.error ? "Schedule unavailable." : "Schedule not loaded yet."}</div>}
       {showRun &&
@@ -335,25 +346,28 @@ const Customize: FC<{ s: Summary; onSaved: () => void }> = ({ s, onSaved }) => {
     }, 400);
   };
   return (
-    <Section title="Customize">
-      <Focusable style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
-        <div>
-          {WIDGETS.map((w) => (
-            <ToggleField
-              key={w.id}
-              label={w.label}
-              checked={!p.hidden.includes(w.id)}
-              onChange={(on) => {
-                const hidden = on ? p.hidden.filter((x) => x !== w.id) : [...p.hidden, w.id];
-                save({ hidden }, { hidden });
-              }}
-            />
-          ))}
-        </div>
-        <div>
+    <Section title="Customize" right={<span style={{ color: colors.muted, fontSize: "13px" }}>Fissure mode and tiers follow the filters on the World page.</span>}>
+      {/* toggles in rows of three (left/right inside a row, up/down between rows) */}
+      <Focusable>
+        {TOGGLE_ROWS.map((row, i) => (
+          <Focusable key={i} flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0 24px" }}>
+            {row.map((w) => (
+              <ToggleField
+                key={w.id}
+                label={w.label}
+                checked={!p.hidden.includes(w.id)}
+                onChange={(on) => {
+                  const hidden = on ? p.hidden.filter((x) => x !== w.id) : [...p.hidden, w.id];
+                  save({ hidden }, { hidden });
+                }}
+              />
+            ))}
+          </Focusable>
+        ))}
+        {/* sliders take left/right themselves, so they stack (one per row) instead of sitting side by side */}
+        <div style={{ maxWidth: "50%" }}>
           <SliderField label="Fissure rows" value={p.fissureLimit} min={1} max={20} step={1} showValue onChange={(v) => save({ fissure_limit: v }, { fissureLimit: v })} />
           <SliderField label="Foundry rows" value={p.foundryLimit} min={1} max={20} step={1} showValue onChange={(v) => save({ foundry_limit: v }, { foundryLimit: v })} />
-          <div style={{ color: colors.muted, fontSize: "13px", marginTop: "8px" }}>Fissure mode and tiers follow the filters on the World page.</div>
         </div>
       </Focusable>
     </Section>
@@ -378,20 +392,23 @@ const Dashboard: FC = () => {
             <>
               <div style={{ color: colors.muted, fontSize: "12px", marginTop: "8px" }}>L1 / R1 switch to World, Foundry, Missions and the other pages for details.</div>
               {s.stale && <div style={{ color: colors.warn, fontSize: "13px", marginTop: "8px" }}>World state is offline or stale; clock-based timers are still live.</div>}
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "0 16px", alignItems: "start" }}>
-                <div>
-                  {show("cycles") && <CyclesSection cycles={s.cycles} now={now} />}
-                  {show("fissures") && <FissuresWidget s={s} now={now} />}
-                  {show("baro") && <BaroWidget s={s} now={now} />}
-                </div>
-                <div>
-                  {show("resets") && <ResetsWidget s={s} now={now} />}
-                  {show("foundry") && <FoundryWidget s={s} now={now} />}
-                  {show("lastMission") && <MissionWidget s={s} now={now} />}
-                  {show("lastReward") && <RewardWidget s={s} now={now} />}
-                  {(show("arbitration") || show("lastArbi")) && <ArbiWidget s={s} now={now} showNext={show("arbitration")} showRun={show("lastArbi")} />}
-                </div>
-              </div>
+              <Columns
+                style={{ gap: "0 16px" }}
+                cols={[
+                  <>
+                    {show("cycles") && <CyclesSection cycles={s.cycles} now={now} />}
+                    {show("fissures") && <FissuresWidget s={s} now={now} />}
+                    {show("baro") && <BaroWidget s={s} now={now} />}
+                  </>,
+                  <>
+                    {show("resets") && <ResetsWidget s={s} now={now} />}
+                    {show("foundry") && <FoundryWidget s={s} now={now} />}
+                    {show("lastMission") && <MissionWidget s={s} now={now} />}
+                    {show("lastReward") && <RewardWidget s={s} now={now} />}
+                    {(show("arbitration") || show("lastArbi")) && <ArbiWidget s={s} now={now} showNext={show("arbitration")} showRun={show("lastArbi")} />}
+                  </>,
+                ]}
+              />
               <Customize s={s} onSaved={r.reload} />
             </>
           );

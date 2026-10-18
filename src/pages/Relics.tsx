@@ -19,7 +19,7 @@ import {
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Plat, Section, Stat, chip, colors } from "../components/ui";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Pager, Plat, Section, Stat, chip, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -138,7 +138,8 @@ const SORTS: { data: SortMode; label: string }[] = [
 ];
 const DEFAULT_DESC: SortMode[] = ["ev", "ducat", "ducatonator", "owned"];
 const RARITY_COLOR: Record<string, string> = { Rare: "#ffd666", Uncommon: "#c8d0dc", Common: "#cd966e" };
-const PAGE_SIZE = 20;
+// A multiple of GRID_COLUMNS so every page ends on a full row of cards.
+const PAGE_SIZE = 21;
 
 interface ViewState {
   tier: string;
@@ -419,12 +420,6 @@ const RelicCard: FC<{ g: RelicGroup; squad: number; showOwned: boolean; pin: Pin
 
 const GRID_COLUMNS = 3;
 
-function chunk<T>(items: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
-  return out;
-}
-
 const OverlayFiltersModal: FC<{ closeModal?: () => void; onPush: () => Promise<void>; onClear: () => Promise<void> }> = ({ closeModal, onPush, onClear }) => (
   <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
     <div style={{ color: colors.text }}>
@@ -552,19 +547,24 @@ const Relics: FC = () => {
           />
         </FilterCell>
       </Focusable>
-      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap" }}>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
         <FilterCell label="Squad">
           <SquadPicker value={s.squad} onChange={(n) => update({ squad: n })} />
         </FilterCell>
-        <DialogButton style={chip(s.direction === "desc")} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
-          {s.direction === "desc" ? "High → low" : "Low → high"}
-        </DialogButton>
-        <DialogButton style={chip(s.needed)} disabled={noInv} onClick={() => update({ needed: !s.needed })}>
-          Has a reward I need
-        </DialogButton>
-        <div style={{ width: "220px" }}>
+        <FilterCell label="Order">
+          <DialogButton style={{ ...chip(false), width: "120px" }} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
+            {s.direction === "desc" ? "High → low" : "Low → high"}
+          </DialogButton>
+        </FilterCell>
+        <FilterCell label="Rewards">
+          <DialogButton style={chip(s.needed)} disabled={noInv} onClick={() => update({ needed: !s.needed })}>
+            {s.needed ? "✓ " : ""}Has a reward I need
+          </DialogButton>
+        </FilterCell>
+        <FilterCell label="Search" width="240px">
           <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
-        </div>
+        </FilterCell>
+        <span style={{ flex: 1 }} />
         <DialogButton style={chip(false)} onClick={() => showModal(<OverlayFiltersModal onPush={pushToOverlay} onClear={async () => { await call("relics.clear_filters"); setPushed("Overlay ranks by EV again."); }} />)}>
           Overlay…
         </DialogButton>
@@ -600,44 +600,28 @@ const Relics: FC = () => {
   else
     body = (
       <>
-        <Focusable style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {chunk(v.groups, GRID_COLUMNS).map((row) => (
-            // One horizontal group per row: left/right moves within it,
-            // up/down moves to the card above or below.
-            <Focusable key={row[0].key} flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`, gap: "8px" }}>
-              {row.map((g) => (
-                <RelicCard
-                  key={g.key}
-                  g={g}
-                  squad={s.squad}
-                  showOwned={v.hasInventory}
-                  pin={{
-                    current: s.pinned[g.key],
-                    set: (q) => {
-                      const next = { ...s.pinned };
-                      if (q) next[g.key] = q;
-                      else delete next[g.key];
-                      update({ pinned: next });
-                    },
-                  }}
-                />
-              ))}
-            </Focusable>
-          ))}
-        </Focusable>
-        {pages > 1 && (
-          <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }} flow-children="horizontal">
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page === 0} onClick={() => setPage(page - 1)}>
-              Prev
-            </DialogButton>
-            <span style={{ color: colors.muted }}>
-              {page + 1} / {pages} · {v.total} relics
-            </span>
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page >= pages - 1} onClick={() => setPage(page + 1)}>
-              Next
-            </DialogButton>
-          </Focusable>
-        )}
+        <Grid
+          items={v.groups}
+          cols={GRID_COLUMNS}
+          render={(g) => (
+            <RelicCard
+              key={g.key}
+              g={g}
+              squad={s.squad}
+              showOwned={v.hasInventory}
+              pin={{
+                current: s.pinned[g.key],
+                set: (q) => {
+                  const next = { ...s.pinned };
+                  if (q) next[g.key] = q;
+                  else delete next[g.key];
+                  update({ pinned: next });
+                },
+              }}
+            />
+          )}
+        />
+        {pages > 1 && <Pager page={page} pages={pages} onPage={setPage} label={`${v.total} relics`} />}
       </>
     );
 
@@ -646,19 +630,25 @@ const Relics: FC = () => {
       <Focusable style={{ display: "flex", flexDirection: "column" }}>
         {filters}
         {v && (
-          <Section
-            title={s.ownership === "owned" ? "Owned relics" : "All relics"}
-            right={view.loading ? <span style={{ color: colors.muted, fontSize: "12px" }}>Updating…</span> : undefined}
-          >
-            {v.hasInventory && (
-              <>
-                <Stat label="Relics" value={v.totals.relics} />
-                <Stat label="Kinds" value={v.totals.groups} />
-                {v.totals.plat != null && <Stat label="Crack all (EV)" value={`${Math.round(v.totals.plat)}p`} color={colors.plat} />}
-                {v.totals.ducat != null && <Stat label="Ducat EV" value={`${Math.round(v.totals.ducat)}d`} color={colors.ducat} />}
-              </>
-            )}
-            <Stat label="Squad" value={v.squad} />
+          // One-line summary strip between the filters and the cards.
+          <Section style={{ padding: "6px 12px", margin: "10px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 600, color: colors.accent, marginRight: "18px" }}>{s.ownership === "owned" ? "Owned relics" : "All relics"}</span>
+              {v.hasInventory && (
+                <>
+                  <Stat label="Relics" value={v.totals.relics} />
+                  <Stat label="Kinds" value={v.totals.groups} />
+                  {v.totals.plat != null && <Stat label="Crack all (EV)" value={`${Math.round(v.totals.plat)}p`} color={colors.plat} />}
+                  {v.totals.ducat != null && <Stat label="Ducat EV" value={`${Math.round(v.totals.ducat)}d`} color={colors.ducat} />}
+                </>
+              )}
+              <Stat label="Squad" value={v.squad} />
+              <span style={{ flex: 1 }} />
+              <span style={{ color: colors.muted, fontSize: "13px" }}>
+                {view.loading ? "Updating… · " : ""}
+                {v.total} relics{pages > 1 ? ` · page ${page + 1} / ${pages}` : ""}
+              </span>
+            </div>
             {v.pricesMissing > 0 && (
               <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
                 {v.pricesMissing} reward prices not cached yet (counted as 0). Use “Fetch prices”.
@@ -718,10 +708,10 @@ export const Qam: FC = () => {
       <PanelSectionRow>
         <DropdownItem
           label="Tier"
-          description={era === "auto" ? "List: all tiers · overlay: detect era" : era === "all" ? "List and overlay: all tiers" : "Overlay forced to this tier"}
+          description={era === "auto" ? "Overlay detects the era" : era === "all" ? "List and overlay: all tiers" : "Overlay forced to this tier"}
           rgOptions={[
-            { data: "auto", label: "Auto-detect" },
-            { data: "all", label: "All tiers" },
+            { data: "auto", label: "Auto" },
+            { data: "all", label: "All" },
             ...TIERS.slice(1).map((x) => ({ data: x, label: x })),
           ]}
           selectedOption={era}
@@ -749,7 +739,7 @@ export const Qam: FC = () => {
             label={
               <span>
                 {r.name} <span style={{ color: colors.muted, fontSize: "12px" }}>{Q_SHORT[r.quality]} ×{r.count}</span>
-                {r.vaulted && <span style={{ color: colors.bad, fontSize: "10px", marginLeft: "4px" }}>V</span>}
+                {r.vaulted && <span style={{ color: colors.bad, fontSize: "11px", marginLeft: "4px" }}>V</span>}
               </span>
             }
             childrenContainerWidth="min"
@@ -763,7 +753,7 @@ export const Qam: FC = () => {
       ))}
       {t && t.total > t.rows.length && (
         <PanelSectionRow>
-          <div style={{ color: colors.muted, fontSize: "12px" }}>+{t.total - t.rows.length} more owned</div>
+          <div style={{ color: colors.muted, fontSize: "12px", padding: "4px 0" }}>+{t.total - t.rows.length} more owned</div>
         </PanelSectionRow>
       )}
       {planner && planner.state === "rows" && (
@@ -774,33 +764,34 @@ export const Qam: FC = () => {
           </div>
         </PanelSectionRow>
       )}
+      {/* Show / Hide side by side: one row instead of two full-width buttons. */}
       <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={async () => {
-            try {
-              const r = await call<{ token: number | null; enabled: boolean }>("relics.planner_show", { era });
-              if (!r.enabled) setShowStatus("Relic planner is turned off in Settings.");
-              else if (r.token == null) setShowStatus("Planner did not open (try again in a moment).");
-              else setShowStatus(era === "auto" ? "Shown; detecting the era…" : `Shown: ${era === "all" ? "all tiers" : era}.`);
-            } catch (e) {
-              setShowStatus(`Failed: ${String((e as Error)?.message ?? e)}`);
-            }
-          }}
-        >
-          Show planner overlay
-        </ButtonItem>
+        <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px" }}>
+          <DialogButton
+            style={{ flex: 1, minWidth: 0, width: "auto", padding: "8px 4px" }}
+            onClick={async () => {
+              try {
+                const r = await call<{ token: number | null; enabled: boolean }>("relics.planner_show", { era });
+                if (!r.enabled) setShowStatus("Relic planner is turned off in Settings.");
+                else if (r.token == null) setShowStatus("Planner did not open (try again in a moment).");
+                else setShowStatus(era === "auto" ? "Shown; detecting the era…" : `Shown: ${era === "all" ? "all tiers" : era}.`);
+              } catch (e) {
+                setShowStatus(`Failed: ${String((e as Error)?.message ?? e)}`);
+              }
+            }}
+          >
+            Show overlay
+          </DialogButton>
+          <DialogButton style={{ flex: 1, minWidth: 0, width: "auto", padding: "8px 4px" }} onClick={() => call("relics.planner_hide")}>
+            Hide overlay
+          </DialogButton>
+        </Focusable>
       </PanelSectionRow>
       {showStatus && (
         <PanelSectionRow>
           <div style={{ color: colors.muted, fontSize: "12px" }}>{showStatus}</div>
         </PanelSectionRow>
       )}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={() => call("relics.planner_hide")}>
-          Hide planner overlay
-        </ButtonItem>
-      </PanelSectionRow>
       {rp && (
         <PanelSectionRow>
           <ToggleField

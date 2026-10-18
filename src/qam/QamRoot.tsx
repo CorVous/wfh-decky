@@ -152,8 +152,8 @@ const QamRoot: FC = () => {
       <PanelSection>
         <PanelSectionRow>
           <DropdownItem
-            label="Open full screen"
-            strDefaultLabel="Choose a page…"
+            label="Full screen"
+            strDefaultLabel="Open…"
             rgOptions={PAGES.map((p) => ({ data: p.id, label: p.title }))}
             selectedOption={null}
             onChange={(o) => openPage(String(o.data))}

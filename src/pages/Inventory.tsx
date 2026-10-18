@@ -7,7 +7,6 @@ import {
   ButtonItem,
   DialogButton,
   Dropdown,
-  DropdownItem,
   Field,
   Focusable,
   ModalRoot,
@@ -21,7 +20,7 @@ import {
 } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Plat, Section, Stat, chip, colors } from "../components/ui";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Loading, Page, Pager, Plat, Section, Segmented, Stat, chip, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -252,30 +251,6 @@ function openPage(id: string): void {
   Navigation.Navigate(ROUTE);
 }
 
-// Segmented buttons (D-pad left/right).
-export function Segmented<T extends string | number>({ options, value, onChange, width }: { options: { data: T; label: string }[]; value: T; onChange: (v: T) => void; width?: string }) {
-  return (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-      {options.map((o) => (
-        <DialogButton
-          key={String(o.data)}
-          onClick={() => onChange(o.data)}
-          style={{
-            minWidth: 0,
-            width: width ?? "auto",
-            padding: "4px 10px",
-            background: o.data === value ? colors.accent : undefined,
-            color: o.data === value ? "#0e121e" : undefined,
-            fontWeight: o.data === value ? 700 : 400,
-          }}
-        >
-          {o.label}
-        </DialogButton>
-      ))}
-    </Focusable>
-  );
-}
-
 // "No inventory yet": refresh from the game or import an exported JSON file.
 export const NoInventory: FC<{ status?: InvStatus; home?: string; onDone: () => void }> = ({ status, home, onDone }) => {
   const [busy, setBusy] = useState(false);
@@ -356,15 +331,15 @@ const ValueStrip: FC<{ v: NonNullable<InvView["value"]>; prefs: Prefs; onPrefs: 
     <Focusable flow-children="horizontal" style={{ display: "flex", gap: "16px", marginTop: "8px", alignItems: "center", flexWrap: "wrap" }}>
       <Segmented
         options={[
-          { data: "prime", label: "Prime parts" },
-          { data: "tradable", label: "All tradables" },
+          { id: "prime", label: "Prime parts" },
+          { id: "tradable", label: "All tradables" },
         ]}
         value={prefs.valueScope}
         onChange={(s) => onPrefs({ value_scope: s })}
       />
       <span style={{ color: colors.muted, fontSize: "12px" }}>Min per unit</span>
-      <Segmented options={[0, 5, 10, 15].map((n) => ({ data: n, label: n === 0 ? "Any" : `${n}p` }))} value={prefs.valueMinPlat} onChange={(n) => onPrefs({ value_min_plat: n })} />
-      <DialogButton style={{ minWidth: 0, width: "150px", padding: "4px 10px" }} onClick={onFetch}>
+      <Segmented options={[0, 5, 10, 15].map((n) => ({ id: n, label: n === 0 ? "Any" : `${n}p` }))} value={prefs.valueMinPlat} onChange={(n) => onPrefs({ value_min_plat: n })} />
+      <DialogButton style={chip(false)} onClick={onFetch}>
         Fetch prices
       </DialogButton>
       {fetchMsg && <span style={{ color: colors.muted, fontSize: "12px" }}>{fetchMsg}</span>}
@@ -538,11 +513,12 @@ const ItemRow: FC<{ r: InvRow; tab: Tab }> = ({ r, tab }) => {
 
 // ---- full page --------------------------------------------------------------------------------
 
-const yesNoOptions = (label: string) => [
-  { data: "all", label: `${label}: any` },
-  { data: "yes", label: `${label}: yes` },
-  { data: "no", label: `${label}: no` },
+const yesNoOptions = [
+  { data: "all", label: "Any" },
+  { data: "yes", label: "Yes" },
+  { data: "no", label: "No" },
 ];
+
 
 const Inventory: FC = () => {
   const [s, setS] = useState<ViewState>(loadState);
@@ -610,27 +586,15 @@ const Inventory: FC = () => {
   };
 
   const tabStrip = (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "4px", flexWrap: "wrap", margin: "8px 0" }}>
-      {(v.tabs ?? []).map((t) => (
-        <DialogButton
-          key={t.id}
-          onClick={() => {
-            setSearchDraft("");
-            update({ tab: t.id, sort: null, direction: null, search: "" });
-          }}
-          style={{
-            minWidth: 0,
-            width: "auto",
-            padding: "4px 10px",
-            background: t.id === s.tab ? colors.accent : undefined,
-            color: t.id === s.tab ? "#0e121e" : undefined,
-            fontWeight: t.id === s.tab ? 700 : 400,
-          }}
-        >
-          {t.label} <span style={{ opacity: 0.7, fontSize: "12px" }}>{t.count}</span>
-        </DialogButton>
-      ))}
-    </Focusable>
+    <Segmented
+      style={{ margin: "8px 0" }}
+      value={s.tab}
+      options={(v.tabs ?? []).map((t) => ({ id: t.id, label: <>{t.label} <span style={{ opacity: 0.7, fontSize: "12px" }}>{t.count}</span></> }))}
+      onChange={(id) => {
+        setSearchDraft("");
+        update({ tab: id, sort: null, direction: null, search: "" });
+      }}
+    />
   );
 
   const refreshInventory = async () => {
@@ -645,22 +609,23 @@ const Inventory: FC = () => {
   };
 
   // Compact filter bar above the list; the rarely used filters fold out
-  // below it so the rows keep the full width.
+  // below it (as more horizontal rows) so the rows keep the full width.
+  const toggleIn = (list: string[], id: string, on: boolean) => (on ? list.filter((x) => x !== id) : [...list, id]);
   const filters = (
-    <Focusable style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
+    <Focusable style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
       <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap" }}>
         <FilterCell label="Search" width="220px">
           <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
         </FilterCell>
-        <FilterCell label="Sort" width="180px">
+        <FilterCell label="Sort" width="190px">
           <Dropdown
             rgOptions={sorts.map((k) => ({ data: k, label: SORT_LABEL[k] ?? k }))}
             selectedOption={v.sort ?? "name"}
             onChange={(o) => update({ sort: o.data, direction: DESC_DEFAULT.includes(o.data) ? "desc" : "asc" })}
           />
         </FilterCell>
-        <DialogButton style={chip(v.direction === "desc")} onClick={() => update({ sort: v.sort ?? "name", direction: v.direction === "desc" ? "asc" : "desc" })}>
-          {v.direction === "desc" ? "Descending" : "Ascending"}
+        <DialogButton style={chip(false)} onClick={() => update({ sort: v.sort ?? "name", direction: v.direction === "desc" ? "asc" : "desc" })}>
+          {v.direction === "desc" ? "▼ Descending" : "▲ Ascending"}
         </DialogButton>
         <DialogButton style={chip(s.filters.minimumAmount >= 2)} onClick={() => setFilter({ minimumAmount: s.filters.minimumAmount >= 2 ? 0 : 2 })}>
           Spares only
@@ -676,59 +641,72 @@ const Inventory: FC = () => {
         </DialogButton>
       </Focusable>
       {showMore && (
-        <Focusable style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0 16px" }}>
-      {s.tab === "everything" && (
-        <Field label="Sources" childrenLayout="below" focusable={false}>
-          <Focusable style={{ display: "flex", flexDirection: "column" }}>
-            {SOURCES.map((src) => (
-              <ToggleField
-                key={src.id}
-                label={src.label}
-                checked={!s.everythingHidden.includes(src.id)}
-                onChange={(b) => update({ everythingHidden: b ? s.everythingHidden.filter((x) => x !== src.id) : [...s.everythingHidden, src.id] })}
-              />
-            ))}
-          </Focusable>
-        </Field>
-      )}
-      {s.tab === "full_sets" && (
-        <>
-          <ToggleField label="Show incomplete sets" description="Sets with at least one part owned" checked={s.showIncomplete} onChange={(b) => update({ showIncomplete: b, sort: b ? "missing_parts" : null, direction: b ? "asc" : null })} />
-          {(v.setCategories ?? []).map((c) => (
-            <ToggleField
-              key={c.id}
-              label={`${c.id} (${c.count})`}
-              checked={!s.fullSetsHidden.includes(c.id)}
-              onChange={(b) => update({ fullSetsHidden: b ? s.fullSetsHidden.filter((x) => x !== c.id) : [...s.fullSetsHidden, c.id] })}
-            />
-          ))}
-        </>
-      )}
-      {s.tab !== "resources" && (
-        <>
-          <DropdownItem label="Min platinum" rgOptions={MIN_PLAT_OPTIONS.map((n) => ({ data: n, label: n === 0 ? "Any" : `${n}p or more` }))} selectedOption={s.filters.minimumPlatinum} onChange={(o) => setFilter({ minimumPlatinum: o.data })} />
-          <DropdownItem label="Vaulted" rgOptions={yesNoOptions("Vaulted")} selectedOption={s.filters.vaulted} onChange={(o) => setFilter({ vaulted: o.data })} />
-          <DropdownItem
-            label="Part type"
-            rgOptions={[
-              { data: "all", label: "Any" },
-              { data: "prime", label: "Prime" },
-              { data: "normal", label: "Non-prime" },
-            ]}
-            selectedOption={s.filters.partType}
-            onChange={(o) => setFilter({ partType: o.data })}
-          />
-          <DropdownItem label="Equipped" rgOptions={yesNoOptions("Equipped")} selectedOption={s.filters.equipped} onChange={(o) => setFilter({ equipped: o.data })} />
-          <DropdownItem label="Favorite" rgOptions={yesNoOptions("Favorite")} selectedOption={s.filters.favorite} onChange={(o) => setFilter({ favorite: o.data })} />
-          <DropdownItem label="Leveled up" rgOptions={yesNoOptions("Leveled")} selectedOption={s.filters.leveledUp} onChange={(o) => setFilter({ leveledUp: o.data })} />
-        </>
-      )}
-      <ToggleField
-        label="Hide blueprints in the foundry"
-        checked={prefs.hideFoundryClaims}
-        onChange={(b) => setPrefs({ hide_foundry_claims: b })}
-      />
+        <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap" }}>
+          {s.tab !== "resources" && (
+            <>
+              <FilterCell label="Min platinum" width="150px">
+                <Dropdown rgOptions={MIN_PLAT_OPTIONS.map((n) => ({ data: n, label: n === 0 ? "Any" : `${n}p or more` }))} selectedOption={s.filters.minimumPlatinum} onChange={(o) => setFilter({ minimumPlatinum: o.data })} />
+              </FilterCell>
+              <FilterCell label="Vaulted" width="130px">
+                <Dropdown rgOptions={yesNoOptions} selectedOption={s.filters.vaulted} onChange={(o) => setFilter({ vaulted: o.data })} />
+              </FilterCell>
+              <FilterCell label="Part type" width="140px">
+                <Dropdown
+                  rgOptions={[
+                    { data: "all", label: "Any" },
+                    { data: "prime", label: "Prime" },
+                    { data: "normal", label: "Non-prime" },
+                  ]}
+                  selectedOption={s.filters.partType}
+                  onChange={(o) => setFilter({ partType: o.data })}
+                />
+              </FilterCell>
+              <FilterCell label="Equipped" width="130px">
+                <Dropdown rgOptions={yesNoOptions} selectedOption={s.filters.equipped} onChange={(o) => setFilter({ equipped: o.data })} />
+              </FilterCell>
+              <FilterCell label="Favorite" width="130px">
+                <Dropdown rgOptions={yesNoOptions} selectedOption={s.filters.favorite} onChange={(o) => setFilter({ favorite: o.data })} />
+              </FilterCell>
+              <FilterCell label="Leveled up" width="130px">
+                <Dropdown rgOptions={yesNoOptions} selectedOption={s.filters.leveledUp} onChange={(o) => setFilter({ leveledUp: o.data })} />
+              </FilterCell>
+            </>
+          )}
+          <DialogButton style={chip(prefs.hideFoundryClaims)} onClick={() => setPrefs({ hide_foundry_claims: !prefs.hideFoundryClaims })}>
+            Hide foundry blueprints
+          </DialogButton>
         </Focusable>
+      )}
+      {showMore && s.tab === "everything" && (
+        <FilterCell label="Sources">
+          <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            {SOURCES.map((src) => {
+              const on = !s.everythingHidden.includes(src.id);
+              return (
+                <DialogButton key={src.id} style={chip(on)} onClick={() => update({ everythingHidden: toggleIn(s.everythingHidden, src.id, !on) })}>
+                  {src.label}
+                </DialogButton>
+              );
+            })}
+          </Focusable>
+        </FilterCell>
+      )}
+      {showMore && s.tab === "full_sets" && (
+        <FilterCell label="Sets">
+          <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <DialogButton style={chip(s.showIncomplete)} onClick={() => { const b = !s.showIncomplete; update({ showIncomplete: b, sort: b ? "missing_parts" : null, direction: b ? "asc" : null }); }}>
+              Incomplete sets too
+            </DialogButton>
+            {(v.setCategories ?? []).map((c) => {
+              const on = !s.fullSetsHidden.includes(c.id);
+              return (
+                <DialogButton key={c.id} style={chip(on)} onClick={() => update({ fullSetsHidden: toggleIn(s.fullSetsHidden, c.id, !on) })}>
+                  {c.id} <span style={{ opacity: 0.7, fontSize: "12px" }}>{c.count}</span>
+                </DialogButton>
+              );
+            })}
+          </Focusable>
+        </FilterCell>
       )}
       {v.inventory && (
         <div style={{ color: colors.muted, fontSize: "12px" }}>
@@ -755,19 +733,7 @@ const Inventory: FC = () => {
             <ItemRow key={r.key} r={r} tab={s.tab} />
           ))}
         </Focusable>
-        {pages > 1 && (
-          <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }} flow-children="horizontal">
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page === 0} onClick={() => setPage(page - 1)}>
-              Prev
-            </DialogButton>
-            <span style={{ color: colors.muted }}>
-              {page + 1} / {pages} · {v.total} items
-            </span>
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page >= pages - 1} onClick={() => setPage(page + 1)}>
-              Next
-            </DialogButton>
-          </Focusable>
-        )}
+        {pages > 1 && <Pager page={page} pages={pages} onPage={setPage} label={`${v.total} items`} />}
         {(v.pricesMissing ?? 0) > 0 && (
           <div style={{ color: colors.muted, fontSize: "12px", marginTop: "6px" }}>{v.pricesMissing} prices not cached yet. Use “Fetch prices”.</div>
         )}

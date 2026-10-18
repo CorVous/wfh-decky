@@ -3,10 +3,10 @@
 // (docs/port/menus.md §10). Data: world.view / world.qam / world.dailies (py_modules/wfh/menus/world.py),
 // world.arbi_schedule (data/arbi_schedule.py). Every date comes as epoch ms; countdowns tick locally.
 import { ButtonItem, DialogButton, DropdownItem, Field, Focusable, Navigation, PanelSection, PanelSectionRow, SliderField } from "@decky/ui";
-import { ComponentProps, CSSProperties, FC, ReactNode, useEffect, useRef, useState } from "react";
+import { ComponentProps, FC, ReactNode, useEffect, useRef, useState } from "react";
 import { FaBell, FaRegBell, FaRegStar, FaStar } from "react-icons/fa";
 
-import { Badge, Ducats, Empty, ErrorText, Guard, Loading, Page, Paged, Row, Section, colors } from "../components/ui";
+import { Badge, Columns, Ducats, Empty, ErrorText, Guard, Loading, Page, Paged, Row, Section, Segmented, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -267,9 +267,7 @@ export function fmtDay(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-export const TierTag: FC<{ tier: string }> = ({ tier }) => (
-  <span style={{ color: TIER_COLORS[tier.toLowerCase()] ?? colors.text, fontWeight: 600 }}>{tier}</span>
-);
+export const TierTag: FC<{ tier: string }> = ({ tier }) => <span style={{ color: TIER_COLORS[tier.toLowerCase()] ?? colors.text, fontWeight: 600 }}>{tier}</span>;
 
 export const FissureLabel: FC<{ f: Fissure }> = ({ f }) => (
   <>
@@ -280,9 +278,7 @@ export const FissureLabel: FC<{ f: Fissure }> = ({ f }) => (
 );
 
 export const Countdown: FC<{ to: number | null | undefined; now: number; activation?: number | null; short?: boolean }> = ({ to, now, activation, short }) => (
-  <span style={{ color: isUrgent(activation, to, now) ? colors.warn : colors.text, fontVariantNumeric: "tabular-nums" }}>
-    {short ? fmtShort(to, now) : fmtCountdown(to, now)}
-  </span>
+  <span style={{ color: isUrgent(activation, to, now) ? colors.warn : colors.text, fontVariantNumeric: "tabular-nums" }}>{short ? fmtShort(to, now) : fmtCountdown(to, now)}</span>
 );
 
 export function cycleText(c: Cycle, now: number): string {
@@ -321,39 +317,12 @@ export const noop = (): void => {};
 
 export const Item: FC<ComponentProps<typeof Row>> = (p) => <Row {...p} onActivate={p.onActivate ?? noop} />;
 
-// Gamepad tab strip: one row of buttons, the active one highlighted.
-export function Segmented<T extends string>({ value, options, onChange, style }: {
-  value: T;
-  options: { id: T; label: ReactNode }[];
-  onChange: (v: T) => void;
-  style?: CSSProperties;
-}) {
-  return (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", ...style }}>
-      {options.map((o) => (
-        <DialogButton
-          key={o.id}
-          onClick={() => onChange(o.id)}
-          style={{
-            minWidth: 0,
-            width: "auto",
-            padding: "6px 14px",
-            flex: "0 0 auto",
-            background: o.id === value ? colors.accent : undefined,
-            color: o.id === value ? "#0e121e" : undefined,
-            fontWeight: o.id === value ? 700 : 400,
-          }}
-        >
-          {o.label}
-        </DialogButton>
-      ))}
-    </Focusable>
-  );
+// Deals items into n columns, keeping their order across then down (as a grid would).
+function deal<T>(items: T[], n: number): T[][] {
+  const out: T[][] = Array.from({ length: n }, () => []);
+  items.forEach((it, i) => out[i % n].push(it));
+  return out;
 }
-
-const Grid: FC<{ cols?: number; children: ReactNode }> = ({ cols = 3, children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0 14px", alignItems: "start" }}>{children}</div>
-);
 
 const Muted: FC<{ children: ReactNode }> = ({ children }) => <span style={{ color: colors.muted }}>{children}</span>;
 
@@ -437,10 +406,7 @@ export const CircuitBlock: FC<{ circuit: Circuit; showNext?: boolean }> = ({ cir
       return (
         <div key={k}>
           <Item label={k === "normal" ? "Circuit (Normal)" : "Circuit (Steel Path)"} sub={c.choices.length ? c.choices.join(", ") : "Not known yet"} />
-          {showNext &&
-            c.next.map((w, i) => (
-              <Item key={i} label={<Muted>{i === 0 ? "Next week" : `In ${i + 1} weeks`}</Muted>} sub={w.join(", ")} />
-            ))}
+          {showNext && c.next.map((w, i) => <Item key={i} label={<Muted>{i === 0 ? "Next week" : `In ${i + 1} weeks`}</Muted>} sub={w.join(", ")} />)}
         </div>
       );
     })}
@@ -460,52 +426,58 @@ export const BaroRow: FC<{ baro: Baro | null; now: number; onActivate?: () => vo
     <Item label="Baro Ki'Teer" sub="No schedule in the world state" />
   );
 
-const Overview: FC<{ v: WorldView; now: number; go: (t: WorldTab) => void; setPrefs: (p: Partial<WorldPrefs>) => void; arbi?: ArbiSchedule }> = ({
-  v,
-  now,
-  go,
-  setPrefs,
-  arbi,
-}) => (
-  <Grid>
-    <div>
-      <TimersSection timers={v.timers} now={now} />
-    </div>
-    <div>
-      <CyclesSection cycles={v.cycles} now={now} />
-      <Section title="Fissures" right={<Muted>A to open</Muted>}>
-        <CountsTable
-          counts={v.fissureCounts}
-          onPick={(m) => {
-            setPrefs({ fissureMode: m });
-            go("fissures");
-          }}
-        />
-      </Section>
-    </div>
-    <div>
-      <Section title="Arbitration">
-        {arbi?.current && (
-          <Item label={arbi.current.node} sub={`${arbi.current.mission} · ${arbi.current.faction} · now`} value={<Countdown to={arbi.current.epochMs + 3600000} now={now} />} onActivate={() => go("arbis")} />
-        )}
-        {arbi?.next && (
-          <Item label={`Next: ${arbi.next.node}`} sub={`${arbi.next.mission} · ${arbi.next.faction} · ${fmtClock(arbi.next.epochMs)}`} value={<Countdown to={arbi.next.epochMs} now={now} />} onActivate={() => go("arbis")} />
-        )}
-        {!arbi?.current && !arbi?.next && <Muted>{arbi?.error ? "Schedule unavailable" : "No schedule yet"}</Muted>}
-      </Section>
-      <Section title="Baro Ki'Teer">
-        <BaroRow baro={v.baro} now={now} onActivate={() => go("baro")} />
-      </Section>
-      <Section title="Steel Path honors">
-        {v.steelPath?.current ? (
-          <Item label={v.steelPath.current.name} sub={`${v.steelPath.current.cost} Steel Essence`} value={<Countdown to={v.steelPath.expiryMs} now={now} />} onActivate={() => go("steel")} />
-        ) : (
-          <Muted>Unknown</Muted>
-        )}
-        <CircuitBlock circuit={v.circuit} />
-      </Section>
-    </div>
-  </Grid>
+const Overview: FC<{ v: WorldView; now: number; go: (t: WorldTab) => void; setPrefs: (p: Partial<WorldPrefs>) => void; arbi?: ArbiSchedule }> = ({ v, now, go, setPrefs, arbi }) => (
+  <Columns
+    cols={[
+      <>
+        <TimersSection timers={v.timers} now={now} />
+        <Section title="Baro Ki'Teer">
+          <BaroRow baro={v.baro} now={now} onActivate={() => go("baro")} />
+        </Section>
+      </>,
+      <>
+        <CyclesSection cycles={v.cycles} now={now} />
+        <Section title="Fissures" right={<Muted>A to open</Muted>}>
+          <CountsTable
+            counts={v.fissureCounts}
+            onPick={(m) => {
+              setPrefs({ fissureMode: m });
+              go("fissures");
+            }}
+          />
+        </Section>
+      </>,
+      <>
+        <Section title="Arbitration">
+          {arbi?.current && (
+            <Item
+              label={arbi.current.node}
+              sub={`${arbi.current.mission} · ${arbi.current.faction} · now`}
+              value={<Countdown to={arbi.current.epochMs + 3600000} now={now} />}
+              onActivate={() => go("arbis")}
+            />
+          )}
+          {arbi?.next && (
+            <Item
+              label={`Next: ${arbi.next.node}`}
+              sub={`${arbi.next.mission} · ${arbi.next.faction} · ${fmtClock(arbi.next.epochMs)}`}
+              value={<Countdown to={arbi.next.epochMs} now={now} />}
+              onActivate={() => go("arbis")}
+            />
+          )}
+          {!arbi?.current && !arbi?.next && <Muted>{arbi?.error ? "Schedule unavailable" : "No schedule yet"}</Muted>}
+        </Section>
+        <Section title="Steel Path honors">
+          {v.steelPath?.current ? (
+            <Item label={v.steelPath.current.name} sub={`${v.steelPath.current.cost} Steel Essence`} value={<Countdown to={v.steelPath.expiryMs} now={now} />} onActivate={() => go("steel")} />
+          ) : (
+            <Muted>Unknown</Muted>
+          )}
+          <CircuitBlock circuit={v.circuit} />
+        </Section>
+      </>,
+    ]}
+  />
 );
 
 const FissuresTab: FC<{ v: WorldView; now: number; prefs: WorldPrefs; setPrefs: (p: Partial<WorldPrefs>) => void }> = ({ v, now, prefs, setPrefs }) => {
@@ -518,13 +490,10 @@ const FissuresTab: FC<{ v: WorldView; now: number; prefs: WorldPrefs; setPrefs: 
   };
   return (
     <>
-      <Segmented
-        value={prefs.fissureMode}
-        options={MODES.map((m) => ({ id: m, label: `${MODE_LABELS[m]} (${v.fissureCounts[m].total})` }))}
-        onChange={(m) => setPrefs({ fissureMode: m })}
-        style={{ margin: "8px 0" }}
-      />
-      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "4px" }}>
+      {/* one compact filter bar: mode, then the tier toggles */}
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", margin: "8px 0" }}>
+        <Segmented value={prefs.fissureMode} options={MODES.map((m) => ({ id: m, label: `${MODE_LABELS[m]} (${v.fissureCounts[m].total})` }))} onChange={(m) => setPrefs({ fissureMode: m })} />
+        <span style={{ width: "1px", alignSelf: "stretch", background: colors.border, margin: "0 6px" }} />
         {TIERS.map((t) => (
           <DialogButton
             key={t}
@@ -532,7 +501,7 @@ const FissuresTab: FC<{ v: WorldView; now: number; prefs: WorldPrefs; setPrefs: 
             style={{
               minWidth: 0,
               width: "auto",
-              padding: "4px 12px",
+              padding: "6px 12px",
               flex: "0 0 auto",
               opacity: tiers.has(t) ? 1 : 0.45,
               borderBottom: `3px solid ${tiers.has(t) ? TIER_COLORS[t.toLowerCase()] : "transparent"}`,
@@ -542,27 +511,23 @@ const FissuresTab: FC<{ v: WorldView; now: number; prefs: WorldPrefs; setPrefs: 
           </DialogButton>
         ))}
       </Focusable>
-      <div style={{ maxWidth: "420px" }}>
-        <SliderField
-          label="Quick Access fissure rows"
-          value={prefs.qamLimit}
-          min={1}
-          max={20}
-          step={1}
-          showValue
-          onChange={(n) => setPrefs({ qamLimit: n })}
-        />
-      </div>
       {groups.length === 0 && <Empty text="No fissures match these filters." />}
-      <Grid cols={2}>
-        {groups.map((g) => (
-          <Section key={g.tier} title={`${g.tier} (${g.rows.length})`}>
-            {g.rows.map((f) => (
-              <Item key={f.id} label={<FissureLabel f={f} />} sub={f.node} value={<Countdown to={f.expiryMs} activation={f.activationMs} now={now} />} />
-            ))}
-          </Section>
-        ))}
-      </Grid>
+      {groups.length > 0 && (
+        <Columns
+          cols={deal(groups, 3).map((col) =>
+            col.map((g) => (
+              <Section key={g.tier} title={`${g.tier} (${g.rows.length})`}>
+                {g.rows.map((f) => (
+                  <Item key={f.id} label={<FissureLabel f={f} />} sub={f.node} value={<Countdown to={f.expiryMs} activation={f.activationMs} now={now} />} />
+                ))}
+              </Section>
+            )),
+          )}
+        />
+      )}
+      <div style={{ maxWidth: "420px", marginTop: "8px" }}>
+        <SliderField label="Quick Access fissure rows" value={prefs.qamLimit} min={1} max={20} step={1} showValue onChange={(n) => setPrefs({ qamLimit: n })} />
+      </div>
     </>
   );
 };
@@ -614,33 +579,33 @@ const InvasionRow: FC<{ i: Invasion }> = ({ i }) => {
 };
 
 const MissionsTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => (
-  <Grid>
-    <div>
-      <SortieSection title="Sortie" s={v.sortie} now={now} />
-      <SortieSection title="Archon Hunt" s={v.archon} now={now} />
-    </div>
-    <div>
+  <Columns
+    cols={[
+      <>
+        <SortieSection title="Sortie" s={v.sortie} now={now} />
+        <SortieSection title="Archon Hunt" s={v.archon} now={now} />
+      </>,
       <Section title={`Invasions (${v.invasions.length})`}>
         {v.invasions.length === 0 && <Muted>No running invasions.</Muted>}
         {v.invasions.map((i) => (
           <InvasionRow key={i.id} i={i} />
         ))}
-      </Section>
-    </div>
-    <div>
+      </Section>,
       <Section title={`Alerts (${v.alerts.length})`}>
         {v.alerts.length === 0 && <Muted>No alerts.</Muted>}
         {v.alerts.map((a) => (
           <Item
             key={a.id}
             label={`${a.mission} · ${a.node}`}
-            sub={[a.items.map((x) => (x.count > 1 ? `${x.count}x ${x.name}` : x.name)).join(", "), a.credits ? `${a.credits.toLocaleString()} cr` : "", `${a.faction} ${a.minLevel}-${a.maxLevel}`].filter(Boolean).join(" · ")}
+            sub={[a.items.map((x) => (x.count > 1 ? `${x.count}x ${x.name}` : x.name)).join(", "), a.credits ? `${a.credits.toLocaleString()} cr` : "", `${a.faction} ${a.minLevel}-${a.maxLevel}`]
+              .filter(Boolean)
+              .join(" · ")}
             value={<Countdown to={a.expiryMs} now={now} />}
           />
         ))}
-      </Section>
-    </div>
-  </Grid>
+      </Section>,
+    ]}
+  />
 );
 
 const NightwaveTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => {
@@ -657,8 +622,8 @@ const NightwaveTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => {
         Season {nw.season}
         {nw.expiryMs && ` · ends in ${fmtCountdown(nw.expiryMs, now)}`}
       </div>
-      <Grid>
-        {kinds.map((k) => {
+      <Columns
+        cols={kinds.map((k) => {
           const acts = nw.challenges.filter((c) => c.kind === k.id);
           return (
             <Section key={k.id} title={`${k.title} (${acts.length})`}>
@@ -681,14 +646,14 @@ const NightwaveTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => {
             </Section>
           );
         })}
-      </Grid>
+      />
     </>
   );
 };
 
 const BaroTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => (
-  <Grid cols={2}>
-    <div>
+  <Columns
+    cols={[
       <Section title="Baro Ki'Teer">
         <BaroRow baro={v.baro} now={now} />
         {v.baro?.active && v.baro.inventory && (
@@ -709,69 +674,76 @@ const BaroTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => (
             )}
           />
         )}
-      </Section>
-    </div>
-    <div>
-      <Section title="Darvo's deal">
-        {v.darvo.length === 0 && <Muted>No deal right now.</Muted>}
-        {v.darvo.map((d, i) => (
-          <Item
-            key={i}
-            label={d.item}
-            sub={`${d.discount}% off · ${Math.max(0, d.total - d.sold)} / ${d.total} left`}
-            value={
-              <span>
-                <span style={{ color: colors.plat }}>{d.salePrice}p</span> <s style={{ color: colors.muted }}>{d.originalPrice}p</s>
-                <div style={{ fontSize: "12px" }}>
-                  <Countdown to={d.expiryMs} now={now} short />
-                </div>
-              </span>
-            }
-          />
-        ))}
-      </Section>
-      <Section title="Varzia (Prime Resurgence)" right={v.varzia ? <Countdown to={v.varzia.expiryMs} now={now} /> : undefined}>
-        {!v.varzia && <Muted>Not in the world state.</Muted>}
-        {v.varzia && (
-          <Paged
-            items={v.varzia.inventory}
-            pageSize={10}
-            render={(it, i) => (
-              <Item key={i} label={it.item} value={<Muted>{it.aya != null ? `${it.aya} Aya` : it.regalAya != null ? `${it.regalAya} Regal Aya` : ""}</Muted>} />
-            )}
-          />
-        )}
-      </Section>
-    </div>
-  </Grid>
+      </Section>,
+      <>
+        <Section title="Darvo's deal">
+          {v.darvo.length === 0 && <Muted>No deal right now.</Muted>}
+          {v.darvo.map((d, i) => (
+            <Item
+              key={i}
+              label={d.item}
+              sub={`${d.discount}% off · ${Math.max(0, d.total - d.sold)} / ${d.total} left`}
+              value={
+                <span>
+                  <span style={{ color: colors.plat }}>{d.salePrice}p</span> <s style={{ color: colors.muted }}>{d.originalPrice}p</s>
+                  <div style={{ fontSize: "12px" }}>
+                    <Countdown to={d.expiryMs} now={now} short />
+                  </div>
+                </span>
+              }
+            />
+          ))}
+        </Section>
+        <Section title="Varzia (Prime Resurgence)" right={v.varzia ? <Countdown to={v.varzia.expiryMs} now={now} /> : undefined}>
+          {!v.varzia && <Muted>Not in the world state.</Muted>}
+          {v.varzia && (
+            <Paged
+              items={v.varzia.inventory}
+              pageSize={10}
+              render={(it, i) => <Item key={i} label={it.item} value={<Muted>{it.aya != null ? `${it.aya} Aya` : it.regalAya != null ? `${it.regalAya} Regal Aya` : ""}</Muted>} />}
+            />
+          )}
+        </Section>
+      </>,
+    ]}
+  />
 );
 
 const SteelTab: FC<{ v: WorldView; now: number }> = ({ v, now }) => (
-  <Grid cols={2}>
-    <div>
-      <Section title="Steel Path honors (Teshin)">
-        {!v.steelPath && <Muted>Unknown</Muted>}
-        {v.steelPath?.current && (
-          <Item label={v.steelPath.current.name} sub={`${v.steelPath.current.cost} Steel Essence · this week`} value={<Countdown to={v.steelPath.expiryMs} now={now} />} color={colors.ducat} />
-        )}
-        {v.steelPath?.upcoming.map((u, i) => (
-          <Item key={i} label={u.name} sub={`${u.cost} Steel Essence`} value={<Muted>in {u.inDays} day{u.inDays === 1 ? "" : "s"}</Muted>} />
-        ))}
-      </Section>
-      {v.steelPath && (
-        <Section title="Always available">
-          {v.steelPath.evergreens.map((e, i) => (
-            <Item key={i} label={e.name} value={<Muted>{e.cost} SE</Muted>} />
+  <Columns
+    cols={[
+      <>
+        <Section title="Steel Path honors (Teshin)">
+          {!v.steelPath && <Muted>Unknown</Muted>}
+          {v.steelPath?.current && (
+            <Item label={v.steelPath.current.name} sub={`${v.steelPath.current.cost} Steel Essence · this week`} value={<Countdown to={v.steelPath.expiryMs} now={now} />} color={colors.ducat} />
+          )}
+          {v.steelPath?.upcoming.map((u, i) => (
+            <Item
+              key={i}
+              label={u.name}
+              sub={`${u.cost} Steel Essence`}
+              value={
+                <Muted>
+                  in {u.inDays} day{u.inDays === 1 ? "" : "s"}
+                </Muted>
+              }
+            />
           ))}
         </Section>
-      )}
-    </div>
-    <div>
+        {v.steelPath && (
+          <Section title="Always available">
+            {v.steelPath.evergreens.map((e, i) => (
+              <Item key={i} label={e.name} value={<Muted>{e.cost} SE</Muted>} />
+            ))}
+          </Section>
+        )}
+      </>,
       <Section title="The Circuit">
         <CircuitBlock circuit={v.circuit} showNext />
-      </Section>
-    </div>
-  </Grid>
+      </Section>,
+    ]}
+  />
 );
 
 // ---- arbitration schedule ---------------------------------------------------------------------
@@ -898,8 +870,8 @@ const DailiesTab: FC<{ now: number }> = ({ now }) => {
         </DialogButton>
         <Muted>{d.inventory ? "Ticks marked auto come from your inventory." : "No inventory yet: tick tasks by hand."}</Muted>
       </Focusable>
-      <Grid>
-        {groups.map((g) => {
+      <Columns
+        cols={groups.map((g) => {
           const tasks = d.tasks.filter((t) => t.group === g.id && (edit || !t.hidden));
           return (
             <Section key={g.id} title={g.title}>
@@ -920,13 +892,19 @@ const DailiesTab: FC<{ now: number }> = ({ now }) => {
                     </>
                   }
                   sub={[t.detail, t.resetMs ? `resets in ${fmtShort(t.resetMs, now)}` : null].filter(Boolean).join(" · ") || undefined}
-                  value={t.target > 1 ? <span>{t.count}/{t.target}</span> : undefined}
+                  value={
+                    t.target > 1 ? (
+                      <span>
+                        {t.count}/{t.target}
+                      </span>
+                    ) : undefined
+                  }
                 />
               ))}
             </Section>
           );
         })}
-      </Grid>
+      />
     </>
   );
 };
@@ -988,7 +966,7 @@ const World: FC = () => {
     };
   }, []);
   const setPrefs = (p: Partial<WorldPrefs>) => {
-    const merged = { ...(latest.current && pending.current ? latest.current : prefs ?? view.data!.prefs), ...p };
+    const merged = { ...(latest.current && pending.current ? latest.current : (prefs ?? view.data!.prefs)), ...p };
     latest.current = merged;
     setPrefsState(merged);
     pending.current = 1;
@@ -1105,15 +1083,21 @@ export const Qam: FC = () => {
                 focusable
                 onActivate={() => openWorld("overview")}
                 label="Resets"
-                description={d.resets.map((r) => `${RESET_SHORT[r.key] ?? r.label} ${fmtShort(r.expiryMs, now)}`).join(" · ")}
+                description={
+                  // each "Label time" pair stays on one line; the panel wraps between pairs, never inside one
+                  d.resets.map((r, i) => (
+                    <span key={r.key} style={{ whiteSpace: "nowrap" }}>
+                      {i > 0 && " · "}
+                      {RESET_SHORT[r.key] ?? r.label} {fmtShort(r.expiryMs, now)}
+                    </span>
+                  ))
+                }
               />
             </PanelSectionRow>
             {d.cycles.map((c) => (
               <PanelSectionRow key={c.key}>
                 <Field focusable padding="compact" label={c.label} onActivate={() => openWorld("overview")}>
-                  <span style={{ color: isUrgent(c.activationMs, c.expiryMs, now) ? colors.warn : colors.text, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                    {cycleText(c, now)}
-                  </span>
+                  <span style={{ color: isUrgent(c.activationMs, c.expiryMs, now) ? colors.warn : colors.text, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{cycleText(c, now)}</span>
                 </Field>
               </PanelSectionRow>
             ))}

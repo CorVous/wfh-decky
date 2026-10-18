@@ -16,9 +16,9 @@ import {
   TextField,
   showModal,
 } from "@decky/ui";
-import { CSSProperties, FC, ReactNode, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, useEffect, useRef, useState } from "react";
 
-import { Badge, Empty, ErrorText, Loading, Page, Paged, Plat, Row, Section, Stat, colors } from "../components/ui";
+import { Badge, Empty, ErrorText, Grid, Loading, Page, Plat, Row, Section, Segmented, Stat, card, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -212,35 +212,6 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-function Segmented<T extends string>({ value, options, onChange, style }: {
-  value: T;
-  options: { id: T; label: ReactNode }[];
-  onChange: (v: T) => void;
-  style?: CSSProperties;
-}) {
-  return (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", ...style }}>
-      {options.map((o) => (
-        <DialogButton
-          key={o.id}
-          onClick={() => onChange(o.id)}
-          style={{
-            minWidth: 0,
-            width: "auto",
-            padding: "6px 14px",
-            flex: "0 0 auto",
-            background: o.id === value ? colors.accent : undefined,
-            color: o.id === value ? "#0e121e" : undefined,
-            fontWeight: o.id === value ? 700 : 400,
-          }}
-        >
-          {o.label}
-        </DialogButton>
-      ))}
-    </Focusable>
-  );
-}
-
 const StatusDot: FC<{ status: string }> = ({ status }) => (
   <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "4px", marginRight: "6px", background: STATUS_COLOR[status] ?? colors.muted }} />
 );
@@ -298,24 +269,52 @@ const WhisperModal: FC<{ row: OrderRow; side: "sell" | "buy"; closeModal?: () =>
 
 // ---- browse ----------------------------------------------------------------------------------
 
+// One column of orders. Its own vertical Focusable so the two tables side by side form a
+// horizontal pair: up/down moves within a table, left/right jumps between them.
 const OrderTable: FC<{ title: string; side: "sell" | "buy"; rows: OrderRow[] }> = ({ title, side, rows }) => (
-  <Section title={title} style={{ flex: 1, minWidth: 0 }}>
-    {rows.length === 0 && <div style={{ color: colors.muted }}>No online orders.</div>}
-    {rows.map((r, i) => (
-      <Row
-        key={`${r.user}-${i}`}
-        onActivate={() => showModal(<WhisperModal row={r} side={side} />)}
-        label={
-          <>
-            <StatusDot status={r.status} />
-            {r.user}
-          </>
-        }
-        sub={`${STATUS_LABEL[r.status] ?? r.status} · qty ${r.quantity}${r.perTrade > 1 ? ` (${r.perTrade}/trade)` : ""}${r.rank != null ? ` · R${r.rank}` : ""}${r.reputation != null ? ` · rep ${r.reputation}` : ""}`}
-        value={<Plat value={r.platinum} />}
-      />
-    ))}
-  </Section>
+  <Focusable style={{ flex: 1, minWidth: 0 }}>
+    <Section title={`${title} · ${rows.length}`} style={{ margin: 0 }}>
+      {rows.length === 0 && <div style={{ color: colors.muted, padding: "4px 0" }}>No online orders.</div>}
+      {rows.map((r, i) => (
+        <Row
+          key={`${r.user}-${i}`}
+          onActivate={() => showModal(<WhisperModal row={r} side={side} />)}
+          label={
+            <>
+              <StatusDot status={r.status} />
+              {r.user}
+            </>
+          }
+          sub={`${STATUS_LABEL[r.status] ?? r.status} · qty ${r.quantity}${r.perTrade > 1 ? ` (${r.perTrade}/trade)` : ""}${r.rank != null ? ` · R${r.rank}` : ""}${r.reputation != null ? ` · rep ${r.reputation}` : ""}`}
+          value={<Plat value={r.platinum} />}
+        />
+      ))}
+    </Section>
+  </Focusable>
+);
+
+const ItemCard: FC<{ name: ReactNode; sub?: string; value?: ReactNode; selected?: boolean; color?: string; onActivate: () => void }> = ({ name, sub, value, selected, color, onActivate }) => (
+  <Focusable
+    focusClassName="gpfocus"
+    onActivate={onActivate}
+    style={{
+      ...card,
+      border: `1px solid ${selected ? colors.accent : colors.border}`,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: "8px",
+      minWidth: 0,
+      minHeight: "44px",
+      boxSizing: "border-box",
+    }}
+  >
+    <div style={{ minWidth: 0 }}>
+      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: selected ? colors.accent : color ?? colors.text }}>{name}</div>
+      {sub && <div style={{ fontSize: "12px", color: colors.muted }}>{sub}</div>}
+    </div>
+    {value !== undefined && <div style={{ flexShrink: 0 }}>{value}</div>}
+  </Focusable>
 );
 
 const ItemDetail: FC<{ slug: string; rank: number | null; onRank: (r: number | null) => void; onLoaded: () => void }> = ({ slug, rank, onRank, onLoaded }) => {
@@ -395,10 +394,10 @@ const ItemDetail: FC<{ slug: string; rank: number | null; onRank: (r: number | n
           </div>
         ) : null}
       </Section>
-      <div style={{ display: "flex", gap: "12px" }}>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
         <OrderTable title="Sellers (you buy)" side="sell" rows={d.sell} />
         <OrderTable title="Buyers (you sell)" side="buy" rows={d.buy} />
-      </div>
+      </Focusable>
     </>
   );
 };
@@ -435,62 +434,69 @@ const Browse: FC = () => {
     lastItem = { slug, rank };
     setSel(lastItem);
   };
+  const q = draft.trim();
   return (
-    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-      <div style={{ width: "360px", flexShrink: 0 }}>
-        <Section title="Find an item">
-          <TextField label="Item name" description="Opens the keyboard; 2+ letters" value={draft} onChange={(e) => setDraft(e.target.value)} />
-          {searching && <div style={{ color: colors.muted, fontSize: "12px" }}>Searching…</div>}
-          {hits.map((h) => (
-            <Row key={h.slug} label={h.name} sub={h.max_rank ? `Rank 0-${h.max_rank}` : undefined} onActivate={() => pick(h.slug, null)} color={sel?.slug === h.slug ? colors.accent : undefined} />
-          ))}
-          {!searching && draft.trim().length >= 2 && hits.length === 0 && <div style={{ color: colors.muted }}>No match.</div>}
-        </Section>
-        <Section
-          title="Recently viewed"
-          right={
-            recent.data && recent.data.length > 0 ? (
-              <SmallButton
-                onClick={() =>
-                  confirm("Clear recent items?", "Removes every item from the recently viewed list.", "Clear", async () => {
-                    await call("market.recent_clear");
-                    recent.reload();
-                  })
-                }
-              >
-                Clear
-              </SmallButton>
-            ) : undefined
-          }
-        >
-          {recent.error && <ErrorText error={recent.error} />}
-          {recent.data?.length === 0 && <div style={{ color: colors.muted }}>Items you look up appear here.</div>}
-          {recent.data && (
-            <Paged
-              items={recent.data}
-              pageSize={10}
-              render={(r) => (
-                <Row
-                  key={`${r.slug}-${r.rank}`}
-                  label={r.name}
-                  sub={r.rank != null ? `Rank ${r.rank}` : undefined}
-                  color={sel?.slug === r.slug && sel?.rank === r.rank ? colors.accent : undefined}
-                  value={<Plat value={r.price?.plat} />}
-                  onActivate={() => pick(r.slug, r.rank)}
-                />
+    <>
+      <Section
+        title="Find an item"
+        right={
+          recent.data && recent.data.length > 0 ? (
+            <SmallButton
+              onClick={() =>
+                confirm("Clear recent items?", "Removes every item from the recently viewed list.", "Clear", async () => {
+                  await call("market.recent_clear");
+                  recent.reload();
+                })
+              }
+            >
+              Clear recent
+            </SmallButton>
+          ) : undefined
+        }
+      >
+        <TextField label="Item name (2+ letters; A opens the keyboard)" value={draft} onChange={(e) => setDraft(e.target.value)} />
+        {q.length >= 2 && (
+          <>
+            <div style={{ fontSize: "12px", color: colors.muted, marginTop: "6px", textTransform: "uppercase" }}>
+              {searching ? "Searching…" : hits.length === 0 ? "No match." : "Matches"}
+            </div>
+            <Grid style={{ marginTop: "8px" }}
+              items={hits}
+              cols={4}
+              rows={2}
+              render={(h) => (
+                <ItemCard key={h.slug} name={h.name} sub={h.max_rank ? `Rank 0-${h.max_rank}` : undefined} selected={sel?.slug === h.slug} onActivate={() => pick(h.slug, null)} />
               )}
             />
-          )}
-        </Section>
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {sel ? (
-          <ItemDetail key={sel.slug} slug={sel.slug} rank={sel.rank} onRank={(r) => pick(sel.slug, r)} onLoaded={() => recent.reload()} />
-        ) : (
-          <Empty text="Search an item or pick a recent one to see its price and the best online orders. Press A on an order for the whisper." />
+          </>
         )}
-      </div>
-    </div>
+        <div style={{ fontSize: "12px", color: colors.muted, marginTop: "8px", textTransform: "uppercase" }}>Recently viewed</div>
+        {recent.error && <ErrorText error={recent.error} />}
+        {recent.data?.length === 0 && <div style={{ color: colors.muted, padding: "4px 0" }}>Items you look up appear here.</div>}
+        {recent.data && (
+          <Grid style={{ marginTop: "8px" }}
+            items={recent.data}
+            cols={4}
+            rows={2}
+            render={(r) => (
+              <ItemCard
+                key={`${r.slug}-${r.rank}`}
+                name={r.name}
+                sub={r.rank != null ? `Rank ${r.rank}` : undefined}
+                selected={sel?.slug === r.slug && sel?.rank === r.rank}
+                value={<Plat value={r.price?.plat} />}
+                onActivate={() => pick(r.slug, r.rank)}
+              />
+            )}
+          />
+        )}
+      </Section>
+      {sel ? (
+        <ItemDetail key={sel.slug} slug={sel.slug} rank={sel.rank} onRank={(r) => pick(sel.slug, r)} onLoaded={() => recent.reload()} />
+      ) : (
+        <Empty text="Search an item or pick a recent one to see its price and the best online orders. Press A on an order for the whisper." />
+      )}
+    </>
   );
 };
 
@@ -633,8 +639,10 @@ const MyOrders: FC<{ account: Account | undefined; goAccount: () => void }> = ({
   if (!signedIn)
     return (
       <Section title="My orders">
-        <div style={{ color: colors.muted, marginBottom: "8px" }}>Sign in to warframe.market to see and manage your orders.</div>
-        <SmallButton onClick={goAccount}>Sign in</SmallButton>
+        <Focusable flow-children="horizontal" style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <div style={{ color: colors.muted, flex: 1 }}>Sign in to warframe.market to see and manage your orders.</div>
+          <SmallButton onClick={goAccount}>Sign in</SmallButton>
+        </Focusable>
       </Section>
     );
   const rows = (data?.orders ?? []).filter((o) => (filter === "all" ? true : filter === "hidden" ? !o.visible : o.type === filter));
@@ -693,15 +701,16 @@ const MyOrders: FC<{ account: Account | undefined; goAccount: () => void }> = ({
       {data && rows.length === 0 && <Empty text="No orders here." />}
       {rows.length > 0 && (
         <Section>
-          <Paged
+          <Grid style={{ marginTop: "8px" }}
             items={rows}
-            pageSize={20}
+            cols={2}
+            rows={10}
             render={(o) => (
-              <Row
+              <ItemCard
                 key={o.id}
                 color={o.visible ? undefined : colors.muted}
                 onActivate={() => showModal(<OrderModal o={o} onDone={apply} />)}
-                label={
+                name={
                   <>
                     {o.name}
                     <Badge text={o.type === "sell" ? "WTS" : "WTB"} color={o.type === "sell" ? colors.good : colors.warn} />
@@ -769,7 +778,7 @@ const StatusControls: FC<{ account: Account; onChange: (a: Account) => void; com
           onChange={(o) => (account.status ? set(account.status, o.data as number) : saveHold(o.data as number))}
         />
       )}
-      {err && <ErrorText error={err} />}
+      {err && <div style={{ gridColumn: "1 / -1" }}><ErrorText error={err} /></div>}
     </>
   );
 };
@@ -782,9 +791,11 @@ const AccountPanel: FC<{ account: Account | undefined; onChange: (a: Account) =>
   if (!account) return <Loading />;
   if (!account.signedIn)
     return (
-      <Section title="Sign in to warframe.market" style={{ maxWidth: "640px" }}>
-        <TextField label="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label="Password" bIsPassword value={password} onChange={(e) => setPassword(e.target.value)} />
+      <Section title="Sign in to warframe.market">
+        <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "16px" }}>
+          <TextField label="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <TextField label="Password" bIsPassword value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Focusable>
         {err && <ErrorText error={err} />}
         <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
           <SmallButton
@@ -816,14 +827,18 @@ const AccountPanel: FC<{ account: Account | undefined; onChange: (a: Account) =>
       </Section>
     );
   return (
-    <Section title="warframe.market account" style={{ maxWidth: "640px" }}>
-      <Field label="Signed in as" focusable>
-        {account.userName ?? "?"}
-      </Field>
-      <Field label="Platform" focusable>
-        {account.platform.toUpperCase()}
-      </Field>
-      <StatusControls account={account} onChange={onChange} />
+    <Section title="warframe.market account">
+      <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0 16px" }}>
+        <Field label="Signed in as" focusable>
+          {account.userName ?? "?"}
+        </Field>
+        <Field label="Platform" focusable>
+          {account.platform.toUpperCase()}
+        </Field>
+      </Focusable>
+      <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "0 16px" }}>
+        <StatusControls account={account} onChange={onChange} />
+      </Focusable>
       {!account.persisted && <div style={{ color: colors.warn, fontSize: "12px" }}>The session could not be saved; you will need to sign in again after a restart.</div>}
       <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
         <SmallButton onClick={async () => onChange(await call<Account>("market.account", { refresh: true }))}>Refresh status</SmallButton>

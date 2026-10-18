@@ -1,9 +1,9 @@
 // Wiki: where does an item drop (relic tables bundled with the plugin) and what is in a relic
 // (backend: py_modules/wfh/menus/wiki.py).
-import { DialogButton, DropdownItem, Focusable, ModalRoot, Navigation, TextField, ToggleField, showModal } from "@decky/ui";
+import { DialogButton, Focusable, ModalRoot, Navigation, TextField, showModal } from "@decky/ui";
 import { FC, useEffect, useRef, useState } from "react";
 
-import { Badge, Ducats, Empty, ErrorText, Loading, Page, Paged, Row, Section, colors } from "../components/ui";
+import { Badge, Ducats, Empty, ErrorText, FilterCell, Grid, Loading, Page, Section, Segmented, card, chip, colors } from "../components/ui";
 import { call, useRpc } from "../rpc";
 
 // Compact section for the Quick Access Menu home; null when the page has none.
@@ -124,46 +124,43 @@ function showRelic(name: string): void {
   showModal(<RelicModal name={name} />);
 }
 
-const DropRowView: FC<{ r: DropRow; mode: Mode }> = ({ r, mode }) => (
-  <Row
-    label={
-      <span>
-        <span style={{ color: mode === "item" ? colors.text : RARITY_COLOR[r.rarity] }}>{mode === "item" ? `${r.relic} Relic` : r.item}</span>
+const DropCard: FC<{ r: DropRow; mode: Mode }> = ({ r, mode }) => (
+  <Focusable focusClassName="gpfocus" onActivate={() => showRelic(r.relic)} style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+    <div style={{ minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: mode === "item" ? colors.text : RARITY_COLOR[r.rarity] }}>
+          {mode === "item" ? `${r.relic} Relic` : r.item}
+        </span>
         {r.vaulted ? <Badge text="Vaulted" color={colors.muted} /> : <Badge text="Available" color={colors.good} />}
         {r.owned > 0 && <Badge text={`Owned ${r.owned}`} color={colors.accent} />}
-      </span>
-    }
-    sub={
-      <span>
-        {mode === "item" ? <span style={{ color: RARITY_COLOR[r.rarity] }}>{r.item} · {r.rarity}</span> : <span>{r.relic} Relic · {r.rarity}</span>}
-      </span>
-    }
-    value={
-      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "13px" }}>
-        {pct(r.chances.intact)} <span style={{ color: colors.muted }}>→</span> {pct(r.chances.radiant)}
-      </span>
-    }
-    onActivate={() => showRelic(r.relic)}
-  />
+      </div>
+      <div style={{ fontSize: "12px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: mode === "item" ? RARITY_COLOR[r.rarity] : colors.muted }}>
+        {mode === "item" ? `${r.item} · ${r.rarity}` : `${r.relic} Relic · ${r.rarity}`}
+      </div>
+    </div>
+    <span style={{ flexShrink: 0, fontVariantNumeric: "tabular-nums", fontSize: "13px" }}>
+      {pct(r.chances.intact)} <span style={{ color: colors.muted }}>→</span> {pct(r.chances.radiant)}
+    </span>
+  </Focusable>
 );
 
 const ItemCard: FC<{ s: ItemSummary }> = ({ s }) => (
   <Focusable
     focusClassName="gpfocus"
     onActivate={() => openWeb(s.wikiUrl)}
-    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 4px", borderBottom: `1px solid ${colors.border}` }}
+    style={{ ...card, display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}
   >
-    <div>
-      <div style={{ fontWeight: 600 }}>{s.item}</div>
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.item}</div>
       <div style={{ fontSize: "12px", color: s.unvaulted ? colors.good : colors.warn }}>
         {s.unvaulted
           ? `In ${s.unvaulted} of ${s.relics} relics now · best ${pct(s.bestIntact)} intact / ${pct(s.bestRadiant)} radiant`
           : `Vaulted: ${s.relics} relics, none dropping now`}
       </div>
     </div>
-    <div style={{ textAlign: "right", fontSize: "12px" }}>
+    <div style={{ textAlign: "right", fontSize: "12px", flexShrink: 0 }}>
       <Ducats value={s.ducats} />
-      <div style={{ color: colors.muted }}>A: wiki</div>
+      
     </div>
   </Focusable>
 );
@@ -172,37 +169,33 @@ const TierBrowser: FC<{ unvaultedOnly: boolean }> = ({ unvaultedOnly }) => {
   const [tier, setTier] = useState("Lith");
   const list = useRpc<{ name: string; vaulted: boolean; owned: number }[]>("wiki.relics", { tier, unvaulted_only: unvaultedOnly });
   return (
-    <Section title="Browse relics">
-      <Focusable style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }} flow-children="horizontal">
-        {TIERS.map((t) => (
-          <DialogButton
-            key={t}
-            style={{ width: "110px", minWidth: 0, padding: "6px", border: t === tier ? `1px solid ${colors.accent}` : undefined }}
-            onClick={() => setTier(t)}
-          >
-            {t}
-          </DialogButton>
-        ))}
-      </Focusable>
+    <Section
+      title="Browse relics"
+      right={list.data ? <span style={{ color: colors.muted, fontSize: "12px" }}>{list.data.length} {tier} relics · A: rewards</span> : undefined}
+    >
+      <Segmented value={tier} options={TIERS.map((t) => ({ id: t, label: t }))} onChange={setTier} style={{ marginBottom: "8px" }} />
       {list.error && <ErrorText error={list.error} />}
       {!list.data && !list.error && <Loading />}
       {list.data && list.data.length === 0 && <Empty text={`No ${unvaultedOnly ? "unvaulted " : ""}${tier} relics.`} />}
       {list.data && list.data.length > 0 && (
-        <Paged
+        <Grid
+          key={`${tier}|${unvaultedOnly}`}
           items={list.data}
-          pageSize={20}
+          cols={5}
+          rows={7}
           render={(r) => (
-            <Row
+            <Focusable
               key={r.name}
-              label={
-                <span>
-                  {r.name} Relic
-                  {r.vaulted && <Badge text="Vaulted" color={colors.muted} />}
-                </span>
-              }
-              value={r.owned ? <span style={{ color: colors.accent }}>Owned {r.owned}</span> : undefined}
+              focusClassName="gpfocus"
               onActivate={() => showRelic(r.name)}
-            />
+              style={{ ...card, display: "flex", flexDirection: "column", gap: "2px" }}
+            >
+              <span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+              <span style={{ fontSize: "12px" }}>
+                <span style={{ color: r.vaulted ? colors.muted : colors.good }}>{r.vaulted ? "Vaulted" : "Available"}</span>
+                {r.owned > 0 && <span style={{ color: colors.accent }}> · Owned {r.owned}</span>}
+              </span>
+            </Focusable>
           )}
         />
       )}
@@ -280,47 +273,49 @@ const Wiki: FC = () => {
 
   return (
     <Page>
-      <Section title="Where does it drop?">
-        <div style={{ color: colors.muted, fontSize: "12px", marginBottom: "6px" }}>
-          Searches the relic drop tables bundled with the plugin (refreshed weekly). Mission, bounty and enemy drops are not included.
-        </div>
-        <Focusable style={{ display: "flex", gap: "12px", alignItems: "flex-end" }} flow-children="horizontal">
-          <div style={{ flex: 1 }}>
-            <TextField label={mode === "item" ? "Item name" : "Relic name"} description={mode === "item" ? "e.g. Ash Prime, Forma" : "e.g. Lith A1, Axi"} value={draft} onChange={(e) => setDraft(e.target.value)} />
+      <Section
+        title="Where does it drop?"
+        right={<span style={{ color: colors.muted, fontSize: "12px" }}>Relic drop tables bundled with the plugin (weekly); no mission, bounty or enemy drops</span>}
+      >
+        <Focusable style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "wrap" }} flow-children="horizontal">
+          <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+            <FilterCell label={mode === "item" ? "Item name, e.g. Ash Prime or Forma" : "Relic name, e.g. Lith A1 or Axi"}>
+              <TextField label="" value={draft} onChange={(e) => setDraft(e.target.value)} />
+            </FilterCell>
           </div>
-          <DialogButton style={{ width: "120px", minWidth: 0 }} disabled={busy || draft.trim().length < 2} onClick={() => runNow(draft.trim(), mode)}>
+          <FilterCell label="Search in">
+            <Focusable style={{ display: "flex", gap: "6px" }} flow-children="horizontal">
+              <DialogButton style={chip(mode === "item")} onClick={() => setMode("item")}>
+                Items: where it drops
+              </DialogButton>
+              <DialogButton style={chip(mode === "relic")} onClick={() => setMode("relic")}>
+                Relics: what is inside
+              </DialogButton>
+            </Focusable>
+          </FilterCell>
+          <FilterCell label="Relics">
+            <DialogButton style={chip(unvaultedOnly)} onClick={() => setUnvaultedOnly(!unvaultedOnly)}>
+              Available only
+            </DialogButton>
+          </FilterCell>
+          <DialogButton style={{ ...chip(false), minWidth: "100px" }} disabled={busy || draft.trim().length < 2} onClick={() => runNow(draft.trim(), mode)}>
             Search
           </DialogButton>
         </Focusable>
-        <Focusable style={{ display: "flex", gap: "12px", alignItems: "center" }} flow-children="horizontal">
-          <div style={{ width: "300px" }}>
-            <DropdownItem
-              label="Search in"
-              rgOptions={[
-                { data: "item", label: "Items (where it drops)" },
-                { data: "relic", label: "Relics (what is inside)" },
-              ]}
-              selectedOption={mode}
-              onChange={(o) => setMode(o.data)}
-            />
-          </div>
-          <div style={{ width: "300px" }}>
-            <ToggleField label="Available relics only" checked={unvaultedOnly} onChange={setUnvaultedOnly} />
-          </div>
-        </Focusable>
         {recent.length > 0 && (
-          <Focusable style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }} flow-children="horizontal">
+          <Focusable style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginTop: "8px" }} flow-children="horizontal">
+            <span style={{ fontSize: "11px", color: colors.muted, textTransform: "uppercase" }}>Recent</span>
             {recent.map((r) => (
               <DialogButton
                 key={`${r.mode}:${r.q}`}
-                style={{ width: "auto", minWidth: 0, padding: "4px 12px", fontSize: "13px" }}
+                style={{ ...chip(false), fontSize: "13px" }}
                 onClick={() => runNow(r.q, r.mode)}
               >
                 {r.mode === "relic" ? `Relic: ${r.q}` : r.q}
               </DialogButton>
             ))}
             <DialogButton
-              style={{ width: "auto", minWidth: 0, padding: "4px 12px", fontSize: "13px" }}
+              style={{ ...chip(false), fontSize: "13px" }}
               onClick={async () => setRecent(await call<Recent[]>("wiki.recent_clear"))}
             >
               Clear
@@ -332,14 +327,16 @@ const Wiki: FC = () => {
       {res && query.length >= 2 && (
         <>
           {res.items.length > 0 && (
-            <Section title="Items">
-              {res.items.slice(0, 6).map((s) => (
-                <ItemCard key={s.item} s={s} />
-              ))}
+            <Section title="Items" right={<span style={{ color: colors.muted, fontSize: "12px" }}>A: open the wiki</span>}>
+              <Grid items={res.items.slice(0, 6)} cols={3} rows={2} render={(s) => <ItemCard key={s.item} s={s} />} />
             </Section>
           )}
           <Section title={`${res.total} result${res.total === 1 ? "" : "s"}`} right={<span style={{ color: colors.muted, fontSize: "12px" }}>chance intact → radiant · A: relic</span>}>
-            {res.total === 0 ? <Empty text={`Nothing matches "${res.query}".`} /> : <Paged items={res.rows} pageSize={20} render={(r, i) => <DropRowView key={`${r.relic}|${r.item}|${i}`} r={r} mode={res.mode} />} />}
+            {res.total === 0 ? (
+              <Empty text={`Nothing matches "${res.query}".`} />
+            ) : (
+              <Grid key={`${res.mode}|${res.query}`} items={res.rows} cols={2} rows={10} render={(r, i) => <DropCard key={`${r.relic}|${r.item}|${i}`} r={r} mode={res.mode} />} />
+            )}
           </Section>
         </>
       )}

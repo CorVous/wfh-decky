@@ -5,6 +5,7 @@
 import {
   ButtonItem,
   DialogButton,
+  Dropdown,
   DropdownItem,
   Field,
   Focusable,
@@ -19,7 +20,7 @@ import {
 import { toaster } from "@decky/api";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Empty, ErrorText, Loading, Page, Paged, Row, Section, Stat, colors } from "../components/ui";
+import { Badge, Empty, ErrorText, Grid, Loading, Page, Paged, Row, Section, Stat, chip, colors } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
@@ -437,7 +438,7 @@ const LastResultCards: FC<{ r: LastResult; compact?: boolean }> = ({ r, compact 
       {compact ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>{cards}</div>
       ) : (
-        <Focusable style={{ display: "grid", gridTemplateColumns: r.right ? "1fr 1fr" : "1fr", gap: "16px" }}>{cards}</Focusable>
+        <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: r.right ? "1fr 1fr" : "1fr", gap: "16px" }}>{cards}</Focusable>
       )}
     </div>
   );
@@ -455,13 +456,13 @@ const LiveSession: FC<{ auctions: boolean }> = ({ auctions }) => {
         title={s.active ? `Riven scanner: ${weapon}` : "Riven scanner"}
         right={
           <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px" }}>
-            <DialogButton style={{ minWidth: 0, width: "110px", padding: "4px 0" }} onClick={() => scannerAction("riven.rescan")}>
+            <DialogButton style={chip(false)} onClick={() => scannerAction("riven.rescan")}>
               Rescan
             </DialogButton>
-            <DialogButton style={{ minWidth: 0, width: "110px", padding: "4px 0" }} onClick={() => showModal(<WeaponModal />)}>
+            <DialogButton style={chip(false)} onClick={() => showModal(<WeaponModal />)}>
               Weapon…
             </DialogButton>
-            <DialogButton style={{ minWidth: 0, width: "110px", padding: "4px 0" }} disabled={!s.active} onClick={() => scannerAction("riven.close")}>
+            <DialogButton style={chip(false)} disabled={!s.active} onClick={() => scannerAction("riven.close")}>
               Close
             </DialogButton>
           </Focusable>
@@ -479,7 +480,7 @@ const LiveSession: FC<{ auctions: boolean }> = ({ auctions }) => {
               {s.lastScan && <Stat label="Last scan" value={`${s.lastScan.kind} ${s.lastScan.elapsed_ms} ms`} />}
             </div>
             {s.weaponMissing && <div style={{ color: colors.warn, fontSize: "13px", marginBottom: "6px" }}>Couldn't read the weapon name, so there are no grades. Pick it with Weapon… or Rescan.</div>}
-            <Focusable style={{ display: "grid", gridTemplateColumns: s.visible === "both" ? "1fr 1fr" : "1fr", gap: "16px" }}>
+            <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: s.visible === "both" ? "1fr 1fr" : "1fr", gap: "16px" }}>
               <Focusable focusClassName="gpfocus" onActivate={() => {}}>
                 <CardHeader title="Current" grade={s.left.grade} right={s.chosen === "left" ? <Badge text="kept" color={colors.good} /> : undefined} />
                 <StatLines side={s.left} />
@@ -506,11 +507,19 @@ const LiveSession: FC<{ auctions: boolean }> = ({ auctions }) => {
           </>
         )}
       </Section>
-      {s.active && s.left.stats.length > 0 && (
-        <SimilarSection title="Similar on WFM (current)" method="riven.similar" params={{ side: "left" }} reloadKey={`${s.slug}|${s.listingsCount}|${s.left.stats.length}|${s.updatedAt > 0 ? s.left.stats.map((x) => x.name).join() : ""}`} auctions={auctions} />
-      )}
-      {s.active && s.right.stats.length > 0 && (
-        <SimilarSection title={`Similar on WFM (roll ${s.rollCount})`} method="riven.similar" params={{ side: "right" }} reloadKey={`${s.slug}|${s.listingsCount}|${s.right.stats.map((x) => x.name).join()}`} auctions={auctions} />
+      {/* Similar listings line up under their card: side by side when both cards are read. */}
+      {s.active && (s.left.stats.length > 0 || s.right.stats.length > 0) && (
+        <Focusable
+          flow-children="horizontal"
+          style={{ display: "grid", gridTemplateColumns: s.left.stats.length > 0 && s.right.stats.length > 0 ? "repeat(2, minmax(0, 1fr))" : "minmax(0, 1fr)", gap: "0 12px", alignItems: "start" }}
+        >
+          {s.left.stats.length > 0 && (
+            <SimilarSection title="Similar on WFM (current)" method="riven.similar" params={{ side: "left" }} reloadKey={`${s.slug}|${s.listingsCount}|${s.left.stats.length}|${s.updatedAt > 0 ? s.left.stats.map((x) => x.name).join() : ""}`} auctions={auctions} />
+          )}
+          {s.right.stats.length > 0 && (
+            <SimilarSection title={`Similar on WFM (roll ${s.rollCount})`} method="riven.similar" params={{ side: "right" }} reloadKey={`${s.slug}|${s.listingsCount}|${s.right.stats.map((x) => x.name).join()}`} auctions={auctions} />
+          )}
+        </Focusable>
       )}
     </>
   );
@@ -621,17 +630,19 @@ const OwnedRivens: FC<{ auctions: boolean }> = ({ auctions }) => {
       <Section
         title={d ? `Owned rivens (${d.total})` : "Owned rivens"}
         right={
-          <div style={{ width: "220px" }}>
-            <DropdownItem
-              label="Sort"
-              rgOptions={SORTS}
-              selectedOption={sort}
-              onChange={(o) => {
-                lastSort = o.data;
-                setSort(o.data);
-              }}
-            />
-          </div>
+          <Focusable style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "11px", color: colors.muted, textTransform: "uppercase" }}>Sort</span>
+            <div style={{ width: "180px" }}>
+              <Dropdown
+                rgOptions={SORTS}
+                selectedOption={sort}
+                onChange={(o) => {
+                  lastSort = o.data;
+                  setSort(o.data);
+                }}
+              />
+            </div>
+          </Focusable>
         }
       >
         {st.error && !d && <ErrorText error={st.error} />}
@@ -640,17 +651,7 @@ const OwnedRivens: FC<{ auctions: boolean }> = ({ auctions }) => {
         {d && d.inventory && d.rivens.length === 0 && <Empty text="No unveiled rivens in the inventory." />}
         {d && d.data.weapons === 0 && <ErrorText error="Riven data is missing (run scripts/fetch-data.sh); rivens cannot be graded." />}
         {d && d.rivens.length > 0 && (
-          <Paged
-            items={chunk(d.rivens, 3)}
-            pageSize={4}
-            render={(row, i) => (
-              <Focusable key={i} flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px", marginBottom: "8px" }}>
-                {row.map((r) => (
-                  <OwnedCard key={r.itemId} r={r} auctions={auctions} />
-                ))}
-              </Focusable>
-            )}
-          />
+          <Grid items={d.rivens} cols={3} rows={4} label={`${d.rivens.length} rivens`} render={(r) => <OwnedCard key={r.itemId} r={r} auctions={auctions} />} />
         )}
       </Section>
       {d && (groups.size > 0 || d.veiledUnseen.length > 0) && (
@@ -666,12 +667,6 @@ const OwnedRivens: FC<{ auctions: boolean }> = ({ auctions }) => {
     </>
   );
 };
-
-function chunk<T>(items: T[], n: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
-  return out;
-}
 
 // ---- settings and data --------------------------------------------------------------------------
 
@@ -689,24 +684,36 @@ const ScannerSettingsSection: FC<{ settings: ScannerSettings | undefined; reload
   };
   return (
     <Section title="Scanner settings">
-      <ToggleField label="Riven overlay" description="Scan the Cycle screen and chat-linked rivens, and show the grade panels." checked={rs.enabled !== false} onChange={(b) => set({ enabled: b })} />
-      <ToggleField label="Include auctions in similar listings" checked={rs.auctions_shown !== false} onChange={(b) => set({ auctions_shown: b })} />
-      <ToggleField label="Better / worse marks on the new roll" checked={rs.compare_arrows !== false} onChange={(b) => set({ compare_arrows: b })} />
-      <ToggleField label="Interface scale from EE.cfg" checked={rs.ui_scale_auto !== false} onChange={(b) => set({ ui_scale_auto: b })} />
-      {rs.ui_scale_auto === false && (
-        <DropdownItem label="Interface scale" rgOptions={UI_SCALES} selectedOption={rs.ui_scale ?? 0.99} onChange={(o) => set({ ui_scale: o.data })} />
-      )}
-      <DropdownItem
-        label="Menu area"
-        description="Where Warframe draws its menus on the 16:10 screen. Switch if the scans read nothing."
-        rgOptions={[
-          { data: "16:9", label: "Centred 16:9 band" },
-          { data: "full", label: "Full screen" },
+      {/* Two settings per row: full-width rows leave the label and its switch 1200px apart. */}
+      <Grid
+        cols={2}
+        gap="0 32px"
+        rowGap="0"
+        render={(el) => el}
+        items={[
+            <ToggleField key="en" label="Riven overlay" description="Scan the Cycle screen and chat-linked rivens, and show the grade panels." checked={rs.enabled !== false} onChange={(b) => set({ enabled: b })} />,
+            <ToggleField key="auc" label="Include auctions in similar listings" checked={rs.auctions_shown !== false} onChange={(b) => set({ auctions_shown: b })} />,
+            <ToggleField key="arr" label="Better / worse marks on the new roll" checked={rs.compare_arrows !== false} onChange={(b) => set({ compare_arrows: b })} />,
+            <ToggleField key="dbg" label="Save scan crops for debugging" checked={rs.debug_dumps !== false} onChange={(b) => set({ debug_dumps: b })} />,
+            <DropdownItem
+              key="canvas"
+              label="Menu area"
+              description="Where Warframe draws its menus on the 16:10 screen. Switch if the scans read nothing."
+              rgOptions={[
+                { data: "16:9", label: "16:9" },
+                { data: "full", label: "Full" },
+              ]}
+              selectedOption={rs.canvas ?? "16:9"}
+              onChange={(o) => set({ canvas: o.data })}
+            />,
+            <Focusable key="scale" style={{ display: "flex", flexDirection: "column" }}>
+              <ToggleField label="Interface scale from EE.cfg" checked={rs.ui_scale_auto !== false} onChange={(b) => set({ ui_scale_auto: b })} />
+              {rs.ui_scale_auto === false && (
+                <DropdownItem label="Interface scale" rgOptions={UI_SCALES} selectedOption={rs.ui_scale ?? 0.99} onChange={(o) => set({ ui_scale: o.data })} />
+              )}
+            </Focusable>,
         ]}
-        selectedOption={rs.canvas ?? "16:9"}
-        onChange={(o) => set({ canvas: o.data })}
       />
-      <ToggleField label="Save scan crops for debugging" checked={rs.debug_dumps !== false} onChange={(b) => set({ debug_dumps: b })} />
       {st && (
         <div style={{ fontSize: "12px", color: colors.muted, marginTop: "6px" }}>
           OCR {st.ocr_available ? "ready" : "models missing"} · overlay {st.overlay.connected ? "connected" : st.overlay.headless ? "headless" : "not connected (toasts)"} · real-time log{" "}
@@ -724,7 +731,7 @@ const ScannerSettingsSection: FC<{ settings: ScannerSettings | undefined; reload
       )}
       <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
         <DialogButton
-          style={{ minWidth: 0, width: "220px" }}
+          style={chip(false)}
           disabled={!!busy}
           onClick={async () => {
             setBusy("sheet");
@@ -739,7 +746,7 @@ const ScannerSettingsSection: FC<{ settings: ScannerSettings | undefined; reload
           {busy === "sheet" ? "Refreshing…" : "Refresh good-roll sheet"}
         </DialogButton>
         <DialogButton
-          style={{ minWidth: 0, width: "220px" }}
+          style={chip(false)}
           disabled={!!busy}
           onClick={async () => {
             setBusy("data");

@@ -101,24 +101,123 @@ export function countdown(toMs: number | null | undefined, nowMs = Date.now()): 
   return `${m}m ${String(s % 60).padStart(2, "0")}s`;
 }
 
-// Client-side pager for long lists (gamepad friendly: Prev/Next buttons).
-export function Paged<T>({ items, pageSize = 25, render }: { items: T[]; pageSize?: number; render: (item: T, i: number) => ReactNode }) {
+// Prev / Next row under a paged list. `label` adds a count after "x / y" (e.g. "140 relics").
+// Used directly by pages that page on the server, and by Paged / Grid below.
+export const Pager: FC<{ page: number; pages: number; onPage: (p: number) => void; label?: ReactNode }> = ({ page, pages, onPage, label }) => (
+  <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
+    <DialogButton style={pagerButton} disabled={page <= 0} onClick={() => onPage(page - 1)}>
+      Prev
+    </DialogButton>
+    <span style={{ color: colors.muted, fontSize: "13px", whiteSpace: "nowrap" }}>
+      {page + 1} / {pages}
+      {label != null && label !== "" && <> · {label}</>}
+    </span>
+    <DialogButton style={pagerButton} disabled={page >= pages - 1} onClick={() => onPage(page + 1)}>
+      Next
+    </DialogButton>
+  </Focusable>
+);
+const pagerButton: CSSProperties = { minWidth: "80px", width: "auto", flex: "0 0 auto", padding: "6px 14px" };
+
+// Client-side pager for long lists (gamepad friendly: Prev/Next buttons). The page goes back
+// to the first one when `resetKey` changes (e.g. a new filter or search).
+export function Paged<T>({ items, pageSize = 25, render, label, resetKey }: { items: T[]; pageSize?: number; render: (item: T, i: number) => ReactNode; label?: ReactNode; resetKey?: unknown }) {
   const [page, setPage] = useState(0);
+  const [key, setKey] = useState(resetKey);
+  if (key !== resetKey) {
+    setKey(resetKey);
+    setPage(0);
+  }
   const pages = Math.max(1, Math.ceil(items.length / pageSize));
   const p = Math.min(page, pages - 1);
   return (
     <>
       {items.slice(p * pageSize, (p + 1) * pageSize).map((it, i) => render(it, p * pageSize + i))}
-      {pages > 1 && (
-        <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }} flow-children="horizontal">
-          <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={p === 0} onClick={() => setPage(p - 1)}>Prev</DialogButton>
-          <span style={{ color: colors.muted }}>{p + 1} / {pages}</span>
-          <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={p >= pages - 1} onClick={() => setPage(p + 1)}>Next</DialogButton>
-        </Focusable>
-      )}
+      {pages > 1 && <Pager page={p} pages={pages} onPage={setPage} label={label} />}
     </>
   );
 }
+
+export function chunk<T>(items: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
+  return out;
+}
+
+// Items laid out `cols` to a line. Each line is a horizontal Focusable inside a vertical one,
+// so the d-pad moves left/right inside a line and up/down between lines (a plain CSS grid
+// leaves left/right dead). With `rows`, the lines are paged `rows` at a time.
+export function Grid<T>({ items, cols, render, rows, gap = "8px", rowGap, label, resetKey, style }: {
+  items: T[];
+  cols: number;
+  render: (item: T, index: number) => ReactNode;
+  rows?: number;
+  gap?: string;
+  rowGap?: string;
+  label?: ReactNode;
+  resetKey?: unknown;
+  style?: CSSProperties;
+}) {
+  const lines = chunk(items, cols);
+  const line = (ln: T[], i: number) => (
+    <Focusable key={i} flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap, alignItems: "stretch" }}>
+      {ln.map((it, j) => render(it, i * cols + j))}
+    </Focusable>
+  );
+  const body = (shown: T[][], first: number) => (
+    <Focusable style={{ display: "flex", flexDirection: "column", gap: rowGap ?? gap, ...style }}>{shown.map((ln, i) => line(ln, first + i))}</Focusable>
+  );
+  if (!rows) return body(lines, 0);
+  return <PagedLines lines={lines} rows={rows} body={body} label={label} resetKey={resetKey} />;
+}
+
+function PagedLines<T>({ lines, rows, body, label, resetKey }: { lines: T[][]; rows: number; body: (shown: T[][], first: number) => ReactNode; label?: ReactNode; resetKey?: unknown }) {
+  const [page, setPage] = useState(0);
+  const [key, setKey] = useState(resetKey);
+  if (key !== resetKey) {
+    setKey(resetKey);
+    setPage(0);
+  }
+  const pages = Math.max(1, Math.ceil(lines.length / rows));
+  const p = Math.min(page, pages - 1);
+  return (
+    <>
+      {body(lines.slice(p * rows, (p + 1) * rows), p * rows)}
+      {pages > 1 && <Pager page={p} pages={pages} onPage={setPage} label={label} />}
+    </>
+  );
+}
+
+// Side-by-side columns for the d-pad: left/right moves between columns, up/down stays inside
+// one (each column is its own vertical Focusable).
+export const Columns: FC<{ cols: ReactNode[]; gap?: string; style?: CSSProperties }> = ({ cols, gap = "12px", style }) => (
+  <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: `repeat(${cols.length}, minmax(0, 1fr))`, columnGap: gap, alignItems: "start", ...style }}>
+    {cols.map((c, i) => (
+      <Focusable key={i} style={{ minWidth: 0 }}>
+        {c}
+      </Focusable>
+    ))}
+  </Focusable>
+);
+
+// Panel style for the cards in a Grid.
+export const card: CSSProperties = {
+  background: colors.panel,
+  border: `1px solid ${colors.border}`,
+  borderRadius: "6px",
+  padding: "6px 10px",
+  minWidth: 0,
+  boxSizing: "border-box",
+};
+
+export const ellipsis: CSSProperties = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+
+// Thin progress bar (0..1).
+export const Bar: FC<{ value: number; color?: string; width?: string | number }> = ({ value, color, width = "100%" }) => (
+  <div style={{ width, height: "6px", background: "rgba(255,255,255,0.10)", borderRadius: "3px", overflow: "hidden" }}>
+    <div style={{ width: `${Math.max(0, Math.min(100, value * 100))}%`, height: "100%", background: color ?? colors.accent }} />
+  </div>
+);
 
 // Catches a render error in one full-screen page so the tab strip (and the
 // other pages) stay usable. Key it by page id so switching tabs resets it.
@@ -155,10 +254,32 @@ export const FilterCell: FC<{ label: string; children: ReactNode; width?: string
   </div>
 );
 
-// DialogButton style for toggle chips in filter bars.
+// DialogButton style for buttons and toggle chips in filter bars: as wide as the label
+// (a bare DialogButton fills the whole line), the "on" state filled with the accent colour.
 export const chip = (on: boolean): CSSProperties => ({
   minWidth: 0,
-  padding: "6px 12px",
+  width: "auto",
+  flex: "0 0 auto",
+  whiteSpace: "nowrap",
+  padding: "6px 14px",
   background: on ? colors.accent : undefined,
   color: on ? "#0e121e" : undefined,
 });
+
+// One row of chips, one of them selected (tab strips, quick filters). D-pad left/right.
+export function Segmented<T extends string | number>({ value, options, onChange, style }: {
+  value: T;
+  options: { id: T; label: ReactNode }[];
+  onChange: (v: T) => void;
+  style?: CSSProperties;
+}) {
+  return (
+    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap", ...style }}>
+      {options.map((o) => (
+        <DialogButton key={String(o.id)} onClick={() => onChange(o.id)} style={{ ...chip(o.id === value), fontWeight: o.id === value ? 700 : 400 }}>
+          {o.label}
+        </DialogButton>
+      ))}
+    </Focusable>
+  );
+}

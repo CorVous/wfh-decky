@@ -1,11 +1,11 @@
 // Stats: daily resource deltas from inventory snapshots and the EE.log trade ledger
 // (backend: py_modules/wfh/menus/stats.py). Bars are plain divs, no chart library.
-import { ConfirmModal, DialogButton, DropdownItem, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
+import { ConfirmModal, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal } from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
-import { Empty, Guard, Page, Row, Section, Stat, colors } from "../components/ui";
+import { Empty, FilterCell, Grid, Guard, Page, Pager, Row, Section, Stat, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 interface CatalogEntry {
@@ -97,7 +97,7 @@ export const BarChart: FC<{ title: string; values: number[]; dates: string[]; pl
   const max = Math.max(1, ...values.map((v) => Math.max(0, v)));
   const min = Math.min(0, ...values);
   const span = max - min || 1;
-  const height = 96;
+  const height = 72;
   const zero = (max / span) * height;
   const best = values.reduce((bi, v, i) => (v > values[bi] ? i : bi), 0);
   const [sel, setSel] = useState<number | null>(null);
@@ -106,11 +106,11 @@ export const BarChart: FC<{ title: string; values: number[]; dates: string[]; pl
     <Focusable
       focusClassName="gpfocus"
       onActivate={() => setSel(sel === null ? best : null)}
-      style={{ margin: "10px 0", padding: "8px", borderRadius: "6px", background: colors.panel, border: `1px solid ${colors.border}` }}
+      style={{ minWidth: 0, padding: "8px 10px", borderRadius: "6px", background: colors.panel, border: `1px solid ${colors.border}` }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" }}>
-        <span style={{ fontWeight: 600, color: color ?? colors.accent }}>{title}</span>
-        <span style={{ color: colors.muted }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "13px", marginBottom: "6px" }}>
+        <span style={{ fontWeight: 600, color: color ?? colors.accent, whiteSpace: "nowrap" }}>{title}</span>
+        <span style={{ color: colors.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {dates[i]}: <span style={{ color: deltaColor(values[i] ?? 0) }}>{signed(values[i] ?? 0)}</span>
           {total !== undefined && <> · {dates.length}d total <span style={{ color: deltaColor(total) }}>{signed(total)}</span></>}
           {sel !== null ? " · best day" : ""}
@@ -240,22 +240,8 @@ const Ledger: FC<{ version: number }> = ({ version }) => {
           <Empty text="No trades recorded yet. Trades are read from the in-game trade dialog in EE.log." />
         ) : (
           <>
-            {p.rows.map((t) => (
-              <TradeRow key={t.id} t={t} onDeleted={page.reload} />
-            ))}
-            {p.total > limit && (
-              <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }} flow-children="horizontal">
-                <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>
-                  Prev
-                </DialogButton>
-                <span style={{ color: colors.muted }}>
-                  {offset / limit + 1} / {Math.ceil(p.total / limit)}
-                </span>
-                <DialogButton style={{ minWidth: 0, width: "90px" }} disabled={offset + limit >= p.total} onClick={() => setOffset(offset + limit)}>
-                  Next
-                </DialogButton>
-              </Focusable>
-            )}
+            <Grid cols={2} gap="0 12px" items={p.rows} render={(t) => <TradeRow key={t.id} t={t} onDeleted={page.reload} />} />
+            {p.total > limit && <Pager page={Math.floor(offset / limit)} pages={Math.ceil(p.total / limit)} onPage={(n) => setOffset(n * limit)} label={`${p.total} trades`} />}
           </>
         )
       }
@@ -282,6 +268,35 @@ const Stats: FC = () => {
       <Guard state={view}>
         {(v) => (
           <>
+            <Focusable style={{ display: "flex", gap: "12px", alignItems: "flex-end", margin: "8px 0 0" }} flow-children="horizontal">
+              <FilterCell label="Days" width="180px">
+                <Dropdown
+                  rgOptions={v.dayChoices.map((d) => ({ data: d, label: `${d} days` }))}
+                  selectedOption={v.days}
+                  onChange={async (o) => {
+                    setDays(o.data);
+                    await call("stats.configure", { days: o.data });
+                  }}
+                />
+              </FilterCell>
+              <DialogButton
+                style={chip(false)}
+                onClick={() =>
+                  showModal(
+                    <ResourcePicker
+                      catalog={v.catalog}
+                      chart={v.chart}
+                      onSave={async (ids) => {
+                        await call("stats.configure", { chart: ids });
+                        view.reload();
+                      }}
+                    />,
+                  )
+                }
+              >
+                Choose resources
+              </DialogButton>
+            </Focusable>
             <Section title={`Today (${v.today.date})`}>
               {!v.today.hasData && <div style={{ color: colors.muted, marginBottom: "6px" }}>Waiting for an inventory read. Deltas start from the first read of the day.</div>}
               <Focusable focusClassName="gpfocus" style={{ display: "flex", flexWrap: "wrap", rowGap: "8px" }}>
@@ -300,54 +315,33 @@ const Stats: FC = () => {
                 <Stat label="Trades" value={v.today.dailyTrades} />
               </Focusable>
             </Section>
-            <Focusable style={{ display: "flex", gap: "12px", alignItems: "center" }} flow-children="horizontal">
-              <div style={{ width: "260px" }}>
-                <DropdownItem
-                  label="Days"
-                  rgOptions={v.dayChoices.map((d) => ({ data: d, label: `${d} days` }))}
-                  selectedOption={v.days}
-                  onChange={async (o) => {
-                    setDays(o.data);
-                    await call("stats.configure", { days: o.data });
-                  }}
-                />
-              </div>
-              <DialogButton
-                style={{ width: "220px", minWidth: 0 }}
-                onClick={() =>
-                  showModal(
-                    <ResourcePicker
-                      catalog={v.catalog}
-                      chart={v.chart}
-                      onSave={async (ids) => {
-                        await call("stats.configure", { chart: ids });
-                        view.reload();
-                      }}
-                    />,
-                  )
-                }
-              >
-                Choose resources
-              </DialogButton>
-            </Focusable>
             {!v.hasData && <Empty text="No history yet. Stats are recorded from each inventory read while you play." />}
-            {v.chart.map((id) => (
-              <BarChart
-                key={id}
-                title={v.catalog.find((c) => c.id === id)?.label ?? id}
-                values={v.series.values[id] ?? []}
-                dates={v.series.dates}
-                played={v.series.played}
-                color={COLORS[id]}
-                total={v.totals[id]}
-              />
-            ))}
-            <BarChart title="Relics opened" values={v.series.relicsOpened} dates={v.series.dates} played={v.series.played} color="#e6c86e" total={v.series.relicsOpened.reduce((a, b) => a + b, 0)} />
-            <BarChart title="Trades" values={v.series.dailyTrades} dates={v.series.dates} played={v.series.played} color={colors.accent} total={v.series.dailyTrades.reduce((a, b) => a + b, 0)} />
+            <Grid
+              cols={2}
+              gap="10px 12px"
+              render={(el) => el}
+              items={[
+                ...v.chart.map((id) => (
+                  <BarChart
+                    key={id}
+                    title={v.catalog.find((c) => c.id === id)?.label ?? id}
+                    values={v.series.values[id] ?? []}
+                    dates={v.series.dates}
+                    played={v.series.played}
+                    color={COLORS[id]}
+                    total={v.totals[id]}
+                  />
+                )),
+                <BarChart key="relicsOpened" title="Relics opened" values={v.series.relicsOpened} dates={v.series.dates} played={v.series.played} color="#e6c86e" total={v.series.relicsOpened.reduce((a, b) => a + b, 0)} />,
+                <BarChart key="dailyTrades" title="Trades" values={v.series.dailyTrades} dates={v.series.dates} played={v.series.played} color={colors.accent} total={v.series.dailyTrades.reduce((a, b) => a + b, 0)} />,
+              ]}
+            />
             <Section title="Trades" right={<span style={{ color: colors.muted, fontSize: "12px" }}>{v.trades.total} recorded</span>}>
               {!v.tradeTracking && <div style={{ color: colors.warn, marginBottom: "6px" }}>Trade recording is off (Settings &gt; Tracking).</div>}
-              <FlowLine label="Today" f={v.trades.today} />
-              <FlowLine label="This month" f={v.trades.month} />
+              <Focusable focusClassName="gpfocus" style={{ display: "flex", flexWrap: "wrap", columnGap: "40px", marginBottom: "6px" }}>
+                <FlowLine label="Today" f={v.trades.today} />
+                <FlowLine label="This month" f={v.trades.month} />
+              </Focusable>
               <Ledger version={version} />
             </Section>
           </>
@@ -370,7 +364,14 @@ export const Qam: FC = () => {
   const q = useRpc<QamView>("stats.qam", {});
   useEvent("stats.updated", () => q.reload());
   const d = q.data;
-  if (!d) return null;
+  if (!d)
+    return (
+      <PanelSection title="Today">
+        <PanelSectionRow>
+          <Field label={q.error ? "Error" : "Loading…"} description={q.error} />
+        </PanelSectionRow>
+      </PanelSection>
+    );
   return (
     <PanelSection title="Today">
       {!d.hasData && (

@@ -1,10 +1,10 @@
 // Settings: every overlay/tracking option (generic form from settings.view), the PROTON_LOG
 // launch option helper, data refresh and diagnostics (backend: py_modules/wfh/menus/settings_view.py).
-import { ButtonItem, ConfirmModal, DialogButton, DropdownItem, Focusable, PanelSection, PanelSectionRow, SliderField, TextField, ToggleField, showModal } from "@decky/ui";
+import { ButtonItem, ConfirmModal, DialogButton, DropdownItem, Field, Focusable, PanelSection, PanelSectionRow, SliderField, TextField, ToggleField, showModal } from "@decky/ui";
 import { toaster } from "@decky/api";
 import { FC, useEffect, useRef, useState } from "react";
 
-import { Badge, ErrorText, Guard, Loading, Page, Section, colors } from "../components/ui";
+import { Badge, Columns, ErrorText, Guard, Loading, Page, Section, chip, colors } from "../components/ui";
 import { call, useEvent, useRpc } from "../rpc";
 
 interface FieldDef {
@@ -328,7 +328,7 @@ const ProtonSection: FC<{ eelog?: EelogStatus; reload: () => void }> = ({ eelog,
       )}
       <Focusable style={{ display: "flex", gap: "10px", marginTop: "8px" }} flow-children="horizontal">
         <DialogButton
-          style={{ width: "360px", minWidth: 0 }}
+          style={{ width: "auto", minWidth: 0, padding: "8px 18px" }}
           disabled={eelog?.launch_option_set}
           onClick={() =>
             offerProtonLog((m) => {
@@ -444,6 +444,29 @@ const DiagnosticsSection: FC<{ d: Diagnostics; reload: () => void }> = ({ d, rel
   );
 };
 
+// Rough height of a settings section (in toggle rows), to split the sections into two
+// balanced columns. Sections keep their order: the left column reads first.
+const FIELD_WEIGHT: Record<FieldDef["kind"], number> = { toggle: 1, dropdown: 1.1, slider: 2.2, text: 3.2 };
+function sectionWeight(s: SectionDef): number {
+  let w = 1.6 + s.fields.reduce((a, f) => a + FIELD_WEIGHT[f.kind] + (f.description ? 0.4 : 0), 0);
+  if (s.id === "inventory") w += 1;
+  if (s.id === "game") w += 6;
+  return w;
+}
+function splitColumns(sections: SectionDef[], extraRight: number): [SectionDef[], SectionDef[]] {
+  const total = sections.reduce((a, s) => a + sectionWeight(s), 0) + extraRight;
+  const left: SectionDef[] = [];
+  let acc = 0;
+  for (const s of sections) {
+    const w = sectionWeight(s);
+    // Stop when adding this section moves the left column further past half than leaving it out.
+    if (left.length > 0 && Math.abs(acc + w - total / 2) > Math.abs(acc - total / 2)) break;
+    left.push(s);
+    acc += w;
+  }
+  return [left, sections.slice(left.length)];
+}
+
 const Settings: FC = () => {
   const view = useRpc<{ sections: SectionDef[] }>("settings.view");
   const diag = useRpc<Diagnostics>("settings.diagnostics");
@@ -452,16 +475,16 @@ const Settings: FC = () => {
   const set = useDebouncedSet();
   return (
     <Page>
-      <Section title="Quick actions">
+      <Section title="Quick actions" style={{ marginBottom: 0 }}>
         <Focusable style={{ display: "flex", gap: "10px", flexWrap: "wrap" }} flow-children="horizontal">
-          <DialogButton style={{ width: "200px", minWidth: 0 }} onClick={() => call("overlay.test", { seconds: 6 })}>
+          <DialogButton style={chip(false)} onClick={() => call("overlay.test", { seconds: 6 })}>
             Test overlay
           </DialogButton>
-          <DialogButton style={{ width: "200px", minWidth: 0 }} onClick={() => call("overlay.clear")}>
+          <DialogButton style={chip(false)} onClick={() => call("overlay.clear")}>
             Hide overlays now
           </DialogButton>
           <DialogButton
-            style={{ width: "220px", minWidth: 0 }}
+            style={chip(false)}
             disabled={invBusy}
             onClick={async () => {
               setInvBusy(true);
@@ -483,50 +506,60 @@ const Settings: FC = () => {
         {invMsg && <div style={{ marginTop: "6px", color: colors.accent, fontSize: "13px" }}>{invMsg}</div>}
       </Section>
       <Guard state={view}>
-        {(v) => (
-          <>
-            {v.sections.map((s) => (
-              <Section
-                key={s.id}
-                title={s.title}
-                right={
-                  <DialogButton
-                    style={{ width: "100px", minWidth: 0, padding: "4px", fontSize: "12px" }}
-                    onClick={() =>
-                      showModal(
-                        <ConfirmModal
-                          strTitle={`Reset ${s.title}?`}
-                          strDescription="Restores the default value of every option in this section."
-                          strOKButtonText="Reset"
-                          onOK={async () => {
-                            await call("settings.reset", { section: s.id });
-                            view.reload();
-                          }}
-                        />,
-                      )
-                    }
-                  >
-                    Defaults
-                  </DialogButton>
-                }
-              >
-                {s.id === "inventory" && (
-                  <div style={{ fontSize: "12px", color: colors.muted }}>
-                    "Game" reads your inventory from Warframe while it runs. "JSON file" uses an inventory you exported (e.g. from AlecaFrame); paths are on the Deck, ~ is the deck user's home.
-                  </div>
-                )}
-                {s.fields.map((f) => (
-                  <FieldView key={f.key} f={f} set={set} />
-                ))}
-                {s.id === "game" && <ProtonSection eelog={diag.data?.eelog} reload={diag.reload} />}
-              </Section>
-            ))}
-          </>
-        )}
+        {(v) => {
+          const renderSection = (s: SectionDef) => (
+            <Section
+              key={s.id}
+              title={s.title}
+              right={
+                <DialogButton
+                  style={{ width: "100px", minWidth: 0, padding: "6px 4px", fontSize: "13px" }}
+                  onClick={() =>
+                    showModal(
+                      <ConfirmModal
+                        strTitle={`Reset ${s.title}?`}
+                        strDescription="Restores the default value of every option in this section."
+                        strOKButtonText="Reset"
+                        onOK={async () => {
+                          await call("settings.reset", { section: s.id });
+                          view.reload();
+                        }}
+                      />,
+                    )
+                  }
+                >
+                  Defaults
+                </DialogButton>
+              }
+            >
+              {s.id === "inventory" && (
+                <div style={{ fontSize: "12px", color: colors.muted }}>
+                  "Game" reads your inventory from Warframe while it runs. "JSON file" uses an inventory you exported (e.g. from AlecaFrame); paths are on the Deck, ~ is the deck user's home.
+                </div>
+              )}
+              {s.fields.map((f) => (
+                <FieldView key={f.key} f={f} set={set} />
+              ))}
+              {s.id === "game" && <ProtonSection eelog={diag.data?.eelog} reload={diag.reload} />}
+            </Section>
+          );
+          // Game data + Diagnostics close the right column (about 16 rows together).
+          const [left, right] = splitColumns(v.sections, 16);
+          return (
+            <Columns
+              cols={[
+                left.map(renderSection),
+                <>
+                  {right.map(renderSection)}
+                  {diag.data ? <DataSection data={diag.data.data} reload={diag.reload} /> : <Loading />}
+                  {diag.error && <ErrorText error={diag.error} />}
+                  {diag.data && <DiagnosticsSection d={diag.data} reload={diag.reload} />}
+                </>,
+              ]}
+            />
+          );
+        }}
       </Guard>
-      {diag.data ? <DataSection data={diag.data.data} reload={diag.reload} /> : <Loading />}
-      {diag.error && <ErrorText error={diag.error} />}
-      {diag.data && <DiagnosticsSection d={diag.data} reload={diag.reload} />}
       <div style={{ color: colors.muted, fontSize: "12px", margin: "8px 0" }}>
         WFHelper for Decky ports WFHelper (MIT). Hotkeys are not available in game mode; use the Quick Access Menu buttons instead.
         <Badge text="Gamescope" color={colors.muted} />
@@ -563,7 +596,14 @@ export const Qam: FC = () => {
   const [scanMsg, setScanMsg] = useState<string>();
   const [scanBusy, setScanBusy] = useState(false);
   const d = s.data;
-  if (!d) return null;
+  if (!d)
+    return (
+      <PanelSection title="Overlays">
+        <PanelSectionRow>
+          <Field label={s.error ? "Error" : "Loading…"} description={s.error} />
+        </PanelSectionRow>
+      </PanelSection>
+    );
   return (
     <PanelSection title="Overlays">
       {QAM_TOGGLES.map((t) => (

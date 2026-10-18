@@ -5,11 +5,11 @@
 import { ButtonItem, DialogButton, Dropdown, Field, Focusable, ModalRoot, Navigation, PanelSection, PanelSectionRow, TextField, showModal } from "@decky/ui";
 import { FC, ReactNode, useEffect, useState } from "react";
 
-import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Section, chip, colors, countdown } from "../components/ui";
+import { Badge, Empty, ErrorText, FilterCell, Loading, Page, Pager, Section, Segmented, chip, colors, countdown } from "../components/ui";
 import { openTab } from "../nav";
 import { ROUTE } from "../nav";
 import { call, useEvent, useRpc } from "../rpc";
-import { InvStatus, NoInventory, Segmented, ago, fmtNum } from "./Inventory";
+import { InvStatus, NoInventory, ago, fmtNum } from "./Inventory";
 
 // ---- types (mirror menus/foundry.py) ----------------------------------------------------------
 
@@ -150,15 +150,15 @@ const hours = (s: number): string => (s >= 86400 ? `${Math.round(s / 3600)}h` : 
 
 const IngredientGrid: FC<{ ings: Ingredient[]; compact?: boolean }> = ({ ings, compact }) => (
   <div style={{ display: "grid", gridTemplateColumns: compact ? "repeat(auto-fill, minmax(150px, 1fr))" : "1fr 120px", gap: compact ? "0 12px" : "2px 12px", fontSize: compact ? "12px" : "14px" }}>
-    {ings.map((i) =>
+    {ings.map((i, n) =>
       compact ? (
-        <span key={i.uniqueName} style={{ color: i.owned >= i.count ? colors.muted : colors.bad, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span key={`${i.uniqueName}:${n}`} style={{ color: i.owned >= i.count ? colors.muted : colors.bad, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {i.name} {fmtNum(i.owned)}/{fmtNum(i.count)}
         </span>
       ) : (
         [
-          <span key={i.uniqueName + "n"}>{i.name}</span>,
-          <span key={i.uniqueName + "c"} style={{ textAlign: "right", color: i.owned >= i.count ? colors.good : colors.bad }}>
+          <span key={`${i.uniqueName}:${n}n`}>{i.name}</span>,
+          <span key={`${i.uniqueName}:${n}c`} style={{ textAlign: "right", color: i.owned >= i.count ? colors.good : colors.bad }}>
             {fmtNum(i.owned)} / {fmtNum(i.count)}
           </span>,
         ]
@@ -321,35 +321,30 @@ const Foundry: FC = () => {
   const c = v.counts!;
 
   const tabStrip = (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "4px", flexWrap: "wrap", margin: "8px 0" }}>
-      {(v.tabs ?? []).map((t) => (
-        <DialogButton
-          key={t.id}
-          onClick={() => update({ tab: t.id })}
-          style={{ minWidth: 0, width: "auto", padding: "4px 10px", background: t.id === v.tab ? colors.accent : undefined, color: t.id === v.tab ? "#0e121e" : undefined, fontWeight: t.id === v.tab ? 700 : 400 }}
-        >
-          {t.label} <span style={{ opacity: 0.7, fontSize: "12px" }}>{t.count}</span>
-        </DialogButton>
-      ))}
-    </Focusable>
+    <Segmented
+      style={{ margin: "8px 0" }}
+      value={v.tab ?? s.tab}
+      options={(v.tabs ?? []).map((t) => ({ id: t.id, label: <>{t.label} <span style={{ opacity: 0.7, fontSize: "12px" }}>{t.count}</span></> }))}
+      onChange={(id) => update({ tab: String(id) })}
+    />
   );
 
   // Compact filter bar above the list so rows get the full width.
   const filters = (
-    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap", marginTop: "8px" }}>
+    <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap", marginTop: "4px" }}>
       <FilterCell label="Search" width="220px">
         <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
       </FilterCell>
       <FilterCell label="State" width="170px">
         <Dropdown rgOptions={STATES} selectedOption={s.state} onChange={(o) => update({ state: o.data })} />
       </FilterCell>
-      <FilterCell label="Sort" width="170px">
+      <FilterCell label="Sort" width="200px">
         <Dropdown rgOptions={SORTS} selectedOption={s.sort} onChange={(o) => update({ sort: o.data, direction: o.data === "count" ? "desc" : "asc" })} />
       </FilterCell>
-      <DialogButton style={chip(s.direction === "desc")} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
-        {s.direction === "desc" ? "Descending" : "Ascending"}
+      <DialogButton style={chip(false)} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
+        {s.direction === "desc" ? "▼ Descending" : "▲ Ascending"}
       </DialogButton>
-      <FilterCell label="Prime" width="150px">
+      <FilterCell label="Prime" width="140px">
         <Dropdown
           rgOptions={[
             { data: "all", label: "Any" },
@@ -360,7 +355,7 @@ const Foundry: FC = () => {
           onChange={(o) => update({ prime: o.data })}
         />
       </FilterCell>
-      <FilterCell label="Vaulted" width="150px">
+      <FilterCell label="Vaulted" width="140px">
         <Dropdown
           rgOptions={[
             { data: "all", label: "Any" },
@@ -393,19 +388,7 @@ const Foundry: FC = () => {
             <Row key={r.key} r={r} now={now} onOpen={() => showModal(<RowModal r={r} onPin={onPin} />)} />
           ))}
         </Focusable>
-        {pages > 1 && (
-          <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }} flow-children="horizontal">
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page === 0} onClick={() => setPage(page - 1)}>
-              Prev
-            </DialogButton>
-            <span style={{ color: colors.muted }}>
-              {page + 1} / {pages} · {v.total} rows
-            </span>
-            <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page >= pages - 1} onClick={() => setPage(page + 1)}>
-              Next
-            </DialogButton>
-          </Focusable>
-        )}
+        {pages > 1 && <Pager page={page} pages={pages} onPage={setPage} label={`${v.total} rows`} />}
       </>
     );
 
@@ -416,20 +399,19 @@ const Foundry: FC = () => {
         {filters}
         {notes}
         <div>
-          <Section title="Foundry">
-            <Focusable flow-children="horizontal" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-              <Segmented
-                options={[
-                  { data: "claimable", label: `Claimable ${c.claimable}` },
-                  { data: "in-progress", label: `Building ${c.building}` },
-                  { data: "buildable", label: `Ready ${c.ready}` },
-                  { data: "not_ready", label: `Missing parts ${c.missing}` },
-                ]}
-                value={s.state === "all" && v.tab === "status:in-progress" ? "in-progress" : s.state}
-                onChange={(x) => (x === "in-progress" ? update({ tab: "status:in-progress", state: "all" }) : update({ state: s.state === x ? "all" : x, tab: v.tab === "status:in-progress" ? "all" : s.tab }))}
-              />
-            </Focusable>
-          </Section>
+          <Focusable flow-children="horizontal" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", margin: "10px 0 4px" }}>
+            <span style={{ color: colors.muted, fontSize: "11px", textTransform: "uppercase" }}>Quick filter</span>
+            <Segmented
+              options={[
+                { id: "claimable", label: `Claimable ${c.claimable}` },
+                { id: "in-progress", label: `Building ${c.building}` },
+                { id: "buildable", label: `Ready ${c.ready}` },
+                { id: "not_ready", label: `Missing parts ${c.missing}` },
+              ]}
+              value={s.state === "all" && v.tab === "status:in-progress" ? "in-progress" : s.state}
+              onChange={(x) => (x === "in-progress" ? update({ tab: "status:in-progress", state: "all" }) : update({ state: s.state === x ? "all" : x, tab: v.tab === "status:in-progress" ? "all" : s.tab }))}
+            />
+          </Focusable>
           {v.pinnedTotals && <PinnedSummary t={v.pinnedTotals} />}
           {view.loading && <div style={{ color: colors.muted, fontSize: "12px" }}>Updating…</div>}
           {body}
