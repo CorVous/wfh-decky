@@ -549,9 +549,12 @@ const PlannedTab: FC<{ open: (u: string) => void; tick: number }> = ({ open, tic
 
 type Tab = "collection" | "roadmap" | "planned" | "account";
 let lastTab: Tab = "roadmap";
+const masteryTabListeners = new Set<(t: Tab) => void>();
 
+// Opens Mastery on a sub-tab; a mounted Mastery page switches to it immediately.
 export function openMastery(tab: Tab = "roadmap"): void {
   lastTab = tab;
+  masteryTabListeners.forEach((l) => l(tab));
   openPage("mastery");
 }
 
@@ -559,6 +562,12 @@ const Mastery: FC = () => {
   const [tab, setTabS] = useState<Tab>(lastTab);
   const [tick, setTick] = useState(0);
   const setTab = (t: Tab) => ((lastTab = t), setTabS(t));
+  useEffect(() => {
+    masteryTabListeners.add(setTabS);
+    return () => {
+      masteryTabListeners.delete(setTabS);
+    };
+  }, []);
   const setDetail = (u: string) => showModal(<ItemDetail unique={u} onPinned={() => setTick((n) => n + 1)} />);
   const s = useRpc<SummaryView>("mastery.summary", {}, [tick]);
   useEvent("mastery.updated", () => setTick((n) => n + 1));

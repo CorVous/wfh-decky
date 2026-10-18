@@ -56,14 +56,26 @@ def _gamescopectl(env: SessionEnv, path: str, timeout: float) -> bool:
     if not exe or not env.wayland_display:
         return False
     since = time.time() - 0.01
-    run_env = {**os.environ, **env.x_env(), "WAYLAND_DISPLAY": env.wayland_display}
+    # gamescopectl reads GAMESCOPE_WAYLAND_DISPLAY (default "gamescope-0"), not
+    # WAYLAND_DISPLAY, so pass both.
+    run_env = {
+        **os.environ, **env.x_env(),
+        "WAYLAND_DISPLAY": env.wayland_display,
+        "GAMESCOPE_WAYLAND_DISPLAY": env.wayland_display,
+    }
     try:
-        subprocess.run(
+        proc = subprocess.run(
             [exe, "screenshot", path, str(BASE_PLANE_ONLY)],
             env=run_env, timeout=timeout, capture_output=True, check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as e:
         _log.warning("gamescopectl failed: %s", e)
+        return False
+    if proc.returncode != 0:
+        # Connection/interface failure: no screenshot was requested, so do
+        # not burn the timeout waiting for a file that will never appear.
+        err = (proc.stderr or b"").decode(errors="replace").strip()
+        _log.warning("gamescopectl exited %d: %s", proc.returncode, err[-300:])
         return False
     return _wait_for(path, since, timeout)
 

@@ -154,6 +154,8 @@ let lastItem: { slug: string; rank: number | null } | null = null;
 export function openMarket(tab: Tab = "browse", item?: { slug: string; rank: number | null }): void {
   lastTab = tab;
   if (item) lastItem = item;
+  // A mounted Market page read lastTab/lastItem only at mount; its listener applies them now.
+  window.dispatchEvent(new CustomEvent("wfh-market-tab", { detail: tab }));
   openTab("market");
   Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);

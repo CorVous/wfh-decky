@@ -104,7 +104,9 @@ def load_modules(app: App, modules: list[str] | None = None) -> list[str]:
         try:
             mod = importlib.import_module(name)
             if hasattr(mod, "setup"):
-                mod.setup(app)
+                sub_failed = mod.setup(app)
+                if isinstance(sub_failed, list):  # package loaders report their own broken submodules
+                    failed.extend(sub_failed)
         except Exception:  # noqa: BLE001 - one broken feature must not take the rest down
             _log.exception("module %s failed to load", name)
             failed.append(name)

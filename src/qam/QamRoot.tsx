@@ -18,26 +18,36 @@ import { Qam as SyndicatesQam } from "../pages/Syndicates";
 import { Qam as WikiQam } from "../pages/Wiki";
 import { Qam as WorldQam } from "../pages/World";
 
-// Page sections shown under the status block, in this order (null = the page has none).
-// World first (the primary QAM page), then Arbitrations and Relics; the remaining pages
-// except Dashboard (whose summary repeats World/Foundry) follow; Foundry, Missions and Market
-// close the list, then the overlay switches from Settings. Each section loads its own small
-// view-model (world.qam, arbi.qam, ...), which the backend serves from caches.
-const SECTIONS: { id: string; Qam: FC | null }[] = [
-  { id: "world", Qam: WorldQam },
-  { id: "arbitrations", Qam: ArbitrationsQam },
-  { id: "relics", Qam: RelicsQam },
-  { id: "inventory", Qam: InventoryQam },
-  { id: "mastery", Qam: MasteryQam },
-  { id: "syndicates", Qam: SyndicatesQam },
-  { id: "rivens", Qam: RivensQam },
-  { id: "stats", Qam: StatsQam },
-  { id: "wiki", Qam: WikiQam },
-  { id: "foundry", Qam: FoundryQam },
-  { id: "missions", Qam: MissionsQam },
-  { id: "market", Qam: MarketQam },
-  { id: "settings", Qam: SettingsQam },
-];
+// Compact summaries the QAM can show, one at a time (the panel is ~300px wide,
+// so stacking them all made a long scroll). Each loads its own small cached
+// view-model (world.qam, arbi.qam, ...).
+const SECTIONS: { id: string; title: string; Qam: FC | null }[] = [
+  { id: "world", title: "World", Qam: WorldQam },
+  { id: "arbitrations", title: "Arbitrations", Qam: ArbitrationsQam },
+  { id: "relics", title: "Relics", Qam: RelicsQam },
+  { id: "market", title: "Market", Qam: MarketQam },
+  { id: "foundry", title: "Foundry", Qam: FoundryQam },
+  { id: "missions", title: "Last mission", Qam: MissionsQam },
+  { id: "inventory", title: "Inventory", Qam: InventoryQam },
+  { id: "mastery", title: "Mastery", Qam: MasteryQam },
+  { id: "syndicates", title: "Syndicates", Qam: SyndicatesQam },
+  { id: "rivens", title: "Rivens", Qam: RivensQam },
+  { id: "stats", title: "Stats", Qam: StatsQam },
+  { id: "wiki", title: "Wiki", Qam: WikiQam },
+  { id: "settings", title: "Overlay settings", Qam: SettingsQam },
+].filter((x) => x.Qam);
+
+const SECTION_KEY = "wfhelper.qamSection";
+
+function loadSection(): string {
+  try {
+    const v = localStorage.getItem(SECTION_KEY);
+    if (v && SECTIONS.some((x) => x.id === v)) return v;
+  } catch {
+    // storage unavailable: fall back to the default
+  }
+  return "world";
+}
 
 interface Status {
   version: string;
@@ -82,10 +92,16 @@ const QamRoot: FC = () => {
   // Overlay switches elsewhere (Settings page, other sections) change overlay.enabled too.
   useEvent("settings.changed", () => status.reload());
   const [busy, setBusy] = useState(false);
+  const [section, setSection] = useState(loadSection);
   const s = status.data;
+  const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
+  const Qam = current?.Qam;
+  const statusLine = s
+    ? `${s.warframe_running ? "Warframe running" : "Warframe not running"} · ${s.ee_log ? "log found" : "no log yet"}`
+    : "";
   return (
     <>
-      <PanelSection title="Status">
+      <PanelSection>
         {status.error && (
           <PanelSectionRow>
             <Field label="Backend" description={status.error} />
@@ -94,39 +110,15 @@ const QamRoot: FC = () => {
         {s && (
           <>
             <PanelSectionRow>
-              <Field label="Warframe" focusable>
-                {s.warframe_running ? "Running" : "Not running"}
-              </Field>
-            </PanelSectionRow>
-            <PanelSectionRow>
-              <Field label="EE.log" focusable description={s.ee_log ?? "Not found yet"} />
-            </PanelSectionRow>
-            <PanelSectionRow>
               <ToggleField
                 label="Overlays"
-                description={s.overlay.connected ? "Drawing over the game" : "Waiting for the game display"}
+                description={`${s.overlay.connected ? "Drawing over the game" : "Waiting for the game display"}. ${statusLine}`}
                 checked={s.overlay.enabled}
                 onChange={async (v) => {
                   await call("settings.update", { patch: { overlays_enabled: v } });
                   status.reload();
                 }}
               />
-            </PanelSectionRow>
-            <PanelSectionRow>
-              <ButtonItem
-                layout="below"
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await call("overlay.test", { seconds: 6 });
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                Show test overlay
-              </ButtonItem>
             </PanelSectionRow>
             {s.failed_modules.length > 0 && (
               <PanelSectionRow>
@@ -135,9 +127,28 @@ const QamRoot: FC = () => {
             )}
           </>
         )}
+        <PanelSectionRow>
+          <DropdownItem
+            label="Show"
+            rgOptions={SECTIONS.map((x) => ({ data: x.id, label: x.title }))}
+            selectedOption={current?.id}
+            onChange={(o) => {
+              const id = String(o.data);
+              setSection(id);
+              try {
+                localStorage.setItem(SECTION_KEY, id);
+              } catch {
+                // not persisted; still switches for this session
+              }
+            }}
+          />
+        </PanelSectionRow>
       </PanelSection>
-      {/* One focusable row near the top so the full-screen pages are reachable without
-          scrolling past every section; the full list stays at the bottom. */}
+      {Qam && current && (
+        <SectionBoundary key={current.id} id={current.id}>
+          <Qam />
+        </SectionBoundary>
+      )}
       <PanelSection>
         <PanelSectionRow>
           <DropdownItem
@@ -148,28 +159,22 @@ const QamRoot: FC = () => {
             onChange={(o) => openPage(String(o.data))}
           />
         </PanelSectionRow>
-      </PanelSection>
-      {SECTIONS.map(({ id, Qam }) =>
-        Qam ? (
-          <SectionBoundary key={id} id={id}>
-            <Qam />
-          </SectionBoundary>
-        ) : null,
-      )}
-      <PanelSection title="Open">
-        {PAGES.map((p) => (
-          <PanelSectionRow key={p.id}>
-            <ButtonItem
-              layout="below"
-              onClick={() => openPage(p.id)}
-            >
-              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <p.icon />
-                {p.title}
-              </span>
-            </ButtonItem>
-          </PanelSectionRow>
-        ))}
+        <PanelSectionRow>
+          <ButtonItem
+            layout="below"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await call("overlay.test", { seconds: 6 });
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Show test overlay
+          </ButtonItem>
+        </PanelSectionRow>
       </PanelSection>
     </>
   );

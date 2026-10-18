@@ -174,6 +174,11 @@ class OverlayManager:
             any_layers = bool(self._layers) and self.enabled
         return region, box, any_layers
 
+    def _put_full(self) -> None:
+        with self._lock:
+            full = self._canvas.copy()
+        self._win.put(full, 0, 0)
+
     def _run(self) -> None:
         last_connect = 0.0
         while not self._stop.is_set():
@@ -187,21 +192,23 @@ class OverlayManager:
                 self._connect()
             self._expire()
             out = self._compose()
-            if out is None or self._win is None:
+            if self._win is None:
                 continue
-            region, box, any_layers = out
             try:
-                if not any_layers:
-                    self._win.hide()
-                elif not self._win.mapped:
-                    # An unmapped window keeps no contents: push the whole canvas.
-                    self._win.show()
-                    with self._lock:
-                        full = self._canvas.copy()
-                    self._win.put(full, 0, 0)
-                else:
-                    self._win.put(region, box[0], box[1])
-                self._win.pump()
+                if out is not None:
+                    region, box, any_layers = out
+                    if not any_layers:
+                        self._win.hide()
+                    elif not self._win.mapped:
+                        # The window holds no pixels until gamescope maps it;
+                        # show() waits for that, and pump() below catches a late
+                        # MapNotify/Expose if the wait timed out.
+                        self._win.show()
+                        self._put_full()
+                    else:
+                        self._win.put(region, box[0], box[1])
+                if self._win.pump():
+                    self._put_full()
             except Exception as e:  # noqa: BLE001 - X server went away; reconnect later
                 _log.warning("overlay draw failed, reconnecting: %s", e)
                 try:

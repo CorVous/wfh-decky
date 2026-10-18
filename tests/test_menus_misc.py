@@ -171,7 +171,7 @@ def test_stats_rpcs_registered(app):
                  "wiki.search", "wiki.relic", "wiki.relics", "settings.view", "settings.set",
                  "settings.diagnostics", "settings.proton_plan", "settings.check_path", "settings.reset"):
         assert name in rpc.methods(), name
-    assert "wfh.menus" not in app.services["failed_modules"]
+    assert not any(f.startswith("wfh.menus") for f in app.services["failed_modules"])
     q = run(rpc.call_local("stats.qam"))
     assert "rows" in q
     v = run(rpc.call_local("stats.view", {"days": 14}))
@@ -374,3 +374,23 @@ def test_settings_change_emits_event(app, monkeypatch):
     monkeypatch.setattr(rpc, "emit", lambda event, data=None: sent.append(event))
     sv.set_value(app.settings, "overlays_enabled", False)
     assert "settings.changed" in sent
+
+
+def test_broken_menu_module_reported_as_failed(app, monkeypatch):
+    """A page module that fails to import must show up in load_modules' failed list."""
+    from types import SimpleNamespace
+
+    from wfh import app as app_mod
+    from wfh import menus
+
+    monkeypatch.setattr(menus.pkgutil, "iter_modules", lambda path: [SimpleNamespace(name="broken_page")])
+    real_import = menus.importlib.import_module
+
+    def fake_import(name, *a, **kw):
+        if name == "wfh.menus.broken_page":
+            raise ImportError(name)
+        return real_import(name, *a, **kw)
+
+    monkeypatch.setattr(menus.importlib, "import_module", fake_import)
+    assert menus.setup(app) == ["wfh.menus.broken_page"]
+    assert app_mod.load_modules(app, ["wfh.menus"]) == ["wfh.menus.broken_page"]

@@ -116,6 +116,11 @@ def urllib_transport(method: str, url: str, headers: dict, body: bytes | None, t
             data = e.read(MAX_RESPONSE)
         except Exception:  # noqa: BLE001
             data = b""
+        if e.code == 429:
+            # Hold the whole host (anonymous prefetch/price reads too), as net.fetch does.
+            ra = net._retry_after(e)
+            net._hold_host(urlparse(url).netloc,
+                           min(net._RATE_LIMIT_MAX, ra if ra is not None else net._RATE_LIMIT_BASE))
         return HttpResponse(e.code, _lower((e.headers or {}).items()), data)
 
 

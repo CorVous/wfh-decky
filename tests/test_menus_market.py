@@ -517,6 +517,15 @@ def test_rpcs_end_to_end(app, m, tmp_path, monkeypatch):
         assert r["ok"] and r["changed"] >= 1
         assert any(name == "market.orders" for name, _ in events)
 
+        # a 429 mid-bulk stops the loop: one PATCH sent, the rest reported as skipped
+        before = len([c for c in fake.calls if c[0] == "PATCH"])
+        fake.default = (429, {"retry-after": "1"}, {})
+        r = run("market.orders_visible", {"visible": False})
+        fake.default = (200, {}, {"data": {}})
+        assert len([c for c in fake.calls if c[0] == "PATCH"]) == before + 1
+        assert r["ok"] is False and r["changed"] == 0 and len(r["failed"]) >= 2
+        assert all("rate limited" in f["error"].lower() or "wait" in f["error"].lower() for f in r["failed"])
+
         sock = FakeWsSocket()
         mm.auth().ws_factory = lambda: wa.WsConn(sock)
         st = run("market.set_status", {"status": "online", "hold_min": 30})
@@ -631,3 +640,18 @@ def test_set_hold_without_status(app):
         assert st["holdMin"] == 120 and app.settings.get("market.status_hold_min") == 120
     finally:
         app.settings.update({"market": {"status_hold_min": 0}})
+
+
+def test_urllib_transport_429_holds_the_whole_host(monkeypatch):
+    import io
+    import urllib.error
+    from email.message import Message
+    hdrs = Message()
+    hdrs["Retry-After"] = "7"
+    err = urllib.error.HTTPError(wa.API + "/v2/order/x", 429, "Too Many", hdrs, io.BytesIO(b"{}"))
+    held = []
+    monkeypatch.setattr(net, "_throttle", lambda host: None)
+    monkeypatch.setattr(net, "_hold_host", lambda host, d: held.append((host, d)))
+    monkeypatch.setattr(wa._opener, "open", lambda *a, **k: (_ for _ in ()).throw(err))
+    resp = wa.urllib_transport("PATCH", wa.API + "/v2/order/x", {}, b"{}", 5)
+    assert resp.status == 429 and held == [("api.warframe.market", 7.0)]

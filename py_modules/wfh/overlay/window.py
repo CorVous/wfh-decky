@@ -7,6 +7,8 @@ are pushed with PutImage on a 32-bit ARGB visual, premultiplied alpha.
 """
 
 import os
+import select
+import time
 
 from PIL import Image
 
@@ -33,7 +35,7 @@ class OverlayWindow:
         self.win = screen.root.create_window(
             0, 0, self.width, self.height, 0, 32, X.InputOutput, visual,
             colormap=cmap, border_pixel=0, background_pixel=0,
-            event_mask=X.StructureNotifyMask,
+            event_mask=X.StructureNotifyMask | X.ExposureMask,
         )
         self.win.set_wm_name("WFHelper overlay")
         self.win.set_wm_class("wfh-overlay", "WFHelper")
@@ -82,12 +84,39 @@ class OverlayWindow:
     # cleared while still mapped before unmapping, and set again before map
     # (map_win reads it). While one of our layers is up, the performance
     # overlay is hidden.
-    def show(self) -> None:
-        if not self.mapped:
-            self._set_external_overlay(1)
-            self.win.map()
-            self.mapped = True
-            self.d.flush()
+    #
+    # gamescope redirects substructure on the root, so map() only sends a
+    # MapRequest; gamescope maps the window later from its own loop. Until then
+    # the window is unviewable and has no composite backing pixmap, so any
+    # PutImage is discarded. show() therefore waits (bounded) for MapNotify,
+    # and pump() reports Expose/MapNotify so the caller re-pushes everything.
+    MAP_TIMEOUT = 0.2
+
+    def show(self) -> bool:
+        """Map the window; True once gamescope has actually mapped it."""
+        if self.mapped:
+            return True
+        self._set_external_overlay(1)
+        self.win.map()
+        self.mapped = True
+        self.d.flush()
+        return self._wait_mapped(self.MAP_TIMEOUT)
+
+    def _wait_mapped(self, timeout: float) -> bool:
+        deadline = time.monotonic() + timeout
+        while True:
+            while self.d.pending_events():
+                ev = self.d.next_event()
+                if ev.type == self._X.MapNotify and self._is_ours(ev):
+                    return True
+            left = deadline - time.monotonic()
+            if left <= 0:
+                return False
+            select.select([self.d.fileno()], [], [], left)
+
+    def _is_ours(self, ev) -> bool:
+        w = getattr(ev, "window", None)
+        return w is not None and w.id == self.win.id
 
     def hide(self) -> None:
         if self.mapped:
@@ -110,9 +139,16 @@ class OverlayWindow:
             self.win.put_image(self.gc, x, y + top, w, rows, self._X.ZPixmap, 32, 0, chunk)
         self.d.flush()
 
-    def pump(self) -> None:
+    def pump(self) -> bool:
+        """Drain events; True if the window was mapped or exposed and its
+        contents must be pushed again in full."""
+        X = self._X
+        repaint = False
         while self.d.pending_events():
-            self.d.next_event()
+            ev = self.d.next_event()
+            if ev.type in (X.Expose, X.MapNotify) and self._is_ours(ev):
+                repaint = True
+        return repaint and self.mapped
 
     def close(self) -> None:
         try:

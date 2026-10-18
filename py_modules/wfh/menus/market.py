@@ -601,7 +601,7 @@ async def _rpc_orders_visible(visible: bool, type: str | None = None) -> dict:  
         rows = my_orders()["orders"]
         targets = [o for o in rows if o.get("visible") != bool(visible) and (type is None or o.get("type") == type)]
         done, failed = [], []
-        for o in targets:
+        for i, o in enumerate(targets):
             try:
                 auth().update_order(o["id"], visible=bool(visible))
                 done.append(o["id"])
@@ -609,6 +609,10 @@ async def _rpc_orders_visible(visible: bool, type: str | None = None) -> dict:  
                 return _err(e)
             except wfm_auth.WfmError as e:
                 failed.append({"id": o["id"], "name": o.get("name"), "error": str(e)})
+                if e.code == "WFM_RATE_LIMITED":  # stop sending; skip the rest
+                    failed += [{"id": r["id"], "name": r.get("name"), "error": "Skipped (rate limited)."}
+                               for r in targets[i + 1:]]
+                    break
         ids = set(done)
         payload = _after_write(lambda rs: [({**o, "visible": bool(visible)} if o.get("id") in ids else o) for o in rs])
         return {"ok": not failed, "changed": len(done), "failed": failed, **payload}

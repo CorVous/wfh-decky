@@ -17,6 +17,16 @@ PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
 # python3.12, not the python3 symlink: Decky extracts plugin zips without symlinks.
 PYTHON = os.path.join(PLUGIN_DIR, "bin", "python", "bin", "python3.12")
 RPC_TIMEOUT = 60
+# Calls that download and rebuild data (or parse a whole EE.log) on a reniced
+# worker can outlast the default on Deck wifi.
+LONG_RPC_TIMEOUT = 300
+RPC_TIMEOUTS = {
+    "riven.data_refresh": LONG_RPC_TIMEOUT,
+    "riven.goodrolls_refresh": LONG_RPC_TIMEOUT,
+    "data.refresh": LONG_RPC_TIMEOUT,
+    "arbi.import_log": LONG_RPC_TIMEOUT,
+    "inventory.refresh": LONG_RPC_TIMEOUT,
+}
 
 
 class Plugin:
@@ -107,8 +117,12 @@ class Plugin:
         self.pending[rid] = fut
         self.proc.stdin.write((json.dumps({"id": rid, "method": method, "params": params or {}}) + "\n").encode())
         await self.proc.stdin.drain()
+        timeout = RPC_TIMEOUTS.get(method, RPC_TIMEOUT)
         try:
-            return await asyncio.wait_for(fut, RPC_TIMEOUT)
+            return await asyncio.wait_for(fut, timeout)
+        except asyncio.TimeoutError:
+            # str() of a bare TimeoutError is empty; Decky passes str(e) to the UI.
+            raise RuntimeError(f"{method} timed out after {timeout}s") from None
         finally:
             self.pending.pop(rid, None)
 
