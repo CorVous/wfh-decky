@@ -5,6 +5,7 @@
 import {
   ButtonItem,
   DialogButton,
+  Dropdown,
   DropdownItem,
   Field,
   Focusable,
@@ -16,7 +17,7 @@ import {
   ToggleField,
   showModal,
 } from "@decky/ui";
-import { FC, ReactNode, useEffect, useState } from "react";
+import { CSSProperties, FC, ReactNode, useEffect, useState } from "react";
 
 import { Badge, Ducats, Empty, ErrorText, Loading, Page, Plat, Section, Stat, colors } from "../components/ui";
 import { openTab } from "../nav";
@@ -416,6 +417,35 @@ const RelicCard: FC<{ g: RelicGroup; squad: number; showOwned: boolean; pin: Pin
 
 // ---- full page ------------------------------------------------------------------------------
 
+const GRID_COLUMNS = 3;
+
+function chunk<T>(items: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
+  return out;
+}
+
+const FilterCell: FC<{ label: string; children: ReactNode }> = ({ label, children }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+    <span style={{ fontSize: "11px", color: colors.muted, textTransform: "uppercase" }}>{label}</span>
+    {children}
+  </div>
+);
+
+const OverlayFiltersModal: FC<{ closeModal?: () => void; onPush: () => Promise<void>; onClear: () => Promise<void> }> = ({ closeModal, onPush, onClear }) => (
+  <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
+    <div style={{ color: colors.text }}>
+      <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px" }}>Relic planner overlay</div>
+      <div style={{ color: colors.muted, marginBottom: "12px" }}>The planner overlay ranks relics by EV unless you give it this page's filters.</div>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px" }}>
+        <DialogButton onClick={() => void onPush().then(() => closeModal?.())}>Use these filters</DialogButton>
+        <DialogButton onClick={() => void onClear().then(() => closeModal?.())}>Rank by EV again</DialogButton>
+        <DialogButton onClick={closeModal}>Close</DialogButton>
+      </Focusable>
+    </div>
+  </ModalRoot>
+);
+
 const Relics: FC = () => {
   const [s, setS] = useState<ViewState>(loadState);
   const [page, setPage] = useState(0);
@@ -475,95 +505,102 @@ const Relics: FC = () => {
     setPushed(`Overlay uses these filters (squad ${f.squadSize}).`);
   };
 
+  const chip = (on: boolean): CSSProperties => ({
+    minWidth: 0,
+    padding: "6px 12px",
+    background: on ? colors.accent : undefined,
+    color: on ? "#0e121e" : undefined,
+  });
+  const noInv = v ? !v.hasInventory : false;
+
+  // Compact filter bar above the relics: two rows of small controls instead of
+  // a column of full-width Steam rows, so the cards get the whole width.
   const filters = (
-    <Focusable style={{ width: "250px", flexShrink: 0, display: "flex", flexDirection: "column" }}>
-      <DropdownItem
-        label="Tier"
-        rgOptions={TIERS.map((t) => ({ data: t, label: `${t === "all" ? "All tiers" : t}${v?.tierCounts?.[t] != null ? ` (${v.tierCounts[t]})` : ""}` }))}
-        selectedOption={s.tier}
-        onChange={(o) => update({ tier: o.data })}
-      />
-      <Field label="Squad size" childrenLayout="below" focusable={false}>
-        <SquadPicker value={s.squad} onChange={(n) => update({ squad: n })} />
-      </Field>
-      <DropdownItem
-        label="Sort"
-        rgOptions={SORTS}
-        selectedOption={s.sort}
-        onChange={(o) => update({ sort: o.data, direction: DEFAULT_DESC.includes(o.data) ? "desc" : "asc" })}
-      />
-      <ToggleField label="Descending" checked={s.direction === "desc"} onChange={(b) => update({ direction: b ? "desc" : "asc" })} />
-      <DropdownItem
-        label="Show"
-        rgOptions={[
-          { data: "owned", label: "Owned relics" },
-          { data: "all", label: "All relics" },
-        ]}
-        selectedOption={s.ownership}
-        onChange={(o) => update({ ownership: o.data, quality: o.data === "owned" ? "owned" : "intact" })}
-      />
-      <DropdownItem
-        label="Refinement"
-        rgOptions={[{ data: "owned", label: "Best owned" }, ...QUALITIES.map((q) => ({ data: q, label: Q_LABEL[q] }))]}
-        selectedOption={s.quality}
-        onChange={(o) => update({ quality: o.data })}
-      />
-      <DropdownItem
-        label="Vaulted"
-        rgOptions={[
-          { data: "all", label: "Any" },
-          { data: "vaulted", label: "Vaulted only" },
-          { data: "unvaulted", label: "Unvaulted only" },
-        ]}
-        selectedOption={s.vaulted}
-        onChange={(o) => update({ vaulted: o.data })}
-      />
-      <DropdownItem
-        label="Copies owned"
-        disabled={v ? !v.hasInventory : false}
-        rgOptions={[0, 2, 4, 6, 8, 10].map((n) => ({ data: n, label: n === 0 ? "Any" : `More than ${n}` }))}
-        selectedOption={s.ownedAbove}
-        onChange={(o) => update({ ownedAbove: o.data })}
-      />
-      <ToggleField
-        label="Has a reward I need"
-        description="A reward you own no copy of"
-        disabled={v ? !v.hasInventory : false}
-        checked={s.needed}
-        onChange={(b) => update({ needed: b })}
-      />
-      <TextField label="Search" description="Relic or reward name" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
-      <ButtonItem layout="below" onClick={pushToOverlay}>
-        Use these filters in overlay
-      </ButtonItem>
-      <ButtonItem
-        layout="below"
-        onClick={async () => {
-          await call("relics.clear_filters");
-          setPushed("Overlay ranks by EV again.");
-        }}
-      >
-        Reset overlay filters
-      </ButtonItem>
-      {pushed && <div style={{ color: colors.good, fontSize: "12px", padding: "4px 0" }}>{pushed}</div>}
-      <ButtonItem
-        layout="below"
-        onClick={async () => {
-          await call("relics.prefetch_prices");
-          setTimeout(() => view.reload(), 4000);
-        }}
-      >
-        Fetch missing prices
-      </ButtonItem>
-      <ButtonItem
-        layout="below"
-        onClick={() => {
-          setSearchDraft("");
-          update({ ...DEFAULT_STATE });
-        }}
-      >
-        Reset filters
-      </ButtonItem>
+    <Focusable style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+      <Focusable flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: "8px" }}>
+        <FilterCell label="Tier">
+          <Dropdown
+            rgOptions={TIERS.map((t) => ({ data: t, label: `${t === "all" ? "All tiers" : t}${v?.tierCounts?.[t] != null ? ` (${v.tierCounts[t]})` : ""}` }))}
+            selectedOption={s.tier}
+            onChange={(o) => update({ tier: o.data })}
+          />
+        </FilterCell>
+        <FilterCell label="Sort">
+          <Dropdown rgOptions={SORTS} selectedOption={s.sort} onChange={(o) => update({ sort: o.data, direction: DEFAULT_DESC.includes(o.data) ? "desc" : "asc" })} />
+        </FilterCell>
+        <FilterCell label="Show">
+          <Dropdown
+            rgOptions={[
+              { data: "owned", label: "Owned relics" },
+              { data: "all", label: "All relics" },
+            ]}
+            selectedOption={s.ownership}
+            onChange={(o) => update({ ownership: o.data, quality: o.data === "owned" ? "owned" : "intact" })}
+          />
+        </FilterCell>
+        <FilterCell label="Refinement">
+          <Dropdown
+            rgOptions={[{ data: "owned", label: "Best owned" }, ...QUALITIES.map((q) => ({ data: q, label: Q_LABEL[q] }))]}
+            selectedOption={s.quality}
+            onChange={(o) => update({ quality: o.data })}
+          />
+        </FilterCell>
+        <FilterCell label="Vaulted">
+          <Dropdown
+            rgOptions={[
+              { data: "all", label: "Any" },
+              { data: "vaulted", label: "Vaulted only" },
+              { data: "unvaulted", label: "Unvaulted only" },
+            ]}
+            selectedOption={s.vaulted}
+            onChange={(o) => update({ vaulted: o.data })}
+          />
+        </FilterCell>
+        <FilterCell label="Copies owned">
+          <Dropdown
+            disabled={noInv}
+            rgOptions={[0, 2, 4, 6, 8, 10].map((n) => ({ data: n, label: n === 0 ? "Any" : `More than ${n}` }))}
+            selectedOption={s.ownedAbove}
+            onChange={(o) => update({ ownedAbove: o.data })}
+          />
+        </FilterCell>
+      </Focusable>
+      <Focusable flow-children="horizontal" style={{ display: "flex", gap: "8px", alignItems: "flex-end", flexWrap: "wrap" }}>
+        <FilterCell label="Squad">
+          <SquadPicker value={s.squad} onChange={(n) => update({ squad: n })} />
+        </FilterCell>
+        <DialogButton style={chip(s.direction === "desc")} onClick={() => update({ direction: s.direction === "desc" ? "asc" : "desc" })}>
+          {s.direction === "desc" ? "High → low" : "Low → high"}
+        </DialogButton>
+        <DialogButton style={chip(s.needed)} disabled={noInv} onClick={() => update({ needed: !s.needed })}>
+          Has a reward I need
+        </DialogButton>
+        <div style={{ width: "220px" }}>
+          <TextField label="" value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} />
+        </div>
+        <DialogButton style={chip(false)} onClick={() => showModal(<OverlayFiltersModal onPush={pushToOverlay} onClear={async () => { await call("relics.clear_filters"); setPushed("Overlay ranks by EV again."); }} />)}>
+          Overlay…
+        </DialogButton>
+        <DialogButton
+          style={chip(false)}
+          onClick={async () => {
+            await call("relics.prefetch_prices");
+            setTimeout(() => view.reload(), 4000);
+          }}
+        >
+          Fetch prices
+        </DialogButton>
+        <DialogButton
+          style={chip(false)}
+          onClick={() => {
+            setSearchDraft("");
+            update({ ...DEFAULT_STATE });
+          }}
+        >
+          Reset
+        </DialogButton>
+      </Focusable>
+      {pushed && <div style={{ color: colors.good, fontSize: "12px" }}>{pushed}</div>}
     </Focusable>
   );
 
@@ -576,25 +613,31 @@ const Relics: FC = () => {
   else
     body = (
       <>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-          {v.groups.map((g) => (
-            <RelicCard
-              key={g.key}
-              g={g}
-              squad={s.squad}
-              showOwned={v.hasInventory}
-              pin={{
-                current: s.pinned[g.key],
-                set: (q) => {
-                  const next = { ...s.pinned };
-                  if (q) next[g.key] = q;
-                  else delete next[g.key];
-                  update({ pinned: next });
-                },
-              }}
-            />
+        <Focusable style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {chunk(v.groups, GRID_COLUMNS).map((row) => (
+            // One horizontal group per row: left/right moves within it,
+            // up/down moves to the card above or below.
+            <Focusable key={row[0].key} flow-children="horizontal" style={{ display: "grid", gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`, gap: "8px" }}>
+              {row.map((g) => (
+                <RelicCard
+                  key={g.key}
+                  g={g}
+                  squad={s.squad}
+                  showOwned={v.hasInventory}
+                  pin={{
+                    current: s.pinned[g.key],
+                    set: (q) => {
+                      const next = { ...s.pinned };
+                      if (q) next[g.key] = q;
+                      else delete next[g.key];
+                      update({ pinned: next });
+                    },
+                  }}
+                />
+              ))}
+            </Focusable>
           ))}
-        </div>
+        </Focusable>
         {pages > 1 && (
           <Focusable style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "10px" }} flow-children="horizontal">
             <DialogButton style={{ minWidth: 0, width: "100px" }} disabled={page === 0} onClick={() => setPage(page - 1)}>
@@ -613,32 +656,30 @@ const Relics: FC = () => {
 
   return (
     <Page>
-      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start", width: "100%" }} flow-children="horizontal">
+      <Focusable style={{ display: "flex", flexDirection: "column" }}>
         {filters}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {v && (
-            <Section
-              title={s.ownership === "owned" ? "Owned relics" : "All relics"}
-              right={view.loading ? <span style={{ color: colors.muted, fontSize: "12px" }}>Updating…</span> : undefined}
-            >
-              {v.hasInventory && (
-                <>
-                  <Stat label="Relics" value={v.totals.relics} />
-                  <Stat label="Kinds" value={v.totals.groups} />
-                  {v.totals.plat != null && <Stat label="Crack all (EV)" value={`${Math.round(v.totals.plat)}p`} color={colors.plat} />}
-                  {v.totals.ducat != null && <Stat label="Ducat EV" value={`${Math.round(v.totals.ducat)}d`} color={colors.ducat} />}
-                </>
-              )}
-              <Stat label="Squad" value={v.squad} />
-              {v.pricesMissing > 0 && (
-                <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
-                  {v.pricesMissing} reward prices not cached yet (counted as 0). Use “Fetch missing prices”.
-                </div>
-              )}
-            </Section>
-          )}
-          {body}
-        </div>
+        {v && (
+          <Section
+            title={s.ownership === "owned" ? "Owned relics" : "All relics"}
+            right={view.loading ? <span style={{ color: colors.muted, fontSize: "12px" }}>Updating…</span> : undefined}
+          >
+            {v.hasInventory && (
+              <>
+                <Stat label="Relics" value={v.totals.relics} />
+                <Stat label="Kinds" value={v.totals.groups} />
+                {v.totals.plat != null && <Stat label="Crack all (EV)" value={`${Math.round(v.totals.plat)}p`} color={colors.plat} />}
+                {v.totals.ducat != null && <Stat label="Ducat EV" value={`${Math.round(v.totals.ducat)}d`} color={colors.ducat} />}
+              </>
+            )}
+            <Stat label="Squad" value={v.squad} />
+            {v.pricesMissing > 0 && (
+              <div style={{ color: colors.muted, fontSize: "12px", marginTop: "4px" }}>
+                {v.pricesMissing} reward prices not cached yet (counted as 0). Use “Fetch prices”.
+              </div>
+            )}
+          </Section>
+        )}
+        {body}
       </Focusable>
     </Page>
   );
