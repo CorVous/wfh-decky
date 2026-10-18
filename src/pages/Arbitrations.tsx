@@ -323,6 +323,10 @@ function confirm(title: string, body: string, ok: string, onOK: () => void): voi
 // Set by the QAM "Open last run" before navigating here.
 let pendingRunId: string | null = null;
 let lastView: "runs" | "schedule" = "runs";
+// A mounted page applies QAM deep links (view + run) live, since navigating to the
+// already-active tab does not remount it.
+type ArbiJump = (view: "runs" | "schedule", runId: string | null) => void;
+const jumpListeners = new Set<ArbiJump>();
 
 // ---- run list -------------------------------------------------------------------------------
 
@@ -980,7 +984,18 @@ const Arbitrations: FC = () => {
   const [view, setView] = useState<"runs" | "schedule">(lastView);
   const [runId, setRunId] = useState<string | null>(pendingRunId);
   useEffect(() => {
+    // Pick up a request made between the first render and this effect, then consume it.
+    setView(lastView);
+    if (pendingRunId !== null) setRunId(pendingRunId);
     pendingRunId = null;
+    const onJump: ArbiJump = (v, id) => {
+      setView(v);
+      if (v === "runs") setRunId(id);
+    };
+    jumpListeners.add(onJump);
+    return () => {
+      jumpListeners.delete(onJump);
+    };
   }, []);
   const go = (v: "runs" | "schedule") => {
     lastView = v;
@@ -1013,7 +1028,13 @@ export default Arbitrations;
 
 function openPage(view: "runs" | "schedule", runId: string | null = null): void {
   lastView = view;
-  pendingRunId = runId;
+  if (jumpListeners.size > 0) {
+    // Already mounted: apply now so no stale run lingers for the next mount.
+    pendingRunId = null;
+    jumpListeners.forEach((l) => l(view, runId));
+  } else {
+    pendingRunId = runId;
+  }
   openTab("arbitrations");
   Navigation.CloseSideMenus();
   Navigation.Navigate(ROUTE);

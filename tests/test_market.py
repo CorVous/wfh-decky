@@ -443,3 +443,88 @@ def test_rpcs(app, wfm, tmp_path):
         json.dumps([item, out, hits])  # JSON-able
     finally:
         market.set_market(None)
+
+
+# ---- disk retention vs freshness / prefetch storm guard ---------------------
+
+def test_disk_cache_keeps_hours_old_prices_but_not_fresh(wfm, tmp_path):
+    d = tmp_path / "market"
+    d.mkdir(parents=True, exist_ok=True)
+    m1 = market.Market(str(d), FakeSettings())
+    key = m1._key("ash_prime_set", None)
+    old = time.time() - 3 * 3600
+    ancient = time.time() - 2 * market.PRICE_RETAIN
+    p = market.Price(median=10.0, low_sell=9, volume=None, fetched_at=old, slug="ash_prime_set", rank=None)
+    (d / "prices.json").write_text(json.dumps({
+        key: {"t": old, "p": p.to_json()},
+        m1._key("gone_set", None): {"t": ancient, "p": None}}))
+    m2 = market.Market(str(d), FakeSettings())
+    assert m2.cached("ash_prime_set")[0] is False             # stale for the 30 min default
+    hit, got = m2.cached("ash_prime_set", max_age=6 * 3600)   # but a 6 h gate still sees it
+    assert hit and got.median == 10.0
+    assert m2.cached("gone_set", max_age=float("inf"))[0] is False
+    m2._save_disk(force=True)
+    saved = json.loads((d / "prices.json").read_text())
+    assert key in saved and m2._key("gone_set", None) not in saved
+
+
+def test_prefetch_skips_host_down_and_cooldown_and_emits_only_landed(m, wfm, monkeypatch):
+    events = []
+    monkeypatch.setattr(market.rpc, "emit", lambda ev, data: events.append((ev, data)))
+    m._host_down_until = time.time() + 60
+    assert m.prefetch(["ash_prime_set"], notify=True) == 0
+    m._host_down_until = 0
+    m._cooldown[m._key("ash_prime_set", None)] = time.time() + 60
+    assert m.prefetch(["ash_prime_set"], notify=True) == 0
+    m._cooldown.clear()
+    wfm.offline = True
+    assert m.prefetch(["ash_prime_set"], notify=True) == 1
+    assert m.wait_idle()
+    assert events == []                                       # failed read: no reload trigger
+
+
+def test_429_holds_host_for_every_thread_and_honours_retry_after(monkeypatch):
+    """A 429 pushes the host's next slot out by Retry-After for all callers, not just this one."""
+    import email.message
+    sleeps = []
+    clock = [1000.0]
+    monkeypatch.setattr(net.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(net.time, "sleep", lambda s: (sleeps.append(s), clock.__setitem__(0, clock[0] + s)))
+    monkeypatch.setattr(net, "_host_last", {})
+    hdrs = email.message.Message()
+    hdrs["Retry-After"] = "5"
+
+    def urlopen(req, timeout=None):
+        raise urllib.error.HTTPError(req.full_url, 429, "Too Many", hdrs, io.BytesIO(b""))
+
+    monkeypatch.setattr(net.urllib.request, "urlopen", urlopen)
+    with pytest.raises(net.HttpError) as ei:
+        net.fetch("https://api.warframe.market/v2/items")
+    assert ei.value.status == 429
+    assert sleeps[:2] == [pytest.approx(5), pytest.approx(5)]  # Retry-After, not 1.5 s
+    # The host stays held for everyone after the caller gives up.
+    assert net._host_last["api.warframe.market"] + net._HOST_INTERVAL["api.warframe.market"] \
+        == pytest.approx(clock[0] + 5)
+
+    hdrs.replace_header("Retry-After", "45")  # too long to block a thread: raise at once
+    sleeps.clear()
+    clock[0] += 100
+    with pytest.raises(net.HttpError):
+        net.fetch("https://api.warframe.market/v2/items")
+    assert sleeps == []
+
+
+def test_429_on_top_marks_host_down_without_v1_fallback(m, wfm, monkeypatch):
+    orig = FakeWfm.__call__
+
+    def rate_limited(self, url, **kw):
+        if "/top" in url:
+            with self.lock:
+                self.calls.append((url.replace(market.API, ""), {}))
+            raise net.HttpError(429, url)
+        return orig(self, url, **kw)
+
+    monkeypatch.setattr(FakeWfm, "__call__", rate_limited)
+    assert m.price("braton_prime_barrel") is None
+    assert not any("/statistics" in p for p in wfm.paths())
+    assert m.host_down()

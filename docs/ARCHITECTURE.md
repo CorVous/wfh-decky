@@ -102,11 +102,19 @@ Models live in `models/` (`app.models_dir`): `paddle/ch_PP-OCRv3_rec_infer.onnx`
 ## Overlay conventions
 
 - Screen space is the game output (1280x800 on Steam Deck LCD). Scanners map
-  capture coordinates to overlay coordinates by `overlays.size / capture.size`.
+  capture coordinates to overlay coordinates with one uniform scale
+  `min(ow/cw, oh/ch)` plus centring offsets (gamescope letterboxes a buffer of
+  another aspect; render-size screenshots come at the buffer's size). Use
+  `reward_overlay.capture_to_overlay`.
 - Layer names: `rewards`, `planner`, `riven`, `riven_right`, `arbi`, `test`.
 - Every overlay has a setting section with `enabled` and honours
   `overlays_enabled`. Overlays never block: they are click-through and timed.
 - When the overlay window is unavailable, fall back to a short `app.toast`.
+- The window connects only to a gamescope session (`GAMESCOPE_WAYLAND_DISPLAY`
+  set); in Desktop mode the manager stays disconnected and toasts are used.
+- gamescope shows one external overlay at a time, so the Steam performance
+  overlay (mangoapp) is hidden while one of our layers is up; hiding the
+  window clears `GAMESCOPE_EXTERNAL_OVERLAY` so mangoapp gets the slot back.
 
 ## Tests
 

@@ -95,10 +95,27 @@ function errText(e: any): string {
 // onFail lets the control roll back to the saved value; failures are also toasted.
 function useDebouncedSet(): SetFn {
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  useEffect(() => () => Object.values(timers.current).forEach(clearTimeout), []);
+  // Values whose debounce timer has not fired yet; flushed on unmount (closing
+  // the QAM or switching tabs unmounts this) so the last slider value is saved.
+  const pending = useRef<Record<string, any>>({});
+  useEffect(
+    () => () => {
+      Object.values(timers.current).forEach(clearTimeout);
+      timers.current = {};
+      for (const [key, value] of Object.entries(pending.current)) {
+        call<FieldDef>("settings.set", { key, value }).catch(() => undefined);
+      }
+      pending.current = {};
+    },
+    [],
+  );
   return (key, value, delay = 0, onFail) => {
     clearTimeout(timers.current[key]);
+    delete timers.current[key];
+    delete pending.current[key];
     const go = async () => {
+      delete timers.current[key];
+      delete pending.current[key];
       try {
         await call<FieldDef>("settings.set", { key, value });
       } catch (e: any) {
@@ -107,7 +124,10 @@ function useDebouncedSet(): SetFn {
         toaster.toast({ title: "Setting not saved", body: msg });
       }
     };
-    if (delay) timers.current[key] = setTimeout(go, delay);
+    if (delay) {
+      pending.current[key] = value;
+      timers.current[key] = setTimeout(go, delay);
+    }
     else void go();
   };
 }

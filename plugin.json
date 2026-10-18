@@ -2,7 +2,7 @@
   "name": "WFHelper",
   "author": "CorVous",
   "flags": [
-    "_root"
+    "root"
   ],
   "api_version": 1,
   "publish": {

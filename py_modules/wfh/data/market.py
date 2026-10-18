@@ -62,6 +62,8 @@ SITE = "https://warframe.market"
 ASSET_BASE = "https://warframe.market/static/assets/"
 ICON_MIRROR = "https://assets.wfhelper.com"
 PRICE_TTL = 30 * 60
+PRICE_RETAIN = 24 * 3600     # disk retention; freshness is cached(max_age), so 6 h prefetch gates and
+                             # last-known (max_age=inf) fallbacks survive a restart
 CATALOG_TTL = 24 * 3600
 ERROR_COOLDOWN = 60          # WFM_BACKEND_ERROR_COOLDOWN_MS
 CATALOG_RETRY_BLOCK = 15     # wfmCatalog.ts: retry blocked 15 s after a failure
@@ -433,7 +435,7 @@ class Market:
                 raw = json.load(f)
         except (OSError, ValueError):
             return
-        cutoff = time.time() - PRICE_TTL
+        cutoff = time.time() - PRICE_RETAIN
         for key, v in (raw or {}).items():
             ts = float(v.get("t") or 0)
             if ts >= cutoff and key not in self._prices:
@@ -457,7 +459,7 @@ class Market:
                     self._flush_timer.start()
                 return
             self._last_save, self._dirty = now, False
-            cutoff = now - PRICE_TTL
+            cutoff = now - PRICE_RETAIN
             with self._lock:
                 data = {k: {"t": ts, "p": p.to_json() if p else None}
                         for k, (ts, p) in self._prices.items() if ts >= cutoff}
@@ -660,6 +662,9 @@ class Market:
             if e.status == 404:
                 self._store(key, None, {"sell": [], "buy": []})
                 return None
+            if e.status == 429:  # rate limited: host-wide, don't spend more requests on v1
+                self._mark_down(e)
+                return self._stale(key)
             top_err = e
         except Exception as e:  # noqa: BLE001 - network down, bad JSON
             top_err = e
@@ -727,14 +732,20 @@ class Market:
         """Queue slugs that are not fresh; one daemon thread drains them at the throttle rate.
 
         notify emits a "market.price" event {slug, rank, price} as each one lands.
+        Slugs in their error cooldown, or all slugs while the host is down, are skipped:
+        price() would only answer stale without fetching, and pages that reload on
+        market.price and re-queue their unpriced slugs would loop.
         """
+        if self.host_down():
+            return 0
         n = 0
+        now = time.time()
         for s in dict.fromkeys(names.normalize_wfm_slug(x) or "" for x in slugs if x):
             if not s or is_excluded(s) or self.cached(s, rank)[0]:
                 continue
             k = self._key(s, rank)
             with self._lock:
-                if k in self._queued:
+                if now < self._cooldown.get(k, 0) or k in self._queued:
                     continue
                 self._queued.add(k)
             self._queue.put((s, rank, k, notify))
@@ -761,7 +772,9 @@ class Market:
                 return
             try:
                 p = self.price(slug, rank)
-                if notify:
+                # Emit only for a price that actually landed (fresh in cache); a cooldown /
+                # host-down / failed read answers stale and must not trigger page reloads.
+                if notify and self.cached(slug, rank)[0]:
                     rpc.emit("market.price", {"slug": slug, "rank": rank, "price": p.to_json() if p else None})
             except Exception:  # noqa: BLE001
                 _log.exception("prefetch %s failed", slug)

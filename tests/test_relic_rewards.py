@@ -714,6 +714,19 @@ def test_overlay_blocks_sit_under_each_card():
     assert scaled[0].y == round((201 + 162) / 2) + ov.GAP
 
 
+def test_overlay_maps_letterboxed_capture_with_uniform_scale():
+    # A 16:9 render-size capture is letterboxed into the 16:10 output: scale 1, 40 px bars.
+    assert ov.capture_to_overlay((1280, 720), DECK) == (1.0, 0.0, 40.0)
+    assert ov.capture_to_overlay((1920, 1080), DECK) == (2 / 3, 0.0, 40.0)
+    assert ov.capture_to_overlay(DECK, (640, 400)) == (0.5, 0.0, 0.0)
+    assert ov.capture_to_overlay((0, 0), DECK) == (1.0, 0.0, 0.0)
+    entries = [RewardEntry(0, "A Prime Blueprint", ducats=45, plat=18, price_state="ok", rarity="Common")]
+    cards = [(0, (400, 300, 160, 100))]
+    placed = ov.layout_blocks(entries, cards, (1280, 720), DECK, "below")
+    assert placed[0].y == 300 + 100 + 40 + ov.GAP
+    assert abs((placed[0].x + placed[0].image.width / 2) - 480) <= 2
+
+
 def test_name_lines_wrap_then_abbreviate():
     assert ov.name_lines("Fang Prime Handle", 140, 12) == ["Fang Prime Handle"]
     lines = ov.name_lines("Khora Prime Systems Blueprint", 140, 12)

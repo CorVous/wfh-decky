@@ -32,8 +32,8 @@ def set_cache_dir(path: str) -> None:
 
 
 def _throttle(host: str) -> None:
-    gap = _HOST_INTERVAL.get(host)
-    if not gap:
+    gap = _HOST_INTERVAL.get(host, 0.0)
+    if not gap and host not in _host_last:
         return
     with _host_lock:
         now = time.monotonic()
@@ -41,6 +41,28 @@ def _throttle(host: str) -> None:
         _host_last[host] = max(now, _host_last.get(host, 0) + gap)
     if wait > 0:
         time.sleep(wait)
+
+
+# 429 handling: the whole host is held back (every thread), not just the caller.
+_RATE_LIMIT_BASE = 2.0      # first backoff without Retry-After; doubles per attempt
+_RATE_LIMIT_MAX = 60.0      # cap on any host-wide hold
+_RATE_LIMIT_INLINE = 10.0   # longer holds raise instead of blocking the calling thread
+
+
+def _retry_after(e: urllib.error.HTTPError) -> float | None:
+    try:
+        v = float((e.headers.get("Retry-After") or "").strip()) if e.headers is not None else None
+    except (TypeError, ValueError):
+        return None  # HTTP-date form or junk: use our own backoff
+    return v if v is not None and v >= 0 else None
+
+
+def _hold_host(host: str, delay: float) -> None:
+    """Push the host's next request slot out so no thread sends for `delay` seconds."""
+    gap = _HOST_INTERVAL.get(host, 0.0)
+    with _host_lock:
+        until = time.monotonic() + delay - gap  # _throttle adds gap back
+        _host_last[host] = max(_host_last.get(host, 0), until)
 
 
 def _cache_path(key: str) -> str:
@@ -70,9 +92,13 @@ def fetch(url: str, headers: dict | None = None, timeout: float = 20, data: byte
                     body = gzip.decompress(body)
                 return body
         except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < 2:
-                time.sleep(1.5 * (attempt + 1))
-                continue
+            if e.code == 429:
+                ra = _retry_after(e)
+                delay = min(_RATE_LIMIT_MAX, ra if ra is not None else _RATE_LIMIT_BASE * 2 ** attempt)
+                _hold_host(host, delay)  # every thread on this host waits, not just us
+                _log.warning("HTTP 429 from %s; holding host for %.1fs", host, delay)
+                if attempt < 2 and delay <= _RATE_LIMIT_INLINE:
+                    continue  # _throttle sleeps until the hold ends
             raise HttpError(e.code, url, e.read().decode(errors="replace")[:500]) from e
         except (urllib.error.URLError, TimeoutError) as e:
             if attempt < 2 and retry_network:

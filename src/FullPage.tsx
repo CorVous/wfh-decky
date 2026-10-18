@@ -1,6 +1,7 @@
 import { Tabs } from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 
+import { PageBoundary } from "./components/ui";
 import { getLastTab, openTab, registerTabSetter } from "./nav";
 import { PAGES } from "./registry";
 
@@ -18,7 +19,15 @@ const FullPage: FC = () => {
           openTab(id);
           setTab(id);
         }}
-        tabs={PAGES.map((p) => ({ id: p.id, title: p.title, content: <p.component /> }))}
+        tabs={PAGES.map((p) => ({
+          id: p.id,
+          title: p.title,
+          content: (
+            <PageBoundary key={p.id} id={p.id}>
+              <p.component />
+            </PageBoundary>
+          ),
+        }))}
       />
     </div>
   );

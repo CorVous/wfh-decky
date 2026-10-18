@@ -1,6 +1,6 @@
 // Shared building blocks so every page looks and navigates the same way.
 import { DialogButton, Focusable } from "@decky/ui";
-import { CSSProperties, FC, ReactNode, useState } from "react";
+import { Component, CSSProperties, FC, ReactNode, useState } from "react";
 
 export const colors = {
   text: "#e8ecf5",
@@ -118,4 +118,31 @@ export function Paged<T>({ items, pageSize = 25, render }: { items: T[]; pageSiz
       )}
     </>
   );
+}
+
+// Catches a render error in one full-screen page so the tab strip (and the
+// other pages) stay usable. Key it by page id so switching tabs resets it.
+export class PageBoundary extends Component<{ id: string; children: ReactNode }, { error: string | null }> {
+  state = { error: null as string | null };
+  static getDerivedStateFromError(e: unknown) {
+    return { error: String((e as Error)?.message ?? e) };
+  }
+  componentDidCatch(e: unknown) {
+    console.error("[WFHelper] page failed", this.props.id, e);
+  }
+  render() {
+    if (this.state.error !== null) {
+      return (
+        <Page>
+          <Section title="This page failed to render">
+            <ErrorText error={this.state.error} />
+            <Focusable style={{ padding: "8px 16px" }}>
+              <DialogButton onClick={() => this.setState({ error: null })}>Retry</DialogButton>
+            </Focusable>
+          </Section>
+        </Page>
+      );
+    }
+    return this.props.children;
+  }
 }

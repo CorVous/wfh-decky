@@ -37,8 +37,10 @@ class OverlayWindow:
         )
         self.win.set_wm_name("WFHelper overlay")
         self.win.set_wm_class("wfh-overlay", "WFHelper")
-        atom = self.d.intern_atom("GAMESCOPE_EXTERNAL_OVERLAY")
-        self.win.change_property(atom, Xatom.CARDINAL, 32, [1])
+        self._overlay_atom = self.d.intern_atom("GAMESCOPE_EXTERNAL_OVERLAY")
+        self._cardinal = Xatom.CARDINAL
+        # Starts unmapped and not claiming the overlay slot; show() claims it.
+        self._set_external_overlay(0)
         self._make_click_through()
         self.gc = self.win.create_gc()
         self.mapped = False
@@ -69,14 +71,27 @@ class OverlayWindow:
         except Exception:  # noqa: BLE001 - gamescope routes no input to overlays anyway
             _log.debug("input shape not set", exc_info=True)
 
+    def _set_external_overlay(self, value: int) -> None:
+        self.win.change_property(self._overlay_atom, self._cardinal, 32, [value])
+
+    # gamescope draws a single external overlay per focus and picks it from
+    # every window carrying isExternalOverlay, mapped or not (the flag is only
+    # re-read on map or on a property change). An unmapped window that kept
+    # GAMESCOPE_EXTERNAL_OVERLAY=1 would keep winning that slot and starve
+    # mangoapp (the Steam performance overlay). So, like mangoapp, the flag is
+    # cleared while still mapped before unmapping, and set again before map
+    # (map_win reads it). While one of our layers is up, the performance
+    # overlay is hidden.
     def show(self) -> None:
         if not self.mapped:
+            self._set_external_overlay(1)
             self.win.map()
             self.mapped = True
             self.d.flush()
 
     def hide(self) -> None:
         if self.mapped:
+            self._set_external_overlay(0)
             self.win.unmap()
             self.mapped = False
             self.d.flush()

@@ -179,22 +179,35 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     return card.render()
 
 
+def capture_to_overlay(capture_size: tuple[int, int], overlay_size: tuple[int, int]) -> tuple[float, float, float]:
+    """(scale, off_x, off_y) mapping capture pixels onto the overlay.
+
+    gamescope fits the game buffer into the output with one uniform scale and
+    centres it (letterbox/pillarbox), and render-size screenshots come at the
+    buffer's size, so a 16:9 capture on a 16:10 output needs scale + offset,
+    not separate x/y ratios. Matching aspect ratios give zero offsets."""
+    cw, ch = capture_size
+    ow, oh = overlay_size
+    if not cw or not ch:
+        return 1.0, 0.0, 0.0
+    s = min(ow / cw, oh / ch)
+    return s, (ow - cw * s) / 2, (oh - ch * s) / 2
+
+
 def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int, int, int, int]]],
                   capture_size: tuple[int, int], overlay_size: tuple[int, int], position: str = "below",
                   best_plat: int | None = None, best_ducats: int | None = None, show_ducats: bool = True,
                   show_owned: bool = True) -> list[Placed]:
     """One block per on-screen card. card_px: (slot, (x, y, w, h)) in capture pixels."""
-    cw, ch = capture_size
     ow, oh = overlay_size
-    sx = ow / cw if cw else 1.0
-    sy = oh / ch if ch else 1.0
+    s, dx, dy = capture_to_overlay(capture_size, overlay_size)
     by_slot = {e.slot: e for e in entries}
     rendered = []
     for slot, (x, y, w, h) in card_px:
-        bw = max(MIN_BLOCK_W, round(w * sx))
+        bw = max(MIN_BLOCK_W, round(w * s))
         img = render_block(by_slot.get(slot), bw, slot, slot == best_plat, slot == best_ducats, show_ducats, show_owned)
-        cx = round((x + w / 2) * sx)
-        rendered.append((img, cx - bw // 2, round(y * sy), round((y + h) * sy)))
+        cx = round((x + w / 2) * s + dx)
+        rendered.append((img, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
     if not rendered:
         return []
     # One row: every block shares the tallest block's top/bottom alignment.

@@ -124,7 +124,11 @@ class OverlayManager:
         if self.headless or self._win is not None:
             return
         env = find_session_env()
-        if env is None:
+        # Only gamescope honours GAMESCOPE_EXTERNAL_OVERLAY. On any other X
+        # server (Desktop mode's KWin/Xwayland) the window would be mapped as
+        # a normal managed, focusable top-level, so stay disconnected there and
+        # let callers fall back to toasts.
+        if env is None or not env.wayland_display:
             return
         try:
             from .window import OverlayWindow
