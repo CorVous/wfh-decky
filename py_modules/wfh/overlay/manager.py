@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from PIL import Image
 
 from .. import log
-from ..session import find_session_env
+from ..session import find_session_env, x_connect
 
 _log = log.get("overlay")
 
@@ -52,6 +52,7 @@ class OverlayManager:
         self._dirty = None
         self._q: queue.Queue = queue.Queue()
         self._win = None
+        self._last_error: str | None = None
         self.headless = headless
         self.enabled = True
         self.opacity = 1.0
@@ -133,13 +134,18 @@ class OverlayManager:
         try:
             from .window import OverlayWindow
 
-            self._win = OverlayWindow(env.display, env.x_env())
+            self._win = x_connect(env, lambda: OverlayWindow(env.display, env.x_env()))
+            self._last_error = None
+            _log.info("overlay window open on %s (%dx%d)", env.display, self._win.width, self._win.height)
             self.size = (self._win.width, self._win.height)
             with self._lock:
                 self._canvas = Image.new("RGBA", self.size, (0, 0, 0, 0))
                 self._dirty = (0, 0, *self.size)
         except Exception as e:  # noqa: BLE001
-            _log.warning("overlay window unavailable: %s", e)
+            # Retried every few seconds; log each distinct failure once.
+            if str(e) != self._last_error:
+                _log.warning("overlay window unavailable: %s (xauthority=%s)", e, env.xauthority)
+                self._last_error = str(e)
             self._win = None
 
     def _expire(self) -> None:

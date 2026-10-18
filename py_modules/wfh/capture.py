@@ -15,7 +15,7 @@ import time
 from PIL import Image
 
 from . import log
-from .session import SessionEnv, find_session_env
+from .session import SessionEnv, find_session_env, x_connect
 
 _log = log.get("capture")
 
@@ -85,8 +85,7 @@ def _x_property(env: SessionEnv, timeout: float) -> str | None:
 
     path = "/tmp/gamescope.png"
     since = time.time() - 0.01
-    os.environ.update(env.x_env())
-    d = xdisplay.Display(env.display)
+    d = x_connect(env, lambda: xdisplay.Display(env.display))
     try:
         root = d.screen().root
         atom = d.intern_atom("GAMESCOPECTRL_REQUEST_SCREENSHOT")

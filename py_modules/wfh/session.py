@@ -5,10 +5,14 @@ Wayland socket and home directory of the logged-in Steam user are read from
 the environment of that user's own processes.
 """
 
+import ctypes
 import os
+import platform
 import pwd
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Callable, TypeVar
 
 from . import log
 
@@ -36,6 +40,66 @@ class SessionEnv:
         if self.wayland_display:
             env["WAYLAND_DISPLAY"] = self.wayland_display
         return env
+
+
+T = TypeVar("T")
+
+# Raw syscall numbers. Calling them through libc.syscall() changes the
+# credentials of the calling thread only; os.setresuid() would go through
+# glibc, which applies the change to every thread of the worker.
+_SYS_SETRESUID = {"x86_64": 117, "aarch64": 147}
+_SYS_SETRESGID = {"x86_64": 119, "aarch64": 149}
+
+
+def _thread_setres(uid_nr: int, gid_nr: int, uid: int, gid: int) -> None:
+    libc = ctypes.CDLL(None, use_errno=True)
+    # Order matters: drop the gid while still root, restore the uid first.
+    if uid != 0:
+        if libc.syscall(gid_nr, -1, gid, -1) != 0 or libc.syscall(uid_nr, -1, uid, -1) != 0:
+            raise OSError(ctypes.get_errno(), "setresuid/setresgid failed")
+    else:
+        if libc.syscall(uid_nr, -1, 0, -1) != 0 or libc.syscall(gid_nr, -1, gid, -1) != 0:
+            raise OSError(ctypes.get_errno(), "restoring root credentials failed")
+
+
+@contextmanager
+def thread_as_user(uid: int, gid: int):
+    """Run the body with this thread's effective uid/gid set to the user's.
+
+    gamescope's Xwayland only accepts clients running as the session user
+    (mangoapp gets in the same way), so the root worker opens its X
+    connections as that user. The peer credentials the X server checks are
+    taken at connect(), so the connection keeps working after root returns.
+    """
+    arch = platform.machine()
+    if os.geteuid() != 0 or uid == 0 or arch not in _SYS_SETRESUID:
+        yield
+        return
+    real_gid = os.getegid()
+    _thread_setres(_SYS_SETRESUID[arch], _SYS_SETRESGID[arch], uid, gid)
+    try:
+        yield
+    finally:
+        _thread_setres(_SYS_SETRESUID[arch], _SYS_SETRESGID[arch], 0, real_gid)
+
+
+def x_connect(env: "SessionEnv", connect: Callable[[], T]) -> T:
+    """Open an X connection to the game-mode display.
+
+    Tries as the worker (root) first, then as the session user, which is
+    what gamescope's Xwayland allows.
+    """
+    os.environ.update(env.x_env())
+    try:
+        return connect()
+    except Exception as root_error:  # noqa: BLE001
+        if os.geteuid() != 0 or env.uid == 0:
+            raise
+        _log.info("X connect as root failed (%s); retrying as %s", root_error, env.user)
+        with thread_as_user(env.uid, env.gid):
+            result = connect()
+        _log.info("X connect as %s worked", env.user)
+        return result
 
 
 def deck_user() -> pwd.struct_passwd:
@@ -75,6 +139,26 @@ def _pids() -> list[str]:
 _SESSION_COMMS = ("steam", "steamwebhelper", "gamescope-wl", "gamescope", "reaper")
 
 
+def _xwayland_auth(display: str, uid: int) -> str | None:
+    """The -auth cookie file of the user's Xwayland serving `display`, if any."""
+    for pid in _pids():
+        if _comm(pid) != "Xwayland":
+            continue
+        try:
+            if os.stat(f"/proc/{pid}").st_uid != uid:
+                continue
+            with open(f"/proc/{pid}/cmdline", "rb") as f:
+                args = [a.decode(errors="replace") for a in f.read().split(b"\0")]
+        except OSError:
+            continue
+        if display not in args or "-auth" not in args:
+            continue
+        i = args.index("-auth")
+        if i + 1 < len(args) and os.path.isfile(args[i + 1]):
+            return args[i + 1]
+    return None
+
+
 def find_session_env() -> SessionEnv | None:
     """Environment of the gamescope session (DISPLAY :0 in SteamOS game mode)."""
     user = deck_user()
@@ -97,13 +181,14 @@ def find_session_env() -> SessionEnv | None:
             best = dict(os.environ)
         else:
             return None
+    display = best.get("DISPLAY", ":0")
     return SessionEnv(
         uid=user.pw_uid,
         gid=user.pw_gid,
         user=user.pw_name,
         home=user.pw_dir,
-        display=best.get("DISPLAY", ":0"),
-        xauthority=best.get("XAUTHORITY"),
+        display=display,
+        xauthority=best.get("XAUTHORITY") or _xwayland_auth(display, user.pw_uid),
         xdg_runtime_dir=best.get("XDG_RUNTIME_DIR", f"/run/user/{user.pw_uid}"),
         wayland_display=best.get("GAMESCOPE_WAYLAND_DISPLAY"),
     )
