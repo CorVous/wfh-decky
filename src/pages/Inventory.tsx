@@ -758,7 +758,7 @@ const Inventory: FC = () => {
   return (
     <Page>
       {tabStrip}
-      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start" }} flow-children="horizontal">
+      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start", width: "100%" }} flow-children="horizontal">
         {filters}
         <div style={{ flex: 1, minWidth: 0 }}>
           {v.value && s.tab !== "resources" && <ValueStrip v={v.value} prefs={prefs} onPrefs={setPrefs} onFetch={fetchPrices} fetchMsg={fetchMsg} />}

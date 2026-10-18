@@ -12,7 +12,7 @@ const FullPage: FC = () => {
     return () => registerTabSetter(null);
   }, []);
   return (
-    <div style={{ marginTop: "40px", height: "calc(100% - 40px)", background: "#0e121e" }}>
+    <div style={{ marginTop: "40px", height: "calc(100% - 40px)", width: "100%", background: "#0e121e" }}>
       <Tabs
         activeTab={tab}
         onShowTab={(id: string) => {

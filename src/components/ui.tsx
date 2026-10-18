@@ -38,7 +38,7 @@ export function Guard<T>({ state, children, empty }: {
 }
 
 export const Page: FC<{ children: ReactNode }> = ({ children }) => (
-  <div style={{ padding: "0 24px 24px", overflowY: "auto", height: "100%", color: colors.text }}>{children}</div>
+  <div style={{ padding: "0 24px 24px", overflowY: "auto", height: "100%", width: "100%", boxSizing: "border-box", color: colors.text }}>{children}</div>
 );
 
 export const Section: FC<{ title?: string; right?: ReactNode; children: ReactNode; style?: CSSProperties }> = ({ title, right, children, style }) => (

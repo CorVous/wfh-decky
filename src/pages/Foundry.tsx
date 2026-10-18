@@ -402,7 +402,7 @@ const Foundry: FC = () => {
   return (
     <Page>
       {tabStrip}
-      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start" }} flow-children="horizontal">
+      <Focusable style={{ display: "flex", gap: "16px", alignItems: "flex-start", width: "100%" }} flow-children="horizontal">
         {filters}
         <div style={{ flex: 1, minWidth: 0 }}>
           <Section title="Foundry">
