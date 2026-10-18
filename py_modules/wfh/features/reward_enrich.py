@@ -51,6 +51,7 @@ class RewardEntry:
     set_name: str | None = None
     set_slug: str | None = None
     mastered: bool | None = None
+    crafted: bool | None = None      # the finished item is owned or in the foundry
     building: bool = False
     confidence: float = 0.0
     mode: str = ""
@@ -122,6 +123,12 @@ def mastered_of(parent, xp: dict[str, float] | None) -> bool | None:
     return xp.get(parent.unique_name, 0) >= need
 
 
+def crafted_of(parent, inv, pending: set[str]) -> bool | None:
+    if parent is None or inv is None or parent.category not in _MASTERABLE:
+        return None
+    return _owned(inv, parent.unique_name) > 0 or _in_foundry(parent.unique_name, pending)
+
+
 def enrich(scan_items: Iterable, db=None, inv=None) -> list[RewardEntry]:
     """scan_items: reward_scan.ScanItem (item is an items.Item from the reward pool)."""
     pending = _pending(inv)
@@ -171,7 +178,8 @@ def enrich(scan_items: Iterable, db=None, inv=None) -> list[RewardEntry]:
             set_owned=set_owned if inv is not None else None, set_required=set_required,
             complete_sets=complete if inv is not None else None, set_parts=set_parts if inv is not None else [],
             set_name=set_name, set_slug=names.normalize_wfm_slug(set_name) if set_name else None,
-            mastered=mastered_of(parent, xp), building=_in_foundry(unique, pending),
+            mastered=mastered_of(parent, xp), crafted=crafted_of(parent, inv, pending),
+            building=_in_foundry(unique, pending),
             confidence=float(si.confidence), mode=si.mode, text=getattr(si, "text", ""),
             price_state="pending" if slug else "missing",
             set_price_state="pending" if set_name else "missing",
@@ -261,6 +269,21 @@ def best_plat(entries: list[RewardEntry]) -> int | None:
     best = None
     for e in sorted(entries, key=lambda e: e.slot):
         if e.plat and (best is None or e.plat > best.plat):
+            best = e
+    return best.slot if best else None
+
+
+def needed_for_mastery(e: RewardEntry) -> bool:
+    """A part of gear never crafted nor mastered, that you do not already have enough of."""
+    return (e.mastered is False and e.crafted is False and not e.building
+            and e.owned is not None and e.owned < e.required)
+
+
+def best_mastery(entries: list[RewardEntry]) -> int | None:
+    """Slot of the most valuable part needed for mastery; ties go to the lower slot."""
+    best = None
+    for e in sorted(entries, key=lambda e: e.slot):
+        if needed_for_mastery(e) and (best is None or (e.plat or 0) > (best.plat or 0)):
             best = e
     return best.slot if best else None
 

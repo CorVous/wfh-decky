@@ -31,7 +31,7 @@ from ..app import App, get_app
 from ..eelog import FILE, UptimeTracker
 from . import reward_geometry as geo
 from . import reward_overlay as ov
-from .reward_enrich import (MarketPrices, PriceSource, RewardEntry, apply_prices, best_ducats, best_plat,
+from .reward_enrich import (MarketPrices, PriceSource, RewardEntry, apply_prices, best_ducats, best_mastery, best_plat,
                             enrich, pending_slugs)
 from .reward_scan import RewardScanner, ScanResult
 
@@ -91,6 +91,7 @@ def _result_json(source: str, entries: list[RewardEntry], scan: ScanResult | Non
         "items": [e.to_json() for e in sorted(entries, key=lambda e: e.slot)],
         "best_plat": best_plat(entries),
         "best_ducats": best_ducats(entries),
+        "best_mastery": None,
         "slot_count": scan.slot_count if scan else 0,
         "card_count": scan.card_count if scan else 0,
         "meta": scan.meta() if scan else None,
@@ -517,6 +518,8 @@ class RewardController:
         result = _result_json(source, entries, scan, failure, attempts, elapsed,
                               scan.capture_size if scan else None,
                               [{"slot": s, "x": x, "y": y, "w": w, "h": h} for s, (x, y, w, h) in overlay_px])
+        if self.setting("prioritize_mastery", True):
+            result["best_mastery"] = best_mastery(entries)
         if not settled and _item_prices_pending(entries):
             result["best_plat"] = None
         with self._lock:
@@ -532,12 +535,13 @@ class RewardController:
             return result
         if hide_at is not None:
             self.hide_at = hide_at
-        bp, bd = result["best_plat"], result["best_ducats"]
+        bp, bd, bm = result["best_plat"], result["best_ducats"], result["best_mastery"]
         drawn = False
         if self._overlay_allowed() and overlay_px and scan is not None:
             placed = ov.layout_blocks(entries, overlay_px, scan.capture_size, self.app.overlays.size,
                                       str(self.setting("position", "below")), bp, bd,
-                                      bool(self.setting("show_ducats", True)), bool(self.setting("show_owned", True)))
+                                      bool(self.setting("show_ducats", True)), bool(self.setting("show_owned", True)),
+                                      best_mastery=bm)
             comp = ov.compose(placed)
             if comp:
                 self._image = comp
@@ -545,7 +549,7 @@ class RewardController:
                 drawn = True
         if (toast and self.enabled() and (not drawn or not self._overlay_connected())
                 and self.setting("toast_fallback", True)):
-            title, body = ov.toast_text(entries, bp, bd)
+            title, body = ov.toast_text(entries, bp, bd, bm)
             self.app.toast(title, body)
         return result
 

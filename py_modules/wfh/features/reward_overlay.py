@@ -123,7 +123,8 @@ class Placed:
 
 
 def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: bool = False,
-                 is_best_ducats: bool = False, show_ducats: bool = True, show_owned: bool = True) -> Image.Image:
+                 is_best_ducats: bool = False, show_ducats: bool = True, show_owned: bool = True,
+                 is_best_mastery: bool = False, mastery_pick: bool = False) -> Image.Image:
     inner = width - 16
     if e is None:
         card = Card(width, bg=EMPTY_BG, border=(60, 70, 90, 160))
@@ -131,7 +132,14 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
         card.add(draw.Cell("not read", color=draw.MUTED, size=12))
         return card.render()
     best_d = is_best_ducats and show_ducats
-    if is_best_plat and best_d:
+    # A part for gear you have never crafted or mastered outranks platinum;
+    # the plat/ducat winners keep their tags but lose the filled background.
+    top = is_best_mastery or (is_best_plat and not mastery_pick)
+    if is_best_mastery:
+        tag = draw.Cell("MASTERY", color=draw.ACCENT, size=10, bold=True)
+    elif mastery_pick and is_best_plat:
+        tag = draw.Cell("MOST PLAT", color=draw.GOLD, size=10, bold=True)
+    elif is_best_plat and best_d:
         tag = draw.Cell("BEST PICK", color=draw.GOLD, size=10, bold=True)  # most plat and most ducats
     elif is_best_plat:
         tag = draw.Cell("BEST PLAT", color=draw.GOLD, size=10, bold=True)
@@ -142,8 +150,13 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     rarity = draw.Cell(RARITY_LABELS.get(e.rarity or "", (e.rarity or "").upper()),
                        color=RARITY_COLORS.get(e.rarity or "", draw.MUTED), size=10, bold=True, align="right",
                        weight=0.72)
-    card = Card(width, bg=BEST_BG if is_best_plat else draw.BG,
-                     highlight=draw.GOLD if is_best_plat else (draw.DUCAT if is_best_ducats and show_ducats else None))
+    if is_best_mastery:
+        highlight = draw.ACCENT
+    elif is_best_plat:
+        highlight = draw.GOLD
+    else:
+        highlight = draw.DUCAT if best_d else None
+    card = Card(width, bg=BEST_BG if top else draw.BG, highlight=highlight)
     card.pad = 8
     card.add(tag, rarity)
     lines = name_lines(e.name, inner - 2, 12)
@@ -173,7 +186,8 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     if e.vaulted:
         extra.append(draw.Cell("Vaulted", color=draw.WARN, size=11, align="right", weight=1.2))
     elif e.mastered is False:
-        extra.append(draw.Cell("Unmastered", color=draw.ACCENT, size=11, align="right", weight=1.2))
+        label = "Not crafted" if e.crafted is False else "Unmastered"
+        extra.append(draw.Cell(label, color=draw.ACCENT, size=11, align="right", weight=1.2))
     if extra:
         card.add(*extra)
     return card.render()
@@ -197,7 +211,7 @@ def capture_to_overlay(capture_size: tuple[int, int], overlay_size: tuple[int, i
 def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int, int, int, int]]],
                   capture_size: tuple[int, int], overlay_size: tuple[int, int], position: str = "below",
                   best_plat: int | None = None, best_ducats: int | None = None, show_ducats: bool = True,
-                  show_owned: bool = True) -> list[Placed]:
+                  show_owned: bool = True, best_mastery: int | None = None) -> list[Placed]:
     """One block per on-screen card. card_px: (slot, (x, y, w, h)) in capture pixels."""
     ow, oh = overlay_size
     s, dx, dy = capture_to_overlay(capture_size, overlay_size)
@@ -205,7 +219,8 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
     rendered = []
     for slot, (x, y, w, h) in card_px:
         bw = max(MIN_BLOCK_W, round(w * s))
-        img = render_block(by_slot.get(slot), bw, slot, slot == best_plat, slot == best_ducats, show_ducats, show_owned)
+        img = render_block(by_slot.get(slot), bw, slot, slot == best_plat, slot == best_ducats, show_ducats, show_owned,
+                           slot == best_mastery, mastery_pick=best_mastery is not None)
         cx = round((x + w / 2) * s + dx)
         rendered.append((img, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
     if not rendered:
@@ -248,10 +263,14 @@ def render_message(text: str, sub: str = "", width: int = 300) -> Image.Image:
     return card.render()
 
 
-def toast_text(entries: list[RewardEntry], best_plat: int | None, best_ducats: int | None) -> tuple[str, str]:
+def toast_text(entries: list[RewardEntry], best_plat: int | None, best_ducats: int | None,
+               best_mastery: int | None = None) -> tuple[str, str]:
     """Short toast for when the overlay window is not available."""
     by_slot = {e.slot: e for e in entries}
-    if best_plat is not None and best_plat in by_slot:
+    if best_mastery is not None and best_mastery in by_slot:
+        b = by_slot[best_mastery]
+        title = f"For mastery: {short_name(b.name, 10_000, 13)}"
+    elif best_plat is not None and best_plat in by_slot:
         b = by_slot[best_plat]
         title = f"Best: {short_name(b.name, 10_000, 13)} {b.plat}p"
     elif best_ducats is not None and best_ducats in by_slot:

@@ -445,7 +445,9 @@ def test_eelog_trigger_scans_after_delay_and_hides_after_vote(tmp_path, db):
     assert clock.t >= ctl.trigger_at + 0.65
     assert ov.LAYER in app.overlays.active()
     assert app.events and app.events[-1][0] == "rewards.result"
-    assert app.toasts and app.toasts[0][0].startswith("Best: Xaku")  # headless: no window -> toast too
+    # headless: no window -> toast too; the fixture inventory has never crafted Vadarya Prime
+    assert app.toasts and app.toasts[0][0].startswith("For mastery: Vadarya")
+    assert ctl.last["best_mastery"] == 3
     # close line: hide 1.5 s later at the earliest (trigger + 5 s floor)
     clock.t = ctl.trigger_at + 9
     ctl.on_line("Script [Info]: ProjectionRewardChoice.lua: Relic reward screen shut down")
@@ -800,3 +802,22 @@ def test_module_loads_and_scan_file_rpc(app, tmp_path):
     assert st["ocr_available"] is True
     with pytest.raises(ValueError):
         asyncio.run(rpc.call_local("rewards.scan_file", {"path": str(tmp_path / "missing.png")}))
+
+
+def test_needed_for_mastery_rules():
+    from wfh.features.reward_enrich import RewardEntry, best_mastery, needed_for_mastery
+
+    def e(slot, plat=10, **kw):
+        base = dict(mastered=False, crafted=False, owned=0, required=1)
+        base.update(kw)
+        return RewardEntry(slot=slot, name=f"P{slot}", plat=plat, **base)
+
+    assert needed_for_mastery(e(0))
+    assert not needed_for_mastery(e(0, owned=1))            # already have the part
+    assert not needed_for_mastery(e(0, crafted=True))       # own the finished item
+    assert not needed_for_mastery(e(0, mastered=True))      # mastered, maybe since scrapped
+    assert not needed_for_mastery(e(0, building=True))      # part is in the foundry
+    assert not needed_for_mastery(e(0, mastered=None))      # no inventory / not masterable
+    entries = [e(0, plat=5), e(1, plat=40, mastered=True), e(2, plat=9), e(3, plat=9)]
+    assert best_mastery(entries) == 2                       # most plat among needed, lower slot on ties
+    assert best_mastery([e(0, crafted=True)]) is None

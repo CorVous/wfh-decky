@@ -15,7 +15,9 @@ DEFAULTS: dict[str, Any] = {
     "relic_rewards": {"enabled": True, "duration_s": 12, "show_ducats": True, "show_owned": True,
                       # EE.log auto-trigger; EE.cfg UI scale (else ui_scale); blocks below|above the cards
                       "auto_trigger": True, "ui_scale_auto": True, "ui_scale": 0.99, "position": "below",
-                      "toast_fallback": True, "prefetch_prices": True},
+                      "toast_fallback": True, "prefetch_prices": True,
+                      # best pick goes to a part of gear never crafted nor mastered first
+                      "prioritize_mastery": True},
     "relic_planner": {"enabled": True, "duration_s": 20,
                       # auto_trigger: open on the EE.log picker lines; ocr_fallback: read the era
                       # label when EE.log has no fissure tag; squad_size: overlay squad before the

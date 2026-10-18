@@ -67,6 +67,7 @@ SCHEMA: list[dict] = [
         _choice("relic_rewards.position", "Position", [("below", "Below the cards"), ("above", "Above the cards")]),
         _toggle("relic_rewards.show_ducats", "Show ducats"),
         _toggle("relic_rewards.show_owned", "Show owned counts"),
+        _toggle("relic_rewards.prioritize_mastery", "Prioritize mastery", "Best pick goes to parts of gear you have never crafted or mastered, then platinum"),
         _toggle("relic_rewards.toast_fallback", "Toast when overlays cannot draw"),
         _toggle("relic_rewards.prefetch_prices", "Prefetch prices", "Warm prices of relic contents in the background"),
     ]},
