@@ -6,6 +6,14 @@ import pytest
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "py_modules"))
 FIXTURES = os.path.join(ROOT, "tests", "fixtures")
+# Overlay preview images are regenerated into docs/previews only on request
+# (WFH_WRITE_PREVIEWS=1), so a plain test run leaves tracked files alone.
+PREVIEWS_DIR = (
+    os.path.join(ROOT, "docs", "previews")
+    if os.environ.get("WFH_WRITE_PREVIEWS") == "1"
+    else os.path.join(os.environ.get("TMPDIR", "/tmp"), "wfh-previews")
+)
+os.makedirs(PREVIEWS_DIR, exist_ok=True)
 
 
 @pytest.fixture(scope="session")

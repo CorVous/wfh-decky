@@ -33,7 +33,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS = os.path.join(ROOT, "models")
 FIX = os.path.join(ROOT, "tests", "fixtures")
 PUBLIC = os.path.join(FIX, "reward-scan", "public")
-PREVIEWS = os.path.join(ROOT, "docs", "previews")
+from conftest import PREVIEWS_DIR as PREVIEWS
 EXPECTED = json.load(open(os.path.join(FIX, "ocr", "expected.json"), encoding="utf-8"))
 DECK = (1280, 800)
 

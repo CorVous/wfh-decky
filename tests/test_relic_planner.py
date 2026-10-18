@@ -20,7 +20,7 @@ from wfh.settings import Settings
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
-PREVIEWS = os.path.join(ROOT, "docs", "previews")
+from conftest import PREVIEWS_DIR as PREVIEWS
 HAS_DATA = os.path.exists(os.path.join(DATA, "manifest.json"))
 needs_data = pytest.mark.skipif(not HAS_DATA, reason="bundled data not built (scripts/fetch-data.sh)")
 

@@ -28,7 +28,9 @@ from wfh.features.riven_state import Callbacks, RivenLogStateMachine, parse_cost
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIX = os.path.join(ROOT, "tests", "fixtures", "riven")
 MODELS = os.path.join(ROOT, "models")
-PREVIEW = os.path.join(ROOT, "docs", "previews", "riven.png")
+from conftest import PREVIEWS_DIR
+
+PREVIEW = os.path.join(PREVIEWS_DIR, "riven.png")
 DEMO = os.path.join(FIX, "cycle-screen-demo-1280x800.jpg")
 
 needs_data = pytest.mark.skipif(not os.path.exists(os.path.join(ROOT, "data", "riven", "riven.json.gz")),

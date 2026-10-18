@@ -19,7 +19,7 @@ from wfh.features import arbi_tracker as at
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIX = os.path.join(ROOT, "tests", "fixtures", "arbi")
-PREVIEWS = os.path.join(ROOT, "docs", "previews")
+from conftest import PREVIEWS_DIR as PREVIEWS
 
 
 # ---- line builders (arbiRunParser.test.ts) --------------------------------------------
