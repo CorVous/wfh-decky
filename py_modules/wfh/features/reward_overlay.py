@@ -24,7 +24,7 @@ TOP_MARGIN = 4
 RARITY_COLORS = {
     "Rare": (212, 168, 67, 255),      # #d4a843
     "Uncommon": (148, 163, 184, 255),  # #94a3b8
-    "Common": (100, 116, 139, 255),    # #64748b
+    "Common": (138, 152, 174, 255),    # WFHelper's #64748b, lifted: 10 px on the Deck LCD needs the contrast
 }
 RARITY_LABELS = {"Rare": "RARE", "Uncommon": "UNCOMMON", "Common": "COMMON"}
 RARITY_SHORT = {"Uncommon": "UNCOM"}
@@ -268,12 +268,17 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     x = pad
     x += draw.plat_icon(d, x, y_vals + 4, 12) + 4
     ptxt = _plat_text(e.plat, e.price_state, unit=False)
-    d.text((x, y_vals), ptxt, font=draw.font(16, True), fill=draw.GOLD_TEXT if e.plat else draw.GOLD_MUTED)
+    dtxt = (str(e.ducats) if e.ducats else "–") if show_ducats else ""  # "N/A" means a missing price
+    vs = 16  # shrink both values when a long price would reach the ducat coin
+    while vs > 11 and (x + draw.text_width(ptxt, vs, True) + 6
+                       + (16 + draw.text_width(dtxt, vs, True) if show_ducats else 0)) > width - pad:
+        vs -= 1
+    d.text((x, y_vals + 16 - vs), ptxt, font=draw.font(vs, True), fill=draw.GOLD_TEXT if e.plat else draw.GOLD_MUTED)
     if show_ducats:
-        dtxt = str(e.ducats) if e.ducats else "–"  # no ducat value (Forma); "N/A" means a missing price
-        dw = draw.text_width(dtxt, 16, True)
+        dw = draw.text_width(dtxt, vs, True)
         dx = width - pad - dw
-        d.text((dx, y_vals), dtxt, font=draw.font(16, True), fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
+        d.text((dx, y_vals + 16 - vs), dtxt, font=draw.font(vs, True),
+               fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
         draw.ducat_icon(d, dx - 16, y_vals + 4, 12)
     y = _Y_CHIPS
     chip_h = _CHIP_ROW_H
@@ -339,6 +344,11 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
         for i in order:
             xs[i] = x
             x += widths[i] + GAP
+    # Keep the row on screen as a whole, so clamping never pushes one block onto its neighbour.
+    left = min(xs)
+    right = max(x + w for x, w in zip(xs, widths))
+    shift = max(-left, 0) if left < 0 else min(0, ow - right)
+    xs = [x + shift for x in xs]
     out = []
     for lay, (kw, _, top, bottom), bx in zip(layouts, specs, xs):
         img = render_block(**kw, min_height=tallest, layout=lay)
@@ -350,7 +360,6 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
             by = below if fits_below or not fits_above else above
         # Neither side fits: stay on screen (the blocks then cover part of the cards).
         by = max(TOP_MARGIN, min(by, oh - tallest))
-        bx = min(max(0, bx), ow - img.width)
         out.append(Placed(img, bx, by))
     return out
 

@@ -903,3 +903,12 @@ def test_blocks_never_overlap_at_small_ui_scale():
         assert b.x >= a.x + a.image.width + ov.GAP
     mid = (placed[0].x + placed[-1].x + placed[-1].image.width) / 2
     assert abs(mid - (380 + (3 * 98 + 90) / 2)) <= 2  # still centred on the card row
+
+
+def test_row_shifted_on_screen_as_a_whole():
+    entries = [RewardEntry(i, f"P{i} Prime Blueprint", plat=5, price_state="ok") for i in range(4)]
+    cards = [(i, (i * 98, 200, 90, 130)) for i in range(4)]  # hugging the left edge
+    placed = sorted(ov.layout_blocks(entries, cards, DECK, DECK), key=lambda p: p.x)
+    assert placed[0].x >= 0
+    for a, b in zip(placed, placed[1:]):
+        assert b.x >= a.x + a.image.width + ov.GAP

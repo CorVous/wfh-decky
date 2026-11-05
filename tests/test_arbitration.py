@@ -903,4 +903,12 @@ def test_aborted_marker_survives_a_long_type():
     t = ov.type_badge_text({**p, "missionType": "Infested Salvage Extended Variant"}, 150, 11)
     assert t.endswith(" · ABORTED") and "…" in t
     assert ov.draw.text_width(t, 11, True) <= 150
-    assert ov.type_badge_text(p, 20, 11) == "ABORTED"
+    short = ov.type_badge_text(p, 40, 11)
+    assert short.startswith("AB") and ov.draw.text_width(short, 11, True) <= 40
+
+
+def test_long_expected_vitus_is_not_cut():
+    p = ov.build_summary_payload(make_record())
+    p.update(expectedVitusMean=123.4, expectedVitusStd=12.3)
+    img = ov.render_summary(p, 1.0)
+    assert img.width == ov.PANEL_W

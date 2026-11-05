@@ -133,7 +133,7 @@ def type_badge_text(p: dict, max_w: int, size: int) -> str:
     tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
     room = max_w - draw.text_width(suffix, size, True)
     if suffix and room < draw.text_width("…", size, True):
-        return "ABORTED"
+        return draw.ellipsize("ABORTED", max_w, size, True)
     return draw.ellipsize(tl, room, size, True) + suffix
 
 
@@ -196,7 +196,10 @@ def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> I
     for i, (val, label, color) in enumerate(cells):
         cx0 = pad + int(col_w * (i % 3))
         cy0 = s(y_grid) + (i // 3) * s(48)
-        text(cx0, cy0, val, 20, color, bold=True, max_w=int(col_w) - s(6))
+        size = 20  # shrink a long value ("123.4 ±12.3") before cutting it
+        while size > 14 and draw.text_width(val, s(size), True) > int(col_w) - s(6):
+            size -= 1
+        text(cx0, cy0 + s(20 - size), val, size, color, bold=True, max_w=int(col_w) - s(6))
         text(cx0, cy0 + s(25), label.upper(), 11, MUTED, max_w=int(col_w) - s(6))
     d.line((pad, s(y_after), W - pad, s(y_after)), fill=SEP, width=max(1, s(1)))
 
