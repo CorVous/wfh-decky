@@ -168,11 +168,16 @@ def _listing_lines(row: dict, max_w: int, max_lines: int = 2) -> list[list[tuple
     """A listing's stats flowed onto at most max_lines lines (the rest is dropped)."""
     lines: list[list[tuple[str, dict]]] = [[]]
     x = 0
-    for st in row.get("stats") or []:
-        t = listing_stat_text(st)
+    stats = row.get("stats") or []
+    for i, st in enumerate(stats):
+        t = d.ellipsize(listing_stat_text(st), max_w, 10)
         w = d.text_width(t, 10)
         if lines[-1] and x + w > max_w:
-            if len(lines) == max_lines:
+            if len(lines) == max_lines:  # more stats than fit: end the last line with "…"
+                ell = d.text_width("…", 10)
+                while len(lines[-1]) > 1 and x + ell > max_w:
+                    x -= d.text_width(lines[-1].pop()[0], 10) + 8
+                lines[-1].append(("…", {"matched": True, "positive": True}))
                 break
             lines.append([])
             x = 0

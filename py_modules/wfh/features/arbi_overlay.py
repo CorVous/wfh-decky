@@ -165,6 +165,8 @@ def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> I
     d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], fill=ORANGE)
     text(pad + s(15), y, "ARBITRATION COMPLETE", 12, ORANGE, bold=True)
     tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
+    if p.get("endReason") == "aborted":  # a partial run must not read as a finished one
+        tl += " · ABORTED"
     bw = draw.text_width(tl, s(11), True) + s(14)
     d.rounded_rectangle((W - pad - bw, y - s(1), W - pad, y + s(17)), s(9), outline=ACCENT, width=max(1, s(1)))
     text(W - pad - bw // 2, y + s(8), tl, 11, ACCENT, bold=True, anchor="mm")

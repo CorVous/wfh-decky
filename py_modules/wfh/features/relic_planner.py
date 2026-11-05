@@ -389,9 +389,11 @@ def _title_lines(r: dict, width: int) -> tuple[list[str], bool]:
     """'3x Axi A16 Radiant' wrapped to width (the title wraps in WFHelper). Returns (lines,
     pill_inline): the vault pill sits after the last line when it fits, else on a line of its own."""
     title = f"{r.get('count', 0)}x {r['name']} {r.get('qualityLabel', '')}".strip()
-    lines = _wrap(title, width, TITLE_SIZE, True)[:2]
-    if len(lines) == 2 and draw.text_width(lines[1], TITLE_SIZE, True) > width:
-        lines[1] = draw.ellipsize(lines[1], width, TITLE_SIZE, True)
+    wrapped = _wrap(title, width, TITLE_SIZE, True)
+    lines = wrapped[:2]
+    if len(wrapped) > 2:  # keep the tail on the second line, cut with an ellipsis
+        lines[1] = " ".join(wrapped[1:])
+    lines = [draw.ellipsize(ln, width, TITLE_SIZE, True) for ln in lines]
     pills = _pill_w("VAULTED" if r.get("vaulted") else "UNVAULTED")
     if r.get("masteryParts"):
         pills += _pill_w("MASTERY") + 4
@@ -419,7 +421,7 @@ def _draw_card(d: ImageDraw.ImageDraw, r: dict, x: int, y: int, w: int, h: int, 
     ty = y + 5
     cnt = f"{r.get('count', 0)}x "
     for i, ln in enumerate(lines):
-        if i == 0 and ln.startswith(cnt):  # the count reads muted, like .plan-count
+        if i == 0 and ln.startswith(cnt) and ln != cnt.strip():  # the count reads muted, like .plan-count
             d.text((cx, ty), cnt, font=draw.font(TITLE_SIZE, True), fill=draw.GOLD_MUTED)
             cw = draw.text_width(cnt, TITLE_SIZE, True)
             d.text((cx + cw, ty), ln[len(cnt):], font=draw.font(TITLE_SIZE, True), fill=draw.GOLD_TEXT)

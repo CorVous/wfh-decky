@@ -244,7 +244,7 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     ptxt = _plat_text(e.plat, e.price_state, unit=False)
     d.text((x, y_vals), ptxt, font=draw.font(16, True), fill=draw.GOLD_TEXT if e.plat else draw.GOLD_MUTED)
     if show_ducats:
-        dtxt = str(e.ducats) if e.ducats else "N/A"
+        dtxt = str(e.ducats) if e.ducats else "–"  # no ducat value (Forma); "N/A" means a missing price
         dw = draw.text_width(dtxt, 16, True)
         dx = width - pad - dw
         d.text((dx, y_vals), dtxt, font=draw.font(16, True), fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
@@ -298,10 +298,12 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
         specs.append((kw, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
     if not specs:
         return []
-    tallest = max(render_block(**kw).height for kw, *_ in specs)
+    images = [render_block(**kw) for kw, *_ in specs]
+    tallest = max(img.height for img in images)
     out = []
-    for kw, bx, top, bottom in specs:
-        img = render_block(**kw, min_height=tallest)
+    for img, (kw, bx, top, bottom) in zip(images, specs):
+        if img.height < tallest:
+            img = render_block(**kw, min_height=tallest)
         if position == "above":
             by = top - GAP - tallest
             if by < TOP_MARGIN:

@@ -704,12 +704,12 @@ def test_overlay_blocks_sit_under_each_card():
                for i, (n, d, p, r) in enumerate([("A Prime Blueprint", 45, 18, "Uncommon"),
                                                    ("B Prime Barrel", 15, 4, "Common")])]
     cards = [(i, geo.crop_box(DECK, c)) for i, c in enumerate(geo.card_rects(2, 0.99, DECK))]
-    placed = ov.layout_blocks(entries, cards, DECK, DECK, "below", 0, 0)
+    placed = ov.layout_blocks(entries, cards, DECK, DECK, "below", 0)
     assert len(placed) == 2
     for p, (_, (x, y, w, h)) in zip(placed, cards):
         assert p.y == y + h + ov.GAP
         assert abs((p.x + p.image.width / 2) - (x + w / 2)) <= 2 and p.image.width == w
-    above = ov.layout_blocks(entries, cards, DECK, DECK, "above", 0, 0)
+    above = ov.layout_blocks(entries, cards, DECK, DECK, "above", 0)
     assert all(p.y + p.image.height + ov.GAP == 201 for p in above)
     # capture coordinates map onto a differently sized overlay
     scaled = ov.layout_blocks(entries, cards, DECK, (640, 400), "below")
