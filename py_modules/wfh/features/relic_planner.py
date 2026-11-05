@@ -401,8 +401,10 @@ def _title_lines(r: dict, width: int) -> tuple[list[str], bool]:
     return lines, inline
 
 
-def _card_height(r: dict, inner: int, show_rewards: bool) -> int:
+def _card_height(r: dict, inner: int, show_rewards: bool, titles: dict | None = None) -> int:
     lines, inline = _title_lines(r, inner)
+    if titles is not None:
+        titles[id(r)] = (lines, inline)  # reused by _draw_card
     h = 6 + len(lines) * 17 + (0 if inline else 17) + 18 + 4
     if show_rewards and r.get("rewards"):
         h += len(r["rewards"]) * REWARD_ROW_H + 3
@@ -410,14 +412,14 @@ def _card_height(r: dict, inner: int, show_rewards: bool) -> int:
 
 
 def _draw_card(d: ImageDraw.ImageDraw, r: dict, x: int, y: int, w: int, h: int, best: bool,
-               show_rewards: bool) -> None:
+               show_rewards: bool, title: tuple[list[str], bool] | None = None) -> None:
     """.plan-card: title + vault tag, "E. profits:" with platinum and ducats, then the rewards."""
     bg = BEST_TINT if best else CARD_BG
     d.rounded_rectangle((x, y, x + w - 1, y + h - 1), 6, fill=bg, outline=BEST_BORDER if best else CARD_BORDER,
                         width=2 if best else 1)
     cx = x + 8
     inner = w - 16
-    lines, inline = _title_lines(r, inner)
+    lines, inline = title or _title_lines(r, inner)
     ty = y + 5
     cnt = f"{r.get('count', 0)}x "
     for i, ln in enumerate(lines):
@@ -438,14 +440,20 @@ def _draw_card(d: ImageDraw.ImageDraw, r: dict, x: int, y: int, w: int, h: int, 
         ty += 17
     # E. profits: <plat icon> 12.3  <ducat icon> 45.6
     ly = ty + 1
-    d.text((cx, ly + 2), "E. profits:", font=draw.font(11), fill=draw.GOLD_MUTED)
-    px = cx + draw.text_width("E. profits:", 11) + 6
+    ptxt, dtxt = _fmt(r.get("plat")), _fmt(r.get("ducat"))
+    values_w = 14 + draw.text_width(ptxt, 13, True) + 8 + 14 + draw.text_width(dtxt, 13, True)
+    label = "E. profits:"
+    if draw.text_width(label, 11) + 6 + values_w > inner:  # three-digit EVs in a narrow column
+        label = "EV" if draw.text_width("EV", 11) + 6 + values_w <= inner else ""
+    px = cx
+    if label:
+        d.text((cx, ly + 2), label, font=draw.font(11), fill=draw.GOLD_MUTED)
+        px += draw.text_width(label, 11) + 6
     px += draw.plat_icon(d, px, ly + 3, 11) + 3
-    ptxt = _fmt(r.get("plat"))
     d.text((px, ly), ptxt, font=draw.font(13, True), fill=PROFIT_PLAT)
     px += draw.text_width(ptxt, 13, True) + 8
     px += draw.ducat_icon(d, px, ly + 3, 11) + 3
-    d.text((px, ly), _fmt(r.get("ducat")), font=draw.font(13, True), fill=PROFIT_DUCAT)
+    d.text((px, ly), dtxt, font=draw.font(13, True), fill=PROFIT_DUCAT)
     if show_rewards and r.get("rewards"):
         ry = ly + 21
         mastery = set(r.get("masteryParts") or ())
@@ -493,10 +501,11 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
     body_h = len(body_lines) * 20 + 12 if body_lines else 0
     used = header_h + body_h
     grid: list[tuple[list[dict], int]] = []  # (cards in the grid row, row height)
+    titles: dict[int, tuple[list[str], bool]] = {}
     shown = 0
     for i in range(0, len(rows), cols):
         chunk = rows[i:i + cols]
-        rh = max(_card_height(r, col_w - 16, show_rewards) for r in chunk)
+        rh = max(_card_height(r, col_w - 16, show_rewards, titles) for r in chunk)
         if used + rh + GRID_GAP + footer_h + pad > max_height:
             break
         grid.append((chunk, rh))
@@ -538,7 +547,8 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
     best_key = next((id(r) for r in rows if best_plat is not None and r.get("plat") == best_plat), None)
     for chunk, rh in grid:
         for j, r in enumerate(chunk):
-            _draw_card(d, r, pad + j * (col_w + GRID_GAP), y, col_w, rh, id(r) == best_key, show_rewards)
+            _draw_card(d, r, pad + j * (col_w + GRID_GAP), y, col_w, rh, id(r) == best_key, show_rewards,
+                       titles.get(id(r)))
         y += rh + GRID_GAP
 
     # footer (WFHelper: "Press F7 to interact"; the Deck overlay takes no input)

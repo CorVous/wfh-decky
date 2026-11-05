@@ -143,7 +143,7 @@ def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> I
     y_grid = 78
     y_after = y_grid + grid_rows * 48 + 2           # separator under the KPI grid
     lines = int(bool(f.get("vitus_range"))) + int(bool(f.get("squad"))) + int(bool(f.get("end_reason")))
-    H_design = max(PANEL_H if lines >= 2 or grid_rows > 2 else 0, y_after + 8 + lines * 20 + 30)
+    H_design = y_after + 8 + lines * 20 + 30   # fits the content; WFHelper's default fields need 214
     H = s(H_design)
 
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -167,6 +167,7 @@ def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> I
     tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
     if p.get("endReason") == "aborted":  # a partial run must not read as a finished one
         tl += " · ABORTED"
+    tl = draw.ellipsize(tl, inner - draw.text_width("ARBITRATION COMPLETE", s(12), True) - s(15 + 14 + 10), s(11), True)
     bw = draw.text_width(tl, s(11), True) + s(14)
     d.rounded_rectangle((W - pad - bw, y - s(1), W - pad, y + s(17)), s(9), outline=ACCENT, width=max(1, s(1)))
     text(W - pad - bw // 2, y + s(8), tl, 11, ACCENT, bold=True, anchor="mm")

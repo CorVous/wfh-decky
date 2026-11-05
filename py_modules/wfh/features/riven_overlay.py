@@ -177,6 +177,9 @@ def _listing_lines(row: dict, max_w: int, max_lines: int = 2) -> list[list[tuple
                 ell = d.text_width("…", 10)
                 while len(lines[-1]) > 1 and x + ell > max_w:
                     x -= d.text_width(lines[-1].pop()[0], 10) + 8
+                if x + ell > max_w:  # one stat filling the line: shorten it to make room
+                    t0, st0 = lines[-1][0]
+                    lines[-1][0] = (d.ellipsize(t0, max_w - ell - 8, 10), st0)
                 lines[-1].append(("…", {"matched": True, "positive": True}))
                 break
             lines.append([])

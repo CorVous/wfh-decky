@@ -190,12 +190,31 @@ def part_chips(e: RewardEntry) -> list[draw.Pill]:
     return out
 
 
+_PAD = 8
+_CHIP_ROW_H = int(CHIP_SIZE * 1.3) + 4 + 3
+_Y_CHIPS = _PAD + 16 + 2 * 17 + 2 + 24     # below the slot label, the two name lines and the values
+
+
+def _chip_layout(e: RewardEntry, width: int, show_owned: bool, show_vaulted: bool):
+    """(chip rows, part-chip rows, natural block height) for an entry."""
+    inner = width - _PAD * 2
+    chips = draw.flow_pills(reward_chips(e, show_owned, show_vaulted), inner, CHIP_SIZE)
+    parts = draw.flow_pills(part_chips(e), inner, CHIP_SIZE) if show_owned else []
+    h = _Y_CHIPS + _CHIP_ROW_H * len(chips) + (_CHIP_ROW_H * len(parts) + 2 if parts else 0) + _PAD - 3
+    return chips, parts, h
+
+
+def block_height(e: RewardEntry | None, width: int, show_owned: bool = True, show_vaulted: bool = False) -> int:
+    """render_block's natural height, without drawing."""
+    return 64 if e is None else _chip_layout(e, width, show_owned, show_vaulted)[2]
+
+
 def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: bool = False,
                  show_ducats: bool = True, show_owned: bool = True, is_best_mastery: bool = False,
                  mastery_pick: bool = False, show_vaulted: bool = False, min_height: int = 0) -> Image.Image:
     """One reward card, laid out like WFHelper's .reward-slot: slot label and rarity, name (2 lines),
     platinum and ducats, then the chips and the set-part chips."""
-    pad = 8
+    pad = _PAD
     inner = width - pad * 2
     if e is None:
         h = max(min_height, 64)
@@ -219,13 +238,7 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     else:
         tag, tag_col, highlight, bg = f"SLOT {slot + 1}", draw.GOLD_MUTED, None, CARD_BG
     lines = name_lines(e.name, inner - 2, 13)
-    chips = draw.flow_pills(reward_chips(e, show_owned, show_vaulted), inner, CHIP_SIZE)
-    parts = draw.flow_pills(part_chips(e), inner, CHIP_SIZE) if show_owned else []
-    chip_h = int(CHIP_SIZE * 1.3) + 4 + 3
-    y_name = pad + 16
-    y_vals = y_name + 2 * 17 + 2
-    y_chips = y_vals + 24
-    h = y_chips + chip_h * len(chips) + (chip_h * len(parts) + 2 if parts else 0) + pad - 3
+    chips, parts, h = _chip_layout(e, width, show_owned, show_vaulted)
     h = max(h, min_height)
     img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -236,6 +249,8 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     if rar:
         d.text((width - pad - draw.text_width(rar, 10, True), pad), rar, font=draw.font(10, True),
                fill=RARITY_COLORS.get(e.rarity or "", draw.GOLD_MUTED))
+    y_name = pad + 16
+    y_vals = y_name + 2 * 17 + 2
     for i, ln in enumerate(lines[:2]):
         d.text((pad, y_name + i * 17), ln, font=draw.font(13, True), fill=draw.GOLD_TEXT)
     # platinum icon + price, ducat icon + ducats
@@ -249,7 +264,8 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
         dx = width - pad - dw
         d.text((dx, y_vals), dtxt, font=draw.font(16, True), fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
         draw.ducat_icon(d, dx - 16, y_vals + 4, 12)
-    y = y_chips
+    y = _Y_CHIPS
+    chip_h = _CHIP_ROW_H
     for row in chips:
         for p, px in row:
             draw.draw_pill(d, pad + px, y, p, CHIP_SIZE, inner - px, bg)
@@ -298,12 +314,10 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
         specs.append((kw, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
     if not specs:
         return []
-    images = [render_block(**kw) for kw, *_ in specs]
-    tallest = max(img.height for img in images)
+    tallest = max(block_height(kw["e"], kw["width"], show_owned, show_vaulted) for kw, *_ in specs)
     out = []
-    for img, (kw, bx, top, bottom) in zip(images, specs):
-        if img.height < tallest:
-            img = render_block(**kw, min_height=tallest)
+    for kw, bx, top, bottom in specs:
+        img = render_block(**kw, min_height=tallest)
         if position == "above":
             by = top - GAP - tallest
             if by < TOP_MARGIN:
