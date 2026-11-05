@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw
 from ..overlay import draw
 from .arbi_parser import scenario_table, luck, type_label
 
-PANEL_W, PANEL_H = 420, 252
+PANEL_W = 420                       # WFHelper's 420x252 canvas; the height follows the content
 BASE_W = 1280                       # Deck LCD width the panel is designed for
 POSITIONS = ("top-center", "top-right", "top-left", "left-middle")
 DEFAULT_POSITION = "top-center"     # top-right holds Warframe's minimap

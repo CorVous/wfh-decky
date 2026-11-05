@@ -27,6 +27,7 @@ RARITY_COLORS = {
     "Common": (100, 116, 139, 255),    # #64748b
 }
 RARITY_LABELS = {"Rare": "RARE", "Uncommon": "UNCOMMON", "Common": "COMMON"}
+RARITY_SHORT = {"Uncommon": "UNCOM"}
 DUCAT_TEXT = (247, 212, 122, 255)     # #f7d47a
 
 _ABBREV = ((r"\bBlueprint\b", "BP"), (r"\bNeuroptics\b", "Neuro"), (r"\bSystems\b", "Sys"),
@@ -133,8 +134,8 @@ NOT_MASTERED = (96, 165, 250, 255)     # #60a5fa
 FOUNDRY = (245, 166, 35, 255)          # #f5a623, the "building" orange
 CHIP_SIZE = 10
 
-PART_ABBREV = {
-    "blueprint": "BP", "neuroptics": "Neuro", "systems": "Sys", "chassis": "Chas", "receiver": "Recv",
+# Part chips name the part's own word: the card-name abbreviations plus the other part words.
+PART_ABBREV = {pat.replace(r"\b", "").lower(): rep for pat, rep in _ABBREV} | {
     "lower limb": "Lower", "upper limb": "Upper", "carapace": "Cara", "cerebrum": "Cere", "ornament": "Orn",
     "gauntlet": "Gaunt", "harness": "Harn",
 }
@@ -191,11 +192,14 @@ def part_chips(e: RewardEntry) -> list[draw.Pill]:
 
 
 _PAD = 8
+_Y_NAME = _PAD + 16                        # below the slot label
+_Y_VALS = _Y_NAME + 2 * 17 + 2             # below the two name lines
+_Y_CHIPS = _Y_VALS + 24                    # below the platinum / ducat values
 _CHIP_ROW_H = int(CHIP_SIZE * 1.3) + 4 + 3
-_Y_CHIPS = _PAD + 16 + 2 * 17 + 2 + 24     # below the slot label, the two name lines and the values
+EMPTY_H = 64
 
 
-def _chip_layout(e: RewardEntry, width: int, show_owned: bool, show_vaulted: bool):
+def chip_layout(e: RewardEntry, width: int, show_owned: bool = True, show_vaulted: bool = False):
     """(chip rows, part-chip rows, natural block height) for an entry."""
     inner = width - _PAD * 2
     chips = draw.flow_pills(reward_chips(e, show_owned, show_vaulted), inner, CHIP_SIZE)
@@ -204,20 +208,17 @@ def _chip_layout(e: RewardEntry, width: int, show_owned: bool, show_vaulted: boo
     return chips, parts, h
 
 
-def block_height(e: RewardEntry | None, width: int, show_owned: bool = True, show_vaulted: bool = False) -> int:
-    """render_block's natural height, without drawing."""
-    return 64 if e is None else _chip_layout(e, width, show_owned, show_vaulted)[2]
-
-
 def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: bool = False,
                  show_ducats: bool = True, show_owned: bool = True, is_best_mastery: bool = False,
-                 mastery_pick: bool = False, show_vaulted: bool = False, min_height: int = 0) -> Image.Image:
+                 mastery_pick: bool = False, show_vaulted: bool = False, min_height: int = 0,
+                 layout=None) -> Image.Image:
     """One reward card, laid out like WFHelper's .reward-slot: slot label and rarity, name (2 lines),
-    platinum and ducats, then the chips and the set-part chips."""
+    platinum and ducats, then the chips and the set-part chips. layout: chip_layout()'s result,
+    when the caller already measured the block."""
     pad = _PAD
     inner = width - pad * 2
     if e is None:
-        h = max(min_height, 64)
+        h = max(min_height, EMPTY_H)
         img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         a = EMPTY_ALPHA
@@ -238,19 +239,22 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     else:
         tag, tag_col, highlight, bg = f"SLOT {slot + 1}", draw.GOLD_MUTED, None, CARD_BG
     lines = name_lines(e.name, inner - 2, 13)
-    chips, parts, h = _chip_layout(e, width, show_owned, show_vaulted)
+    chips, parts, h = layout or chip_layout(e, width, show_owned, show_vaulted)
     h = max(h, min_height)
     img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=bg, outline=highlight or CARD_BORDER,
                         width=2 if highlight else 1)
-    d.text((pad, pad), tag, font=draw.font(10, True), fill=tag_col)
     rar = RARITY_LABELS.get(e.rarity or "", (e.rarity or "").upper())
+    tag_w = draw.text_width(tag, 10, True)
+    if rar and tag_w + 6 + draw.text_width(rar, 10, True) > inner:  # narrow card: "UNCOM"
+        rar = RARITY_SHORT.get(e.rarity or "", rar)
+    rar_w = draw.text_width(rar, 10, True) if rar else 0
+    d.text((pad, pad), draw.ellipsize(tag, inner - rar_w - 6, 10, True), font=draw.font(10, True), fill=tag_col)
     if rar:
-        d.text((width - pad - draw.text_width(rar, 10, True), pad), rar, font=draw.font(10, True),
+        d.text((width - pad - rar_w, pad), rar, font=draw.font(10, True),
                fill=RARITY_COLORS.get(e.rarity or "", draw.GOLD_MUTED))
-    y_name = pad + 16
-    y_vals = y_name + 2 * 17 + 2
+    y_name, y_vals = _Y_NAME, _Y_VALS
     for i, ln in enumerate(lines[:2]):
         d.text((pad, y_name + i * 17), ln, font=draw.font(13, True), fill=draw.GOLD_TEXT)
     # platinum icon + price, ducat icon + ducats
@@ -314,10 +318,12 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
         specs.append((kw, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
     if not specs:
         return []
-    tallest = max(block_height(kw["e"], kw["width"], show_owned, show_vaulted) for kw, *_ in specs)
+    layouts = [chip_layout(kw["e"], kw["width"], show_owned, show_vaulted) if kw["e"] else None
+               for kw, *_ in specs]
+    tallest = max(lay[2] if lay else EMPTY_H for lay in layouts)
     out = []
-    for kw, bx, top, bottom in specs:
-        img = render_block(**kw, min_height=tallest)
+    for lay, (kw, bx, top, bottom) in zip(layouts, specs):
+        img = render_block(**kw, min_height=tallest, layout=lay)
         if position == "above":
             by = top - GAP - tallest
             if by < TOP_MARGIN:

@@ -17,6 +17,7 @@ from __future__ import annotations
 from PIL import Image, ImageDraw
 
 from ..overlay import draw as d
+from .riven_market import format_listing_value
 
 LAYER_LEFT = "riven"
 LAYER_RIGHT = "riven_right"
@@ -152,8 +153,6 @@ class _Canvas:
 
 def listing_stat_text(st: dict) -> str:
     """'+95% Multi' / 'x1.25 DmgCor': the listing value (riven-scanner.md §13.3) and the short name."""
-    from .riven_market import format_listing_value
-
     name = str(st.get("name", ""))
     ab = abbreviate(name)
     if name.lower().startswith("damage vs "):

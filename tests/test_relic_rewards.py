@@ -860,3 +860,10 @@ def test_reward_blocks_share_one_height():
     # a translucent chip tint must not punch holes into the card
     img = ov.render_block(full, 156, 0)
     assert img.crop((4, 4, 150, img.height - 4)).getchannel("A").getextrema()[0] >= 200
+
+
+def test_narrow_block_renders_and_part_words():
+    e = RewardEntry(0, "Vadarya Prime Barrel", rarity="Uncommon", plat=9, price_state="ok")
+    img = ov.render_block(e, ov.MIN_BLOCK_W, 0, is_best_mastery=True, mastery_pick=True)
+    assert img.width == ov.MIN_BLOCK_W
+    assert ov.PART_ABBREV["blueprint"] == "BP" and ov.PART_ABBREV["chassis"] == "Chas"
