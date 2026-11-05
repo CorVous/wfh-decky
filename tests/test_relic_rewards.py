@@ -885,3 +885,21 @@ def test_part_chips_without_the_set_prefix_stay_distinct():
                     set_parts=[SetPart("Kavasa Prime Band", 0, 1, True), SetPart("Kavasa Prime Buckle", 1, 1),
                                SetPart("Kavasa Prime Blueprint", 1, 1)])
     assert [p.text for p in ov.part_chips(e)] == ["Band 0/1", "Buckle 1/1", "BP 1/1"]
+
+
+def test_part_labels_for_dual_weapons_and_collars():
+    assert ov.part_label("Akbronco Prime Link", "Akbronco Prime") == "Link"
+    assert ov.part_label("Akbronco Prime Blueprint", "Akbronco Prime") == "BP"
+    assert ov.part_label("Bronco Prime", "Akbronco Prime") == "Bronc."
+    assert ov.part_label("Kavasa Prime Kubrow Collar Blueprint", "Kavasa Prime Kubrow Collar") == "BP"
+    assert ov.part_label("Kavasa Prime Buckle", "Kavasa Prime Kubrow Collar") == "Buckle"
+
+
+def test_blocks_never_overlap_at_small_ui_scale():
+    entries = [RewardEntry(i, f"P{i} Prime Blueprint", plat=5, price_state="ok") for i in range(4)]
+    cards = [(i, (380 + i * 98, 200, 90, 130)) for i in range(4)]  # 98 px apart, narrower than a block
+    placed = sorted(ov.layout_blocks(entries, cards, DECK, DECK), key=lambda p: p.x)
+    for a, b in zip(placed, placed[1:]):
+        assert b.x >= a.x + a.image.width + ov.GAP
+    mid = (placed[0].x + placed[-1].x + placed[-1].image.width) / 2
+    assert abs(mid - (380 + (3 * 98 + 90) / 2)) <= 2  # still centred on the card row

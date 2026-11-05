@@ -146,8 +146,15 @@ def part_label(part: str, parent: str | None) -> str:
 
     WFHelper draws the part's icon here; the overlay has no item icons, so it names the part."""
     n = part or ""
-    if parent and n.lower().startswith(parent.lower() + " "):
-        n = n[len(parent) + 1:]
+    if parent:
+        # Strip the leading words the part shares with the set: "Xaku Prime Chassis" -> "Chassis",
+        # and "Kavasa Prime Band" in the "Kavasa Prime Kubrow Collar" set -> "Band".
+        words, pw = n.split(), parent.lower().split()
+        k = 0
+        while k < min(len(words) - 1, len(pw)) and words[k].lower() == pw[k]:
+            k += 1
+        if k >= 2 or k == len(pw):
+            n = " ".join(words[k:])
     n = re.sub(r"\s+Blueprint$", "", n) if n.lower() != "blueprint" else n
     return PART_ABBREV.get(n.lower(), n if len(n) <= 6 else n[:5] + ".")
 
@@ -183,17 +190,6 @@ def part_chips(e: RewardEntry) -> list[draw.Pill]:
     filled when the part is this reward."""
     out = []
     parent = _parent_name(e)
-    names_ = [p.name or "" for p in e.set_parts]
-    if parent and not all(n.lower().startswith(parent.lower() + " ") for n in names_) and len(names_) > 1:
-        # Parts not named after the set (e.g. "Kavasa Prime Band" in "Kavasa Prime Kubrow Collar
-        # Set"): strip the words every part name shares instead, so the labels stay distinct.
-        words = [n.split() for n in names_]
-        common = []
-        for group in zip(*words):
-            if len(set(w.lower() for w in group)) != 1:
-                break
-            common.append(group[0])
-        parent = " ".join(common) or None
     for part in e.set_parts[:6]:
         color = draw.GOOD if part.owned >= part.required else draw.GOLD_MUTED
         fill = (color[0], color[1], color[2], 90) if part.is_reward else None
@@ -332,8 +328,19 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
     layouts = [chip_layout(kw["e"], kw["width"], show_owned, show_vaulted) if kw["e"] else None
                for kw, *_ in specs]
     tallest = max(lay[2] if lay else EMPTY_H for lay in layouts)
+    # At a small in-game UI scale the cards sit closer than a block is wide: lay the blocks out as
+    # one row centred on the cards instead, so none covers its neighbour.
+    xs = [bx for _, bx, *_ in specs]
+    widths = [kw["width"] for kw, *_ in specs]
+    order = sorted(range(len(specs)), key=lambda i: xs[i])
+    if any(xs[b] < xs[a] + widths[a] + GAP for a, b in zip(order, order[1:])):
+        centre = (xs[order[0]] + xs[order[-1]] + widths[order[-1]]) / 2
+        x = round(centre - (sum(widths) + GAP * (len(specs) - 1)) / 2)
+        for i in order:
+            xs[i] = x
+            x += widths[i] + GAP
     out = []
-    for lay, (kw, bx, top, bottom) in zip(layouts, specs):
+    for lay, (kw, _, top, bottom), bx in zip(layouts, specs, xs):
         img = render_block(**kw, min_height=tallest, layout=lay)
         above, below = top - GAP - tallest, bottom + GAP
         fits_above, fits_below = above >= TOP_MARGIN, below + tallest <= oh
