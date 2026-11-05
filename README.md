@@ -9,7 +9,9 @@ SteamOS game mode on the Steam Deck.
 In-game overlays, drawn on top of Warframe by gamescope:
 
 - **Relic rewards**: prices every reward card when the squad's relics crack,
-  with ducats, owned counts, vaulted status and the best pick highlighted.
+  with ducats, the best pick highlighted and WFHelper's chips: owned count,
+  Mastered / Not Mastered, In foundry, set progress and value, and how many of
+  each set part you hold.
 - **Relic planner**: ranks the relics you own by expected value on the relic
   selection screen.
 - **Riven scanner**: reads the rolls while you reroll and compares the old and

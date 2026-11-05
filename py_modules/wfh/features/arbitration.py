@@ -66,7 +66,7 @@ class ArbiController:
 
     def show(self, payload: dict, ttl: float | None = None) -> bool:
         """Draw the panel (or toast when no overlay window). True when drawn."""
-        ttl = float(ttl if ttl is not None else (self.setting("duration_s", 25) or 25))
+        ttl = float(ttl if ttl is not None else (self.setting("duration_s", 60) or 60))
         if not self.app.settings.get("overlays_enabled", True):
             return False
         ovm = self.app.overlays
@@ -75,7 +75,9 @@ class ArbiController:
             self.app.toast(*ov.summary_toast(payload))
             return False
         scale = ov.overlay_scale(self.setting("summary_scale", 1.0), tuple(ovm.size))
-        img = ov.render_summary(payload, scale)
+        fields = {k: bool(self.setting(f"summary_{k}", False))
+                  for k in ("extra_stats", "squad", "end_reason", "vitus_range")}
+        img = ov.render_summary(payload, scale, fields)
         pos = self.setting("summary_position", ov.DEFAULT_POSITION)
         x, y = ov.place(pos if pos in ov.POSITIONS else ov.DEFAULT_POSITION, tuple(ovm.size), img)
         ovm.show(LAYER, img, x, y, ttl=ttl, z=5)

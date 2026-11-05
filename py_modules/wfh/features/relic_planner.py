@@ -349,75 +349,171 @@ def row_signature(label: str) -> str | None:
 
 # ---- panel rendering ---------------------------------------------------------------
 
-RARITY_COLOR = {"Rare": draw.GOLD, "Uncommon": (190, 200, 215, 255), "Common": (205, 150, 110, 255)}
-CARD_BG = (24, 30, 48, 240)
-CARD_BORDER = (70, 84, 120, 255)
-BEST_TINT = (48, 42, 24, 245)
+# WFHelper overlay.css planner tokens (relic-planner.md §9)
+CHANCE_COLOR = {"Rare": draw.GOLD_ACCENT, "Uncommon": (148, 163, 184, 255)}  # common stays muted
+VAULTED_C = (248, 113, 113, 255)     # #f87171
+UNVAULTED_C = (96, 165, 250, 255)    # #60a5fa
+CARD_BG = draw.GOLD_SURFACE
+CARD_BORDER = (212, 168, 67, 64)
+BEST_TINT = (37, 36, 33, 245)        # surface + 10 % accent
+BEST_BORDER = (223, 190, 115, 255)   # accent mixed with 16 % white
+PROFIT_PLAT = draw.GOLD_ACCENT_HI    # #f0c95c
+PROFIT_DUCAT = (230, 196, 101, 255)  # accent mixed with #f7d47a
+MASTERY_C = UNVAULTED_C
+GRID_GAP = 5
+TITLE_SIZE = 13
+REWARD_ROW_H = 16
 
 
-def _pill(d: ImageDraw.ImageDraw, x: int, y: int, text: str, color: tuple, size: int = 10) -> int:
+def _pill(d: ImageDraw.ImageDraw, x: int, y: int, text: str, color: tuple, size: int = 10,
+          base: tuple = CARD_BG) -> int:
+    """Uppercase tag pill (16 % fill, 45 % border, like .plan-vault)."""
     f = draw.font(size, True)
     tw = int(f.getlength(text))
     w, h = tw + 10, size + 7
-    d.rounded_rectangle((x, y, x + w, y + h), h // 2, fill=(color[0], color[1], color[2], 40), outline=color)
+    d.rounded_rectangle((x, y, x + w, y + h), h // 2, fill=draw.blend((*color[:3], 41), base),
+                        outline=draw.blend((*color[:3], 115), base))
     d.text((x + 5, y + 2), text, font=f, fill=color)
     return w
 
 
-def _fmt(v: float | None, unit: str) -> str:
-    if v is None:
-        return "–"
-    return f"{v:.1f}{unit}"
+def _pill_w(text: str, size: int = 9) -> int:
+    return draw.text_width(text, size, True) + 10
+
+
+def _fmt(v: float | None, unit: str = "") -> str:
+    return "-" if v is None else f"{v:.1f}{unit}"
+
+
+def _title_lines(r: dict, width: int) -> tuple[list[str], bool]:
+    """'3x Axi A16 Radiant' wrapped to width (the title wraps in WFHelper). Returns (lines,
+    pill_inline): the vault pill sits after the last line when it fits, else on a line of its own."""
+    title = f"{r.get('count', 0)}x {r['name']} {r.get('qualityLabel', '')}".strip()
+    lines = _wrap(title, width, TITLE_SIZE, True)[:2]
+    if len(lines) == 2 and draw.text_width(lines[1], TITLE_SIZE, True) > width:
+        lines[1] = draw.ellipsize(lines[1], width, TITLE_SIZE, True)
+    pills = _pill_w("VAULTED" if r.get("vaulted") else "UNVAULTED")
+    if r.get("masteryParts"):
+        pills += _pill_w("MASTERY") + 4
+    inline = draw.text_width(lines[-1], TITLE_SIZE, True) + 6 + pills <= width
+    return lines, inline
+
+
+def _card_height(r: dict, inner: int, show_rewards: bool) -> int:
+    lines, inline = _title_lines(r, inner)
+    h = 6 + len(lines) * 17 + (0 if inline else 17) + 18 + 4
+    if show_rewards and r.get("rewards"):
+        h += len(r["rewards"]) * REWARD_ROW_H + 3
+    return h
+
+
+def _draw_card(d: ImageDraw.ImageDraw, r: dict, x: int, y: int, w: int, h: int, best: bool,
+               show_rewards: bool) -> None:
+    """.plan-card: title + vault tag, "E. profits:" with platinum and ducats, then the rewards."""
+    bg = BEST_TINT if best else CARD_BG
+    d.rounded_rectangle((x, y, x + w - 1, y + h - 1), 6, fill=bg, outline=BEST_BORDER if best else CARD_BORDER,
+                        width=2 if best else 1)
+    cx = x + 8
+    inner = w - 16
+    lines, inline = _title_lines(r, inner)
+    ty = y + 5
+    cnt = f"{r.get('count', 0)}x "
+    for i, ln in enumerate(lines):
+        if i == 0 and ln.startswith(cnt):  # the count reads muted, like .plan-count
+            d.text((cx, ty), cnt, font=draw.font(TITLE_SIZE, True), fill=draw.GOLD_MUTED)
+            cw = draw.text_width(cnt, TITLE_SIZE, True)
+            d.text((cx + cw, ty), ln[len(cnt):], font=draw.font(TITLE_SIZE, True), fill=draw.GOLD_TEXT)
+        else:
+            d.text((cx, ty), ln, font=draw.font(TITLE_SIZE, True), fill=draw.GOLD_TEXT)
+        ty += 17
+    px = cx + draw.text_width(lines[-1], TITLE_SIZE, True) + 6 if inline else cx
+    py = ty - 17 + 3 if inline else ty + 1
+    vtxt = "VAULTED" if r.get("vaulted") else "UNVAULTED"
+    px += _pill(d, px, py, vtxt, VAULTED_C if r.get("vaulted") else UNVAULTED_C, 9, bg) + 4
+    if r.get("masteryParts"):
+        _pill(d, px, py, "MASTERY", MASTERY_C, 9, bg)
+    if not inline:
+        ty += 17
+    # E. profits: <plat icon> 12.3  <ducat icon> 45.6
+    ly = ty + 1
+    d.text((cx, ly + 2), "E. profits:", font=draw.font(11), fill=draw.GOLD_MUTED)
+    px = cx + draw.text_width("E. profits:", 11) + 6
+    px += draw.plat_icon(d, px, ly + 3, 11) + 3
+    ptxt = _fmt(r.get("plat"))
+    d.text((px, ly), ptxt, font=draw.font(13, True), fill=PROFIT_PLAT)
+    px += draw.text_width(ptxt, 13, True) + 8
+    px += draw.ducat_icon(d, px, ly + 3, 11) + 3
+    d.text((px, ly), _fmt(r.get("ducat")), font=draw.font(13, True), fill=PROFIT_DUCAT)
+    if show_rewards and r.get("rewards"):
+        ry = ly + 21
+        mastery = set(r.get("masteryParts") or ())
+        for rw in r["rewards"]:
+            ch = float(rw.get("chance") or 0)
+            chance = f"{ch:.1f}%"
+            owned = rw.get("owned")
+            own_txt = "?" if owned is None else f"Owned {owned}"
+            own_col = MASTERY_C if rw.get("name") in mastery else draw.GOLD_MUTED
+            right_w = 98
+            d.text((cx, ry), draw.ellipsize(rw.get("name", ""), inner - right_w - 4, 11), font=draw.font(11),
+                   fill=draw.GOLD_TEXT)
+            rx = x + w - 8
+            d.text((rx - draw.text_width(own_txt, 10), ry + 1), own_txt, font=draw.font(10), fill=own_col)
+            rx -= 58
+            d.text((rx - draw.text_width(chance, 10), ry + 1), chance, font=draw.font(10),
+                   fill=CHANCE_COLOR.get(rw.get("rarity"), draw.GOLD_MUTED))
+            ry += REWARD_ROW_H
 
 
 def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PANEL_MAX_H,
                  width: int = PANEL_W) -> Image.Image:
-    """The planner panel at design scale (1280x800 pixels)."""
+    """The planner panel at design scale (1280x800 pixels).
+
+    Like WFHelper's #planner-grid: two columns of cards while the rewards are hidden (its
+    default); one column when they are listed, so the reward rows keep a readable width."""
     pad = 10
     inner = width - 2 * pad
     rows: list[dict] = payload.get("rows") or []
     state = payload.get("state", "rows")
     header_h = 50
-    card_h = 44
-    reward_h = 17
-    gap = 5
     footer_h = 24
-
-    def card_height(r: dict) -> int:
-        return card_h + (len(r.get("rewards") or []) * reward_h + 4 if show_rewards else 0)
+    cols = 1 if show_rewards else 2
+    col_w = (inner - GRID_GAP * (cols - 1)) // cols
 
     body_lines: list[tuple[str, tuple]] = []
     if state == "scanning":
-        body_lines = [("Detecting relic era and ranking", draw.TEXT), ("your owned relics…", draw.TEXT)]
+        body_lines = [("Detecting relic era and ranking", draw.GOLD_TEXT), ("your owned relics…", draw.GOLD_TEXT)]
     elif not rows:
-        body_lines = [(t, draw.MUTED) for t in _wrap(payload.get("message") or "No owned relics to rank.", inner, 14)]
+        body_lines = [(t, draw.GOLD_MUTED) for t in
+                      _wrap(payload.get("message") or "No owned relics to recommend.", inner, 14)]
     elif int(payload.get("pricesMissing") or 0) >= PRICES_MISSING_NOTE:
         body_lines = [(f"Prices loading ({int(payload['pricesMissing'])} missing, counted as 0)", draw.WARN)]
 
-    shown: list[dict] = []
     body_h = len(body_lines) * 20 + 12 if body_lines else 0
     used = header_h + body_h
-    for r in rows:
-        ch = card_height(r) + gap
-        if used + ch + footer_h + pad > max_height:
+    grid: list[tuple[list[dict], int]] = []  # (cards in the grid row, row height)
+    shown = 0
+    for i in range(0, len(rows), cols):
+        chunk = rows[i:i + cols]
+        rh = max(_card_height(r, col_w - 16, show_rewards) for r in chunk)
+        if used + rh + GRID_GAP + footer_h + pad > max_height:
             break
-        shown.append(r)
-        used += ch
-    more = len(rows) - len(shown)
-    height = used + footer_h + pad
-    height = min(max(height, 110), max_height)
+        grid.append((chunk, rh))
+        shown += len(chunk)
+        used += rh + GRID_GAP
+    more = len(rows) - shown
+    height = min(max(used + footer_h + pad, 110), max_height)
 
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, width - 1, height - 1), 10, fill=draw.BG, outline=draw.BORDER)
+    d.rounded_rectangle((0, 0, width - 1, height - 1), 10, fill=draw.GOLD_BG,
+                        outline=(212, 168, 67, 110))
 
     # header
-    d.text((pad, 8), "Relic planner", font=draw.font(17, True), fill=draw.ACCENT)
+    d.text((pad, 8), "Relic planner", font=draw.font(17, True), fill=draw.GOLD_ACCENT)
     era = payload.get("era")
     era_txt = (era or "all eras").upper()
-    ef = draw.font(12, True)
-    ew = int(ef.getlength(era_txt)) + 10
-    _pill(d, width - pad - ew, 10, era_txt, draw.GOLD if era else draw.MUTED, 12)
+    ew = draw.text_width(era_txt, 12, True) + 10
+    _pill(d, width - pad - ew, 10, era_txt, draw.GOLD_ACCENT_HI if era else draw.GOLD_MUTED, 12, draw.GOLD_BG)
     sub = []
     if payload.get("squadSize"):
         sub.append(f"Squad {payload['squadSize']}")
@@ -426,7 +522,7 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
     if payload.get("eraSource"):
         sub.append({"eelog": "era from mission", "ocr": "era from screen", "cache": "era cached",
                     "hint": "era from filters", "manual": "era picked in QAM"}.get(payload["eraSource"], payload["eraSource"]))
-    d.text((pad, 30), draw.ellipsize("  ·  ".join(sub), inner, 12), font=draw.font(12), fill=draw.MUTED)
+    d.text((pad, 30), draw.ellipsize("  ·  ".join(sub), inner, 12), font=draw.font(12), fill=draw.GOLD_MUTED)
 
     y = header_h
     if body_lines:
@@ -435,82 +531,28 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
             d.text((pad, y), draw.ellipsize(t, inner, 14), font=draw.font(14), fill=c)
             y += 20
         y += 6
-    best_plat = max((r["plat"] for r in rows if r.get("plat") is not None), default=None)
-    best_i = next((j for j, r in enumerate(shown) if best_plat is not None and r.get("plat") == best_plat), -1)
-    for i, r in enumerate(shown):
-        ch = card_height(r)
-        is_best = i == best_i
-        d.rounded_rectangle((pad, y, width - pad - 1, y + ch), 6,
-                            fill=BEST_TINT if is_best else CARD_BG,
-                            outline=draw.GOLD if is_best else CARD_BORDER, width=2 if is_best else 1)
-        cx = pad + 8
-        # line 1: "3x Axi A16 Radiant" + vault pill
-        pill_txt = "VAULTED" if r.get("vaulted") else "UNVAULTED"
-        pill_col = draw.BAD if r.get("vaulted") else (96, 165, 250, 255)
-        pf = draw.font(10, True)
-        pw = int(pf.getlength(pill_txt)) + 10
-        title_w = inner - 16 - pw - 6
-        cnt = f"{r.get('count', 0)}x "
-        d.text((cx, y + 3), cnt, font=draw.font(15, True), fill=draw.MUTED)
-        cw = draw.text_width(cnt, 15, True)
-        title = draw.ellipsize(f"{r['name']} {r.get('qualityLabel', '')}", title_w - cw, 15, True)
-        d.text((cx + cw, y + 3), title, font=draw.font(15, True), fill=draw.TEXT)
-        _pill(d, width - pad - 8 - pw, y + 5, pill_txt, pill_col)
-        # line 2: EV plat / ducats, rank
-        ly = y + 23
-        d.text((cx, ly), "EV", font=draw.font(12), fill=draw.MUTED)
-        x2 = cx + 24
-        ptxt = _fmt(r.get("plat"), "p")
-        d.text((x2, ly - 1), ptxt, font=draw.font(14, True), fill=draw.PLAT)
-        x2 += draw.text_width(ptxt, 14, True) + 14
-        dtxt = _fmt(r.get("ducat"), "d")
-        d.text((x2, ly - 1), dtxt, font=draw.font(14, True), fill=draw.DUCAT)
-        rank = f"#{i + 1}"
-        rank_x = width - pad - 8 - draw.text_width(rank, 12)
-        d.text((rank_x, ly), rank, font=draw.font(12), fill=draw.MUTED)
-        if r.get("masteryParts"):
-            mf = draw.font(10, True)
-            mw = int(mf.getlength("MASTERY")) + 10
-            _pill(d, rank_x - 8 - mw, ly + 1, "MASTERY", draw.ACCENT)
-        if show_rewards and r.get("rewards"):
-            ry = y + card_h - 2
-            for rw in r["rewards"]:
-                chance = f"{rw.get('chance', 0):.0f}%" if rw.get("chance", 0) >= 10 else f"{rw.get('chance', 0):.1f}%"
-                owned = rw.get("owned")
-                if rw.get("name") in (r.get("masteryParts") or ()):
-                    own_txt, own_col = "mastery", draw.ACCENT
-                else:
-                    own_txt = "need" if rw.get("needed") else ("?" if owned is None else f"own {owned}")
-                    own_col = draw.GOOD if rw.get("needed") else draw.MUTED
-                price = rw.get("platinum")
-                ptx = f"{price:.0f}p" if price is not None else ""
-                right_w = 118
-                name = draw.ellipsize(rw.get("name", ""), inner - 16 - right_w, 12)
-                d.text((cx, ry), name, font=draw.font(12), fill=RARITY_COLOR.get(rw.get("rarity"), draw.TEXT))
-                rx = width - pad - 8
-                d.text((rx - draw.text_width(own_txt, 11), ry + 1), own_txt, font=draw.font(11), fill=own_col)
-                rx -= 46
-                d.text((rx - draw.text_width(chance, 11), ry + 1), chance, font=draw.font(11), fill=draw.MUTED)
-                rx -= 40
-                if ptx:
-                    d.text((rx - draw.text_width(ptx, 11, True), ry + 1), ptx, font=draw.font(11, True), fill=draw.PLAT)
-                ry += reward_h
-        y += ch + gap
+    # .best: the card with the highest platEv (>= 0); ties go to the first.
+    best_plat = max((r["plat"] for r in rows if r.get("plat") is not None and r["plat"] >= 0), default=None)
+    best_key = next((id(r) for r in rows if best_plat is not None and r.get("plat") == best_plat), None)
+    for chunk, rh in grid:
+        for j, r in enumerate(chunk):
+            _draw_card(d, r, pad + j * (col_w + GRID_GAP), y, col_w, rh, id(r) == best_key, show_rewards)
+        y += rh + GRID_GAP
 
-    # footer
+    # footer (WFHelper: "Press F7 to interact"; the Deck overlay takes no input)
     fy = height - footer_h
-    d.line((pad, fy, width - pad, fy), fill=(60, 70, 100, 255))
+    d.line((pad, fy, width - pad, fy), fill=(212, 168, 67, 60))
     foot = f"+{more} more  ·  " if more > 0 else ""
     foot += "Filters & squad: QAM › Relics"
-    d.text((pad, fy + 5), draw.ellipsize(foot, inner, 12), font=draw.font(12), fill=draw.MUTED)
+    d.text((pad, fy + 5), draw.ellipsize(foot, inner, 12), font=draw.font(12), fill=draw.GOLD_MUTED)
     return img
 
 
-def _wrap(text: str, width: int, size: int) -> list[str]:
+def _wrap(text: str, width: int, size: int, bold: bool = False) -> list[str]:
     out, line = [], ""
     for word in text.split():
         cand = f"{line} {word}".strip()
-        if draw.text_width(cand, size) <= width or not line:
+        if draw.text_width(cand, size, bold) <= width or not line:
             line = cand
         else:
             out.append(line)

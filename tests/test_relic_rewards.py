@@ -821,3 +821,42 @@ def test_needed_for_mastery_rules():
     entries = [e(0, plat=5), e(1, plat=40, mastered=True), e(2, plat=9), e(3, plat=9)]
     assert best_mastery(entries) == 2                       # most plat among needed, lower slot on ties
     assert best_mastery([e(0, crafted=True)]) is None
+
+
+def test_reward_chips_follow_wfhelper():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Xaku Prime Chassis Blueprint", owned=1, required=1, mastered=False, building=True,
+                    set_owned=3, set_required=4, set_name="Xaku Prime Set", set_plat=140, set_price_state="ok",
+                    vaulted=True,
+                    set_parts=[SetPart("Xaku Prime Blueprint", 1, 1), SetPart("Xaku Prime Chassis", 1, 1, True),
+                               SetPart("Xaku Prime Neuroptics", 0, 1, building=True),
+                               SetPart("Xaku Prime Systems", 1, 1)])
+    assert [c.text for c in ov.reward_chips(e)] == ["Own 1/1", "Not Mastered", "In foundry", "Set 3/4", "Set 140p"]
+    assert [c.text for c in ov.reward_chips(e, show_vaulted=True)][-1] == "Vaulted"
+    assert [c.text for c in ov.reward_chips(e, show_owned=False)] == ["Not Mastered", "In foundry", "Set 140p"]
+    e.mastered = True
+    assert "Mastered" in [c.text for c in ov.reward_chips(e)]
+    e.mastered = None  # not masterable / no inventory: no mastery chip
+    assert not {"Mastered", "Not Mastered"} & {c.text for c in ov.reward_chips(e)}
+    parts = ov.part_chips(e)
+    assert [p.text for p in parts] == ["BP 1/1", "Chas 1/1", "Neuro 0/1", "Sys 1/1"]
+    assert parts[1].fill is not None and parts[0].fill is None          # this reward is filled
+    assert parts[2].outline == ov.FOUNDRY and parts[0].color == ov.draw.GOOD
+    assert ov.part_label("Paris Prime Lower Limb", "Paris Prime") == "Lower"
+    assert ov.part_label("Kronen Prime Handle", "Kronen Prime") == "Handle"
+
+
+def test_reward_blocks_share_one_height():
+    from wfh.features.reward_enrich import SetPart
+
+    full = RewardEntry(0, "Xaku Prime Chassis Blueprint", owned=0, required=1, mastered=False, set_owned=0,
+                       set_required=4, set_name="Xaku Prime Set",
+                       set_parts=[SetPart(f"Xaku Prime P{i}", 0, 1) for i in range(5)])
+    bare = RewardEntry(1, "Forma Blueprint", owned=2, required=1)
+    cards = [(0, (300, 200, 156, 160)), (1, (470, 200, 156, 160)), (2, (640, 200, 156, 160))]
+    placed = ov.layout_blocks([full, bare], cards, DECK, DECK)
+    assert len({p.image.height for p in placed}) == 1   # empty slot 2 too
+    # a translucent chip tint must not punch holes into the card
+    img = ov.render_block(full, 156, 0)
+    assert img.crop((4, 4, 150, img.height - 4)).getchannel("A").getextrema()[0] >= 200

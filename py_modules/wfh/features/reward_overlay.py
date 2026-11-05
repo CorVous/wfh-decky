@@ -24,11 +24,10 @@ TOP_MARGIN = 4
 RARITY_COLORS = {
     "Rare": (212, 168, 67, 255),      # #d4a843
     "Uncommon": (148, 163, 184, 255),  # #94a3b8
-    "Common": (176, 160, 140, 255),    # #64748b is too dark on the Deck panel; warm grey instead
+    "Common": (100, 116, 139, 255),    # #64748b
 }
-RARITY_LABELS = {"Rare": "RARE", "Uncommon": "UNCOM", "Common": "COMMON"}
-BEST_BG = (40, 34, 18, 240)
-EMPTY_BG = (14, 18, 30, 150)
+RARITY_LABELS = {"Rare": "RARE", "Uncommon": "UNCOMMON", "Common": "COMMON"}
+DUCAT_TEXT = (247, 212, 122, 255)     # #f7d47a
 
 _ABBREV = ((r"\bBlueprint\b", "BP"), (r"\bNeuroptics\b", "Neuro"), (r"\bSystems\b", "Sys"),
            (r"\bChassis\b", "Chas"), (r"\bReceiver\b", "Recv"))
@@ -109,9 +108,10 @@ def name_lines(name: str, max_w: int, size: int, max_lines: int = 2) -> list[str
     return [draw.ellipsize(l, max_w, size, True) for l in lines]
 
 
-def _plat_text(value: int | None, state: str) -> str:
+def _plat_text(value: int | None, state: str, unit: bool = True) -> str:
+    """Price label: "…" while it loads, "N/A" when it is missing (overlay.js:83-98)."""
     if value:
-        return f"{value}p"
+        return f"{value}p" if unit else str(value)
     return "N/A" if state == "missing" else "…"
 
 
@@ -122,75 +122,145 @@ class Placed:
     y: int
 
 
+# WFHelper overlay.css: rarity labels and the card chrome.
+CARD_BG = (16, 21, 32, 235)            # panel bg + rgba(255,255,255,.04)
+CARD_BORDER = (212, 168, 67, 90)       # a card with an item: rgba(212,168,67,.28)
+EMPTY_BORDER = (255, 255, 255, 40)     # rgba(255,255,255,.08)
+EMPTY_ALPHA = 0.42                     # columns without an item
+BEST_TINT = (40, 33, 16, 240)          # the best card: 10 % accent tint
+MASTERY_TINT = (16, 30, 52, 240)
+NOT_MASTERED = (96, 165, 250, 255)     # #60a5fa
+FOUNDRY = (245, 166, 35, 255)          # #f5a623, the "building" orange
+CHIP_SIZE = 10
+
+PART_ABBREV = {
+    "blueprint": "BP", "neuroptics": "Neuro", "systems": "Sys", "chassis": "Chas", "receiver": "Recv",
+    "lower limb": "Lower", "upper limb": "Upper", "carapace": "Cara", "cerebrum": "Cere", "ornament": "Orn",
+    "gauntlet": "Gaunt", "harness": "Harn",
+}
+
+
+def part_label(part: str, parent: str | None) -> str:
+    """Set-part chip label: the part's own word ("Chassis" -> "Chas", the main blueprint -> "BP").
+
+    WFHelper draws the part's icon here; the overlay has no item icons, so it names the part."""
+    n = part or ""
+    if parent and n.lower().startswith(parent.lower() + " "):
+        n = n[len(parent) + 1:]
+    n = re.sub(r"\s+Blueprint$", "", n) if n.lower() != "blueprint" else n
+    return PART_ABBREV.get(n.lower(), n if len(n) <= 6 else n[:5] + ".")
+
+
+def _parent_name(e: RewardEntry) -> str | None:
+    return e.set_name[:-4] if e.set_name and e.set_name.endswith(" Set") else None
+
+
+def reward_chips(e: RewardEntry, show_owned: bool = True, show_vaulted: bool = False) -> list[draw.Pill]:
+    """WFHelper's chip row (relic-rewards.md §11.2): Own x/y; Mastered / Not Mastered; In foundry;
+    Set x/y; Set value; Vaulted / Unvaulted (hidden by default)."""
+    chips: list[draw.Pill] = []
+    if show_owned and e.owned is not None:
+        chips.append(draw.Pill(f"Own {e.owned}/{e.required}", draw.GOOD if e.owned >= e.required else draw.GOLD_MUTED))
+    if e.mastered is True:
+        chips.append(draw.Pill("Mastered", draw.GOOD))
+    elif e.mastered is False:
+        chips.append(draw.Pill("Not Mastered", NOT_MASTERED))
+    if e.building:
+        chips.append(draw.Pill("In foundry", FOUNDRY))
+    if show_owned and e.set_owned is not None and e.set_required:
+        done = e.set_owned >= e.set_required
+        chips.append(draw.Pill(f"Set {e.set_owned}/{e.set_required}", draw.GOOD if done else draw.GOLD_MUTED))
+    if e.set_name:
+        chips.append(draw.Pill(f"Set {_plat_text(e.set_plat, e.set_price_state)}", draw.GOLD_ACCENT_HI))
+    if show_vaulted and e.vaulted is not None:
+        chips.append(draw.Pill("Vaulted" if e.vaulted else "Unvaulted", draw.BAD if e.vaulted else NOT_MASTERED))
+    return chips
+
+
+def part_chips(e: RewardEntry) -> list[draw.Pill]:
+    """Up to 6 set-part chips: green when owned >= required, orange outline when building,
+    filled when the part is this reward."""
+    out = []
+    parent = _parent_name(e)
+    for part in e.set_parts[:6]:
+        color = draw.GOOD if part.owned >= part.required else draw.GOLD_MUTED
+        fill = (color[0], color[1], color[2], 90) if part.is_reward else None
+        out.append(draw.Pill(f"{part_label(part.name, parent)} {part.owned}/{part.required}", color, fill,
+                             FOUNDRY if part.building else (draw.GOLD_TEXT if part.is_reward else None)))
+    return out
+
+
 def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: bool = False,
-                 is_best_ducats: bool = False, show_ducats: bool = True, show_owned: bool = True,
-                 is_best_mastery: bool = False, mastery_pick: bool = False) -> Image.Image:
-    inner = width - 16
+                 show_ducats: bool = True, show_owned: bool = True, is_best_mastery: bool = False,
+                 mastery_pick: bool = False, show_vaulted: bool = False, min_height: int = 0) -> Image.Image:
+    """One reward card, laid out like WFHelper's .reward-slot: slot label and rarity, name (2 lines),
+    platinum and ducats, then the chips and the set-part chips."""
+    pad = 8
+    inner = width - pad * 2
     if e is None:
-        card = Card(width, bg=EMPTY_BG, border=(60, 70, 90, 160))
-        card.add(draw.Cell(f"SLOT {slot + 1}", color=draw.MUTED, size=10, bold=True))
-        card.add(draw.Cell("not read", color=draw.MUTED, size=12))
-        return card.render()
-    best_d = is_best_ducats and show_ducats
-    # A part for gear you have never crafted or mastered outranks platinum;
-    # the plat/ducat winners keep their tags but lose the filled background.
+        h = max(min_height, 64)
+        img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        a = EMPTY_ALPHA
+        d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=(CARD_BG[0], CARD_BG[1], CARD_BG[2], int(235 * a)),
+                            outline=(255, 255, 255, int(40 * a) + 20))
+        muted = (*draw.GOLD_MUTED[:3], int(255 * a) + 40)
+        d.text((pad, pad), f"SLOT {slot + 1}", font=draw.font(10, True), fill=muted)
+        d.text((pad, pad + 18), "-", font=draw.font(15, True), fill=muted)
+        return img
+    # The best card (most platinum; ties to the lower slot) gets the accent border and tint. With
+    # "prioritize mastery" on, a part of gear never crafted nor mastered takes that place.
     top = is_best_mastery or (is_best_plat and not mastery_pick)
     if is_best_mastery:
-        tag = draw.Cell("MASTERY", color=draw.ACCENT, size=10, bold=True)
-    elif mastery_pick and is_best_plat:
-        tag = draw.Cell("MOST PLAT", color=draw.GOLD, size=10, bold=True)
-    elif is_best_plat and best_d:
-        tag = draw.Cell("BEST PICK", color=draw.GOLD, size=10, bold=True)  # most plat and most ducats
+        tag, tag_col, highlight, bg = "MASTERY", NOT_MASTERED, NOT_MASTERED, MASTERY_TINT
     elif is_best_plat:
-        tag = draw.Cell("BEST PLAT", color=draw.GOLD, size=10, bold=True)
-    elif best_d:
-        tag = draw.Cell("BEST DUCATS", color=draw.DUCAT, size=10, bold=True)
+        tag, tag_col, highlight = ("MOST PLAT" if mastery_pick else "BEST PICK"), draw.GOLD_ACCENT, draw.GOLD_ACCENT
+        bg = BEST_TINT if top else CARD_BG
     else:
-        tag = draw.Cell(f"SLOT {slot + 1}", color=draw.MUTED, size=10, bold=True)
-    rarity = draw.Cell(RARITY_LABELS.get(e.rarity or "", (e.rarity or "").upper()),
-                       color=RARITY_COLORS.get(e.rarity or "", draw.MUTED), size=10, bold=True, align="right",
-                       weight=0.72)
-    if is_best_mastery:
-        highlight = draw.ACCENT
-    elif is_best_plat:
-        highlight = draw.GOLD
-    else:
-        highlight = draw.DUCAT if best_d else None
-    card = Card(width, bg=BEST_BG if top else draw.BG, highlight=highlight)
-    card.pad = 8
-    card.add(tag, rarity)
-    lines = name_lines(e.name, inner - 2, 12)
-    for i in range(2):  # always two rows, so blocks in one row line up
-        card.add(draw.Cell(lines[i] if i < len(lines) else "", color=draw.TEXT, size=12, bold=True))
-        card.rows[-1].pad_y = 1
-    value_cells = [draw.Cell(_plat_text(e.plat, e.price_state), color=draw.PLAT, size=15, bold=True)]
+        tag, tag_col, highlight, bg = f"SLOT {slot + 1}", draw.GOLD_MUTED, None, CARD_BG
+    lines = name_lines(e.name, inner - 2, 13)
+    chips = draw.flow_pills(reward_chips(e, show_owned, show_vaulted), inner, CHIP_SIZE)
+    parts = draw.flow_pills(part_chips(e), inner, CHIP_SIZE) if show_owned else []
+    chip_h = int(CHIP_SIZE * 1.3) + 4 + 3
+    y_name = pad + 16
+    y_vals = y_name + 2 * 17 + 2
+    y_chips = y_vals + 24
+    h = y_chips + chip_h * len(chips) + (chip_h * len(parts) + 2 if parts else 0) + pad - 3
+    h = max(h, min_height)
+    img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=bg, outline=highlight or CARD_BORDER,
+                        width=2 if highlight else 1)
+    d.text((pad, pad), tag, font=draw.font(10, True), fill=tag_col)
+    rar = RARITY_LABELS.get(e.rarity or "", (e.rarity or "").upper())
+    if rar:
+        d.text((width - pad - draw.text_width(rar, 10, True), pad), rar, font=draw.font(10, True),
+               fill=RARITY_COLORS.get(e.rarity or "", draw.GOLD_MUTED))
+    for i, ln in enumerate(lines[:2]):
+        d.text((pad, y_name + i * 17), ln, font=draw.font(13, True), fill=draw.GOLD_TEXT)
+    # platinum icon + price, ducat icon + ducats
+    x = pad
+    x += draw.plat_icon(d, x, y_vals + 4, 12) + 4
+    ptxt = _plat_text(e.plat, e.price_state, unit=False)
+    d.text((x, y_vals), ptxt, font=draw.font(16, True), fill=draw.GOLD_TEXT if e.plat else draw.GOLD_MUTED)
     if show_ducats:
-        value_cells.append(draw.Cell(f"{e.ducats}d" if e.ducats else "–", color=draw.DUCAT, size=15, bold=True,
-                                     align="right"))
-    card.add(*value_cells)
-    if show_owned:
-        info = []
-        if e.owned is not None:
-            have = e.owned >= e.required
-            info.append(draw.Cell(f"Own {e.owned}/{e.required}", color=draw.GOOD if have else draw.MUTED, size=11))
-        if e.set_owned is not None and e.set_required:
-            info.append(draw.Cell(f"Set {e.set_owned}/{e.set_required}", color=draw.MUTED, size=11, align="right"))
-        elif e.building:
-            info.append(draw.Cell("In foundry", color=draw.WARN, size=11, align="right"))
-        if info:
-            card.add(*info)
-    extra = []
-    if e.set_name:
-        extra.append(draw.Cell(f"Set {_plat_text(e.set_plat, e.set_price_state)}", color=draw.PLAT, size=11,
-                               weight=0.8))
-    if e.vaulted:
-        extra.append(draw.Cell("Vaulted", color=draw.WARN, size=11, align="right", weight=1.2))
-    elif e.mastered is False:
-        label = "Not crafted" if e.crafted is False else "Unmastered"
-        extra.append(draw.Cell(label, color=draw.ACCENT, size=11, align="right", weight=1.2))
-    if extra:
-        card.add(*extra)
-    return card.render()
+        dtxt = str(e.ducats) if e.ducats else "N/A"
+        dw = draw.text_width(dtxt, 16, True)
+        dx = width - pad - dw
+        d.text((dx, y_vals), dtxt, font=draw.font(16, True), fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
+        draw.ducat_icon(d, dx - 16, y_vals + 4, 12)
+    y = y_chips
+    for row in chips:
+        for p, px in row:
+            draw.draw_pill(d, pad + px, y, p, CHIP_SIZE, inner - px, bg)
+        y += chip_h
+    if parts:
+        y += 2
+        for row in parts:
+            for p, px in row:
+                draw.draw_pill(d, pad + px, y, p, CHIP_SIZE, inner - px, bg)
+            y += chip_h
+    return img
 
 
 def capture_to_overlay(capture_size: tuple[int, int], overlay_size: tuple[int, int]) -> tuple[float, float, float]:
@@ -210,25 +280,28 @@ def capture_to_overlay(capture_size: tuple[int, int], overlay_size: tuple[int, i
 
 def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int, int, int, int]]],
                   capture_size: tuple[int, int], overlay_size: tuple[int, int], position: str = "below",
-                  best_plat: int | None = None, best_ducats: int | None = None, show_ducats: bool = True,
-                  show_owned: bool = True, best_mastery: int | None = None) -> list[Placed]:
-    """One block per on-screen card. card_px: (slot, (x, y, w, h)) in capture pixels."""
+                  best_plat: int | None = None, show_ducats: bool = True, show_owned: bool = True,
+                  best_mastery: int | None = None, show_vaulted: bool = False) -> list[Placed]:
+    """One block per on-screen card. card_px: (slot, (x, y, w, h)) in capture pixels.
+
+    Every block in the row gets the tallest block's height, like WFHelper's equal grid columns."""
     ow, oh = overlay_size
     s, dx, dy = capture_to_overlay(capture_size, overlay_size)
     by_slot = {e.slot: e for e in entries}
-    rendered = []
+    specs = []
     for slot, (x, y, w, h) in card_px:
         bw = max(MIN_BLOCK_W, round(w * s))
-        img = render_block(by_slot.get(slot), bw, slot, slot == best_plat, slot == best_ducats, show_ducats, show_owned,
-                           slot == best_mastery, mastery_pick=best_mastery is not None)
+        kw = dict(e=by_slot.get(slot), width=bw, slot=slot, is_best_plat=slot == best_plat, show_ducats=show_ducats,
+                  show_owned=show_owned, is_best_mastery=slot == best_mastery,
+                  mastery_pick=best_mastery is not None, show_vaulted=show_vaulted)
         cx = round((x + w / 2) * s + dx)
-        rendered.append((img, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
-    if not rendered:
+        specs.append((kw, cx - bw // 2, round(y * s + dy), round((y + h) * s + dy)))
+    if not specs:
         return []
-    # One row: every block shares the tallest block's top/bottom alignment.
-    tallest = max(img.height for img, *_ in rendered)
+    tallest = max(render_block(**kw).height for kw, *_ in specs)
     out = []
-    for img, bx, top, bottom in rendered:
+    for kw, bx, top, bottom in specs:
+        img = render_block(**kw, min_height=tallest)
         if position == "above":
             by = top - GAP - tallest
             if by < TOP_MARGIN:

@@ -150,6 +150,37 @@ class _Canvas:
         return w
 
 
+def listing_stat_text(st: dict) -> str:
+    """'+95% Multi' / 'x1.25 DmgCor': the listing value (riven-scanner.md §13.3) and the short name."""
+    from .riven_market import format_listing_value
+
+    name = str(st.get("name", ""))
+    ab = abbreviate(name)
+    if name.lower().startswith("damage vs "):
+        ab = "Dmg" + name[10:13]
+    v = st.get("value")
+    if isinstance(v, (int, float)):
+        return f"{format_listing_value(name, float(v))} {ab}"
+    return ab
+
+
+def _listing_lines(row: dict, max_w: int, max_lines: int = 2) -> list[list[tuple[str, dict]]]:
+    """A listing's stats flowed onto at most max_lines lines (the rest is dropped)."""
+    lines: list[list[tuple[str, dict]]] = [[]]
+    x = 0
+    for st in row.get("stats") or []:
+        t = listing_stat_text(st)
+        w = d.text_width(t, 10)
+        if lines[-1] and x + w > max_w:
+            if len(lines) == max_lines:
+                break
+            lines.append([])
+            x = 0
+        lines[-1].append((t, st))
+        x += w + 8
+    return [ln for ln in lines if ln]
+
+
 def _triangle(dr: ImageDraw.ImageDraw, x: int, y: int, up: bool, color: tuple, size: int = 7) -> None:
     if up:
         pts = [(x, y + size), (x + size, y + size), (x + size / 2, y)]
@@ -273,33 +304,36 @@ def render_panel(view: dict, width: int = PANEL_W, max_h: int = LEFT_MAX_H) -> I
             c.text(PAD, STRINGS["noSimilarFound"], 12, MUTED)
             c.y += 18
         for row in listings[:LISTINGS_SHOWN]:
-            if c.y + 36 > max_h - PAD:
+            lines = _listing_lines(row, inner - 12)
+            card_h = 20 + 14 * len(lines) + 2
+            if c.y + card_h > max_h - PAD:
                 break
             pct = int(row.get("match", 0))
             col = OK if pct >= 75 else WARN_C if pct >= 40 else BAD_C
-            c.dr.rounded_rectangle((PAD, c.y, width - PAD, c.y + 34), 5, fill=SURFACE)
-            c.text(PAD + 6, f"{pct}%", 13, col, True, y=c.y + 2)
-            price = f"{int(row.get('price') or 0)}p"
-            c.text(PAD + 52, price, 13, d.PLAT, True, y=c.y + 2)
+            c.dr.rounded_rectangle((PAD, c.y, width - PAD, c.y + card_h), 5, fill=SURFACE)
+            match = STRINGS["matchPercent"].format(percent=pct)
+            c.text(PAD + 6, match, 12, col, True, y=c.y + 3)
+            price = f"{int(row.get('price') or 0)} p"
+            c.text(PAD + 6 + d.text_width(match, 12, True) + 10, price, 12, d.PLAT, True, y=c.y + 3)
             rolls = STRINGS["rolls"].format(count=int(row.get("rerolls") or 0))
             rw = d.text_width(rolls, 11)
             c.text(width - PAD - 6 - rw, rolls, 11, MUTED, y=c.y + 4)
-            x = PAD + 6
-            for st in row.get("stats") or []:
-                ab = abbreviate(st.get("name", ""))
-                if st.get("name", "").lower().startswith("damage vs "):
-                    ab = "Dmg" + st["name"][10:13]
-                col2 = TEXT if st.get("matched") else (MUTED[0], MUTED[1], MUTED[2], 128)
-                if not st.get("positive", True):
-                    col2 = _rgb("#f4a3a3") if st.get("matched") else (244, 163, 163, 110)
-                w = d.text_width(ab, 10)
-                if x + w > width - PAD - 6:
-                    break
-                c.text(x, ab, 10, col2, y=c.y + 19)
-                if not st.get("matched"):
-                    c.dr.line((x, c.y + 26, x + w, c.y + 26), fill=col2, width=1)
-                x += w + 6
-            c.y += 38
+            ly = c.y + 20
+            for ln in lines:
+                x = PAD + 6
+                for txt, st in ln:
+                    matched = st.get("matched")
+                    if st.get("positive", True):
+                        col2 = TEXT if matched else (MUTED[0], MUTED[1], MUTED[2], 128)
+                    else:
+                        col2 = _rgb("#f4a3a3") if matched else (244, 163, 163, 128)
+                    w = d.text_width(txt, 10)
+                    c.text(x, txt, 10, col2, y=ly)
+                    if not matched:  # WFHelper strikes stats the listing does not share
+                        c.dr.line((x, ly + 7, x + w, ly + 7), fill=col2, width=1)
+                    x += w + 8
+                ly += 14
+            c.y += card_h + 4
 
     h = min(max_h, c.y + PAD - 2)
     out = Image.new("RGBA", (width, h), (0, 0, 0, 0))

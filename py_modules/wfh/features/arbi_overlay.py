@@ -100,13 +100,51 @@ def summary_toast(p: dict) -> tuple[str, str]:
     return "Arbitration complete", body
 
 
-def render_summary(p: dict, scale: float = 1.0) -> Image.Image:
-    """The 420x252 panel (times ``scale``), drawn directly at the target size."""
+END_REASON_LABEL = {"mission-end": "Mission complete", "aborted": "Aborted"}
+
+
+def summary_cells(p: dict, fields: dict | None = None) -> list[tuple[str, str, tuple]]:
+    """KPI grid cells (value, label, colour). WFHelper shows Expected Vitus, Drone Kills, Total Kills
+    and Time at 15+ Enemies; Actual Vitus, the per-minute rates, Kills/Drone and the average drone
+    interval are hidden by default (overlayLayout.ts hiddenByDefault) and come with fields["extra_stats"]."""
+    f = fields or {}
+    mean, std = p.get("expectedVitusMean") or 0, p.get("expectedVitusStd") or 0
+    cells = [
+        (f"{mean:.1f} ±{std:.1f}", "Expected Vitus", ACCENT),
+        (_fmt(p.get("drones")), "Drone Kills", TEXT),
+        (_fmt(p.get("totalEnemies")), "Total Kills", TEXT),
+        (_fmt(p.get("pctTimeAt15Plus"), 1, "%"), "Time at 15+ Enemies", TEXT),
+    ]
+    if f.get("extra_stats"):
+        cells += [
+            (_fmt(p.get("vitusActual")), "Actual Vitus", TEXT),
+            (_fmt(p.get("expectedVitusPerMin"), 2), "Exp. Vitus / Min", TEXT),
+            (_fmt(p.get("killsPerMin"), 1), "Enemies / Min", TEXT),
+            (_fmt(p.get("killsPerDrone"), 1), "Kills / Drone", TEXT),
+            (_fmt(p.get("avgDroneIntervalSec"), 1, "s"), "Avg Drone Interval", TEXT),
+        ]
+    return cells
+
+
+def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> Image.Image:
+    """The 420-px-wide panel (times ``scale``), drawn directly at the target size.
+
+    fields: optional lines WFHelper hides by default: extra_stats (KPI cells), squad, end_reason,
+    plus the plugin's vitus_range (likely Vitus range, or the luck of the actual count)."""
+    f = fields or {}
     k = max(0.5, float(scale or 1.0))
-    W, H = round(PANEL_W * k), round(PANEL_H * k)
+    W = round(PANEL_W * k)
 
     def s(v: float) -> int:
         return int(round(v * k))
+
+    cells = summary_cells(p, f)
+    grid_rows = (len(cells) + 2) // 3
+    y_grid = 78
+    y_after = y_grid + grid_rows * 48 + 2           # separator under the KPI grid
+    lines = int(bool(f.get("vitus_range"))) + int(bool(f.get("squad"))) + int(bool(f.get("end_reason")))
+    H_design = max(PANEL_H if lines >= 2 or grid_rows > 2 else 0, y_after + 8 + lines * 20 + 30)
+    H = s(H_design)
 
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -127,8 +165,6 @@ def render_summary(p: dict, scale: float = 1.0) -> Image.Image:
     d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], fill=ORANGE)
     text(pad + s(15), y, "ARBITRATION COMPLETE", 12, ORANGE, bold=True)
     tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
-    if p.get("endReason") == "aborted":
-        tl += " · ABORTED"
     bw = draw.text_width(tl, s(11), True) + s(14)
     d.rounded_rectangle((W - pad - bw, y - s(1), W - pad, y + s(17)), s(9), outline=ACCENT, width=max(1, s(1)))
     text(W - pad - bw // 2, y + s(8), tl, 11, ACCENT, bold=True, anchor="mm")
@@ -144,48 +180,44 @@ def render_summary(p: dict, scale: float = 1.0) -> Image.Image:
     d.line((pad, s(68), W - pad, s(68)), fill=SEP, width=max(1, s(1)))
 
     # KPI grid: 3 columns, value over label
-    mean, std = p.get("expectedVitusMean") or 0, p.get("expectedVitusStd") or 0
-    sat = p.get("pctTimeAt15Plus")
-    sat_color = draw.GOOD if (sat or 0) >= 50 else (draw.WARN if (sat or 0) >= 25 else TEXT)
-    cells = [
-        (f"{mean:.1f} ±{std:.1f}", "Expected Vitus", ACCENT),
-        (_fmt(p.get("drones")), "Drone Kills", TEXT),
-        (_fmt(p.get("totalEnemies")), "Total Kills", TEXT),
-        (_fmt(sat, 1, "%"), "Time at 15+ Enemies", sat_color),
-        (_fmt(p.get("expectedVitusPerMin"), 2), "Vitus / Min", TEXT),
-        (_fmt(p.get("killsPerDrone"), 1), "Kills / Drone", TEXT),
-    ]
     col_w = inner / 3
     for i, (val, label, color) in enumerate(cells):
         cx0 = pad + int(col_w * (i % 3))
-        cy0 = s(78) + (i // 3) * s(48)
+        cy0 = s(y_grid) + (i // 3) * s(48)
         text(cx0, cy0, val, 20, color, bold=True, max_w=int(col_w) - s(6))
         text(cx0, cy0 + s(25), label.upper(), 11, MUTED, max_w=int(col_w) - s(6))
-    d.line((pad, s(176), W - pad, s(176)), fill=SEP, width=max(1, s(1)))
+    d.line((pad, s(y_after), W - pad, s(y_after)), fill=SEP, width=max(1, s(1)))
 
-    # vitus range (or luck when the actual count is known)
-    y = s(184)
-    actual = p.get("vitusActual")
-    lk = luck(actual, mean, std) if actual is not None else None
-    if lk:
-        col = tuple(int(lk["color"][i:i + 2], 16) for i in (1, 3, 5)) + (255,)
-        w0 = text(pad, y, f"Vitus {actual:.0f}: ", 13, TEXT, bold=True)
-        text(pad + w0, y, lk["text"], 13, col, bold=True, max_w=inner - w0)
-    else:
-        sc = {r["key"]: r["total"] for r in p.get("scenarios") or scenario_table(mean, std)}
-        w0 = text(pad, y, "Likely ", 13, MUTED)
-        w1 = text(pad + w0, y, f"{sc['belowAvg']}–{sc['aboveAvg']} Vitus", 13, TEXT, bold=True)
-        text(pad + w0 + w1, y, f"  (worst {sc['worstCase']} · god {sc['godRoll']})", 12, MUTED,
-             max_w=inner - w0 - w1)
+    y = s(y_after + 8)
+    mean, std = p.get("expectedVitusMean") or 0, p.get("expectedVitusStd") or 0
+    if f.get("vitus_range"):
+        actual = p.get("vitusActual")
+        lk = luck(actual, mean, std) if actual is not None else None
+        if lk:
+            col = tuple(int(lk["color"][i:i + 2], 16) for i in (1, 3, 5)) + (255,)
+            w0 = text(pad, y, f"Vitus {actual:.0f}: ", 13, TEXT, bold=True)
+            text(pad + w0, y, lk["text"], 13, col, bold=True, max_w=inner - w0)
+        else:
+            sc = {r["key"]: r["total"] for r in p.get("scenarios") or scenario_table(mean, std)}
+            w0 = text(pad, y, "Likely ", 13, MUTED)
+            w1 = text(pad + w0, y, f"{sc['belowAvg']}–{sc['aboveAvg']} Vitus", 13, TEXT, bold=True)
+            text(pad + w0 + w1, y, f"  (worst {sc['worstCase']} · god {sc['godRoll']})", 12, MUTED,
+                 max_w=inner - w0 - w1)
+        y += s(20)
+    if f.get("squad"):
+        players = p.get("players") or []
+        squad = f"Squad ({len(players)}): {', '.join(players)}" if players else "Squad: unknown"
+        text(pad, y, squad, 12, MUTED, max_w=inner)
+        y += s(20)
+    if f.get("end_reason"):
+        reason = p.get("endReason")
+        text(pad, y, f"End: {END_REASON_LABEL.get(reason, reason or '?')}", 12, MUTED, max_w=inner)
+        y += s(20)
 
-    # footer: squad + where the details are
-    y = s(222)
-    players = p.get("players") or []
-    squad = f"Squad ({len(players)}): {', '.join(players)}" if players else "Solo / squad unknown"
-    hint = "Details: QAM › Arbitrations"
-    hw = draw.text_width(hint, s(11))
-    text(pad, y, squad, 12, MUTED, max_w=inner - hw - s(12))
-    text(W - pad, y + s(1), hint, 11, (110, 124, 150, 255), anchor="ra")
+    # footer: WFHelper's "Right-click drag to move" + "Detailed Stats" button; the Deck overlay
+    # takes no input, so it says where the details are.
+    hint = "Detailed stats: QAM › Arbitrations"
+    text(W - pad, H - s(24), hint, 11, (110, 124, 150, 255), anchor="ra")
     return img
 
 
