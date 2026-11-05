@@ -183,6 +183,17 @@ def part_chips(e: RewardEntry) -> list[draw.Pill]:
     filled when the part is this reward."""
     out = []
     parent = _parent_name(e)
+    names_ = [p.name or "" for p in e.set_parts]
+    if parent and not all(n.lower().startswith(parent.lower() + " ") for n in names_) and len(names_) > 1:
+        # Parts not named after the set (e.g. "Kavasa Prime Band" in "Kavasa Prime Kubrow Collar
+        # Set"): strip the words every part name shares instead, so the labels stay distinct.
+        words = [n.split() for n in names_]
+        common = []
+        for group in zip(*words):
+            if len(set(w.lower() for w in group)) != 1:
+                break
+            common.append(group[0])
+        parent = " ".join(common) or None
     for part in e.set_parts[:6]:
         color = draw.GOOD if part.owned >= part.required else draw.GOLD_MUTED
         fill = (color[0], color[1], color[2], 90) if part.is_reward else None

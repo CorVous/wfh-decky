@@ -876,3 +876,12 @@ def test_blocks_stay_on_screen_when_neither_side_fits():
     for pos in ("above", "below"):
         p = ov.layout_blocks([e], cards, (1280, 400), (1280, 400), pos)[0]
         assert ov.TOP_MARGIN <= p.y and p.y + p.image.height <= 400
+
+
+def test_part_chips_without_the_set_prefix_stay_distinct():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Kavasa Prime Band", set_name="Kavasa Prime Kubrow Collar Set",
+                    set_parts=[SetPart("Kavasa Prime Band", 0, 1, True), SetPart("Kavasa Prime Buckle", 1, 1),
+                               SetPart("Kavasa Prime Blueprint", 1, 1)])
+    assert [p.text for p in ov.part_chips(e)] == ["Band 0/1", "Buckle 1/1", "BP 1/1"]

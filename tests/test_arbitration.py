@@ -903,3 +903,4 @@ def test_aborted_marker_survives_a_long_type():
     t = ov.type_badge_text({**p, "missionType": "Infested Salvage Extended Variant"}, 150, 11)
     assert t.endswith(" · ABORTED") and "…" in t
     assert ov.draw.text_width(t, 11, True) <= 150
+    assert ov.type_badge_text(p, 20, 11) == "ABORTED"

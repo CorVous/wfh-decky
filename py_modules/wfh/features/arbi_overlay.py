@@ -131,7 +131,10 @@ def type_badge_text(p: dict, max_w: int, size: int) -> str:
     run never reads as a finished one."""
     suffix = " · ABORTED" if p.get("endReason") == "aborted" else ""
     tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
-    return draw.ellipsize(tl, max_w - draw.text_width(suffix, size, True), size, True) + suffix
+    room = max_w - draw.text_width(suffix, size, True)
+    if suffix and room < draw.text_width("…", size, True):
+        return "ABORTED"
+    return draw.ellipsize(tl, room, size, True) + suffix
 
 
 def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> Image.Image:
