@@ -867,3 +867,12 @@ def test_narrow_block_renders_and_part_words():
     img = ov.render_block(e, ov.MIN_BLOCK_W, 0, is_best_mastery=True, mastery_pick=True)
     assert img.width == ov.MIN_BLOCK_W
     assert ov.PART_ABBREV["blueprint"] == "BP" and ov.PART_ABBREV["chassis"] == "Chas"
+
+
+def test_blocks_stay_on_screen_when_neither_side_fits():
+    e = RewardEntry(0, "A Prime Blueprint", ducats=45, plat=18, price_state="ok", rarity="Common", owned=0,
+                    mastered=False)
+    cards = [(0, (300, 150, 156, 160))]
+    for pos in ("above", "below"):
+        p = ov.layout_blocks([e], cards, (1280, 400), (1280, 400), pos)[0]
+        assert ov.TOP_MARGIN <= p.y and p.y + p.image.height <= 400

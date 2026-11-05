@@ -324,14 +324,14 @@ def layout_blocks(entries: list[RewardEntry], card_px: list[tuple[int, tuple[int
     out = []
     for lay, (kw, bx, top, bottom) in zip(layouts, specs):
         img = render_block(**kw, min_height=tallest, layout=lay)
+        above, below = top - GAP - tallest, bottom + GAP
+        fits_above, fits_below = above >= TOP_MARGIN, below + tallest <= oh
         if position == "above":
-            by = top - GAP - tallest
-            if by < TOP_MARGIN:
-                by = bottom + GAP
+            by = above if fits_above or not fits_below else below
         else:
-            by = bottom + GAP
-            if by + tallest > oh:
-                by = max(TOP_MARGIN, top - GAP - tallest)
+            by = below if fits_below or not fits_above else above
+        # Neither side fits: stay on screen (the blocks then cover part of the cards).
+        by = max(TOP_MARGIN, min(by, oh - tallest))
         bx = min(max(0, bx), ow - img.width)
         out.append(Placed(img, bx, by))
     return out

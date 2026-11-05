@@ -126,6 +126,14 @@ def summary_cells(p: dict, fields: dict | None = None) -> list[tuple[str, str, t
     return cells
 
 
+def type_badge_text(p: dict, max_w: int, size: int) -> str:
+    """Mission type for the header badge, cut to max_w; ' · ABORTED' is always kept, so a partial
+    run never reads as a finished one."""
+    suffix = " · ABORTED" if p.get("endReason") == "aborted" else ""
+    tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
+    return draw.ellipsize(tl, max_w - draw.text_width(suffix, size, True), size, True) + suffix
+
+
 def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> Image.Image:
     """The 420-px-wide panel (times ``scale``), drawn directly at the target size.
 
@@ -164,10 +172,8 @@ def render_summary(p: dict, scale: float = 1.0, fields: dict | None = None) -> I
     cx, cy, r = pad + s(5), y + s(7), s(5)
     d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], fill=ORANGE)
     text(pad + s(15), y, "ARBITRATION COMPLETE", 12, ORANGE, bold=True)
-    tl = type_label(p.get("missionType"), p.get("missionTypeRaw")).upper()
-    if p.get("endReason") == "aborted":  # a partial run must not read as a finished one
-        tl += " · ABORTED"
-    tl = draw.ellipsize(tl, inner - draw.text_width("ARBITRATION COMPLETE", s(12), True) - s(15 + 14 + 10), s(11), True)
+    room = inner - draw.text_width("ARBITRATION COMPLETE", s(12), True) - s(15 + 14 + 10)
+    tl = type_badge_text(p, room, s(11))
     bw = draw.text_width(tl, s(11), True) + s(14)
     d.rounded_rectangle((W - pad - bw, y - s(1), W - pad, y + s(17)), s(9), outline=ACCENT, width=max(1, s(1)))
     text(W - pad - bw // 2, y + s(8), tl, 11, ACCENT, bold=True, anchor="mm")

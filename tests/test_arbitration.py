@@ -893,3 +893,13 @@ def test_rpcs(app, tmp_path):
         assert asyncio.run(rpc.call_local("arbi.delete_run", {"id": rid})) == {"ok": True}
     finally:
         arbi_schedule.set_instance(None)
+
+
+def test_aborted_marker_survives_a_long_type():
+    rec = make_record(endReason="aborted", missionType="Infested Salvage Extended Variant")
+    p = ov.build_summary_payload(rec)
+    assert p is not None
+    ov.render_summary(p, 1.25)
+    t = ov.type_badge_text({**p, "missionType": "Infested Salvage Extended Variant"}, 150, 11)
+    assert t.endswith(" · ABORTED") and "…" in t
+    assert ov.draw.text_width(t, 11, True) <= 150
