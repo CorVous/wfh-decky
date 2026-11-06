@@ -1024,3 +1024,17 @@ def test_listing_lines_fit_and_mark_hidden_stats():
     for ln in lines:
         assert sum(ro.d.text_width(t, 10) for t, _ in ln) + 8 * (len(ln) - 1) <= 120
     assert ro.listing_stat_text({"name": "Damage Vs Corpus", "value": 0.95}) == "x0.95 DmgCor"
+
+
+def test_listing_stats_use_short_names_for_wfm_attributes():
+    from wfh.features import riven_overlay as ro
+
+    assert ro.listing_abbreviation("Base Damage / Melee Damage") == "Dmg"
+    assert ro.listing_abbreviation("Fire Rate / Attack Speed") == "FireRate"
+    assert ro.listing_abbreviation("Toxin Damage") == "Toxin"
+    assert ro.listing_abbreviation("Recoil") == "Recoil"
+    row = {"stats": [{"name": n, "value": v, "positive": v > 0, "matched": True}
+                     for n, v in (("Base Damage / Melee Damage", 150), ("Fire Rate / Attack Speed", 60),
+                                  ("Toxin Damage", 80), ("Recoil", -60))]}
+    lines = ro._listing_lines(row, ro.PANEL_W - 2 * ro.PAD - 12)
+    assert sum(len(ln) for ln in lines) == 4 and all(t != "…" for ln in lines for t, _ in ln)

@@ -151,10 +151,33 @@ class _Canvas:
         return w
 
 
+_ELEMENTS = {"toxin", "heat", "cold", "electricity", "electric", "impact", "puncture", "slash"}
+LISTING_ABBREVIATIONS = {
+    "electric": "Elec", "impact": "Impact", "puncture": "Punct", "slash": "Slash", "magazine capacity": "Mag",
+    "status duration": "StatDur", "punch through": "PunchThr", "channeling damage": "Chan",
+    "channeling efficiency": "ChanEff", "critical chance on slide attack": "Slide",
+}
+
+
+def listing_abbreviation(name: str) -> str:
+    """Short name for a warframe.market listing stat. WFM names read like 'Base Damage / Melee Damage',
+    'Fire Rate / Attack Speed', 'Toxin Damage' or 'Recoil', so they are reduced to the card's
+    canonical name before the abbreviation table."""
+    n = str(name or "").lower().strip()
+    if " / " in n:
+        n = n.split(" / ")[0]
+    if n.startswith("base "):
+        n = n[5:]
+    if n.endswith(" damage") and n[:-7] in _ELEMENTS:
+        n = n[:-7]
+    n = STAT_NAME_CANON.get(n, n)
+    return STAT_ABBREVIATIONS.get(n) or LISTING_ABBREVIATIONS.get(n) or abbreviate(name)
+
+
 def listing_stat_text(st: dict) -> str:
     """'+95% Multi' / 'x1.25 DmgCor': the listing value (riven-scanner.md §13.3) and the short name."""
     name = str(st.get("name", ""))
-    ab = abbreviate(name)
+    ab = listing_abbreviation(name)
     if name.lower().startswith("damage vs "):
         ab = "Dmg" + name[10:13]
     v = st.get("value")

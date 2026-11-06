@@ -156,7 +156,12 @@ def part_label(part: str, parent: str | None) -> str:
         if k >= 2 or k == len(pw):
             n = " ".join(words[k:])
     n = re.sub(r"\s+Blueprint$", "", n) if n.lower() != "blueprint" else n
-    return PART_ABBREV.get(n.lower(), n if len(n) <= 6 else n[:5] + ".")
+    if n.lower() in PART_ABBREV:
+        return PART_ABBREV[n.lower()]
+    if len(n) <= 6:
+        return n
+    first = n.split()[0]  # a part that is another item ("Bronco Prime" in Akbronco): its name
+    return first if len(first) <= 8 else first[:7] + "."
 
 
 def _parent_name(e: RewardEntry) -> str | None:
@@ -203,6 +208,7 @@ _Y_NAME = _PAD + 16                        # below the slot label
 _Y_VALS = _Y_NAME + 2 * 17 + 2             # below the two name lines
 _Y_CHIPS = _Y_VALS + 24                    # below the platinum / ducat values
 _CHIP_ROW_H = int(CHIP_SIZE * 1.3) + 4 + 3
+_PARTS_GAP = 2                             # between the chips and the set-part chips
 EMPTY_H = 64
 
 
@@ -211,7 +217,7 @@ def chip_layout(e: RewardEntry, width: int, show_owned: bool = True, show_vaulte
     inner = width - _PAD * 2
     chips = draw.flow_pills(reward_chips(e, show_owned, show_vaulted), inner, CHIP_SIZE)
     parts = draw.flow_pills(part_chips(e), inner, CHIP_SIZE) if show_owned else []
-    h = _Y_CHIPS + _CHIP_ROW_H * len(chips) + (_CHIP_ROW_H * len(parts) + 2 if parts else 0) + _PAD - 3
+    h = _Y_CHIPS + _CHIP_ROW_H * (len(chips) + len(parts)) + (_PARTS_GAP if parts else 0) + _PAD - 3
     return chips, parts, h
 
 
@@ -281,17 +287,12 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
                fill=DUCAT_TEXT if e.ducats else draw.GOLD_MUTED)
         draw.ducat_icon(d, dx - 16, y_vals + 4, 12)
     y = _Y_CHIPS
-    chip_h = _CHIP_ROW_H
-    for row in chips:
+    for i, row in enumerate(chips + parts):
+        if parts and i == len(chips):
+            y += _PARTS_GAP
         for p, px in row:
             draw.draw_pill(d, pad + px, y, p, CHIP_SIZE, inner - px, bg)
-        y += chip_h
-    if parts:
-        y += 2
-        for row in parts:
-            for p, px in row:
-                draw.draw_pill(d, pad + px, y, p, CHIP_SIZE, inner - px, bg)
-            y += chip_h
+        y += _CHIP_ROW_H
     return img
 
 

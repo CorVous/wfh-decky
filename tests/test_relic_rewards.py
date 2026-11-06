@@ -890,7 +890,8 @@ def test_part_chips_without_the_set_prefix_stay_distinct():
 def test_part_labels_for_dual_weapons_and_collars():
     assert ov.part_label("Akbronco Prime Link", "Akbronco Prime") == "Link"
     assert ov.part_label("Akbronco Prime Blueprint", "Akbronco Prime") == "BP"
-    assert ov.part_label("Bronco Prime", "Akbronco Prime") == "Bronc."
+    assert ov.part_label("Bronco Prime", "Akbronco Prime") == "Bronco"
+    assert ov.part_label("Stiletto Prime", "Akstiletto Prime") == "Stiletto"
     assert ov.part_label("Kavasa Prime Kubrow Collar Blueprint", "Kavasa Prime Kubrow Collar") == "BP"
     assert ov.part_label("Kavasa Prime Buckle", "Kavasa Prime Kubrow Collar") == "Buckle"
 
