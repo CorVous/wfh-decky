@@ -354,7 +354,7 @@ CHANCE_COLOR = {"Rare": draw.GOLD_ACCENT, "Uncommon": (148, 163, 184, 255)}  # c
 VAULTED_C = (248, 113, 113, 255)     # #f87171
 UNVAULTED_C = (96, 165, 250, 255)    # #60a5fa
 CARD_BG = draw.GOLD_SURFACE
-CARD_BORDER = (212, 168, 67, 64)
+CARD_BORDER = draw.blend((212, 168, 67, 64), draw.GOLD_BG)  # opaque: ImageDraw does not blend
 BEST_TINT = (37, 36, 33, 245)        # surface + 10 % accent
 BEST_BORDER = (223, 190, 115, 255)   # accent mixed with 16 % white
 PROFIT_PLAT = draw.GOLD_ACCENT_HI    # #f0c95c
@@ -558,7 +558,7 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
 
     # footer (WFHelper: "Press F7 to interact"; the Deck overlay takes no input)
     fy = height - footer_h
-    d.line((pad, fy, width - pad, fy), fill=(212, 168, 67, 60))
+    d.line((pad, fy, width - pad, fy), fill=draw.blend((212, 168, 67, 60), draw.GOLD_BG))
     foot = f"+{more} more  ·  " if more > 0 else ""
     foot += "Filters & squad: QAM › Relics"
     d.text((pad, fy + 5), draw.ellipsize(foot, inner, 12), font=draw.font(12), fill=draw.GOLD_MUTED)
