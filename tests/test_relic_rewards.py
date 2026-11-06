@@ -704,12 +704,12 @@ def test_overlay_blocks_sit_under_each_card():
                for i, (n, d, p, r) in enumerate([("A Prime Blueprint", 45, 18, "Uncommon"),
                                                    ("B Prime Barrel", 15, 4, "Common")])]
     cards = [(i, geo.crop_box(DECK, c)) for i, c in enumerate(geo.card_rects(2, 0.99, DECK))]
-    placed = ov.layout_blocks(entries, cards, DECK, DECK, "below", 0, 0)
+    placed = ov.layout_blocks(entries, cards, DECK, DECK, "below", 0)
     assert len(placed) == 2
     for p, (_, (x, y, w, h)) in zip(placed, cards):
         assert p.y == y + h + ov.GAP
         assert abs((p.x + p.image.width / 2) - (x + w / 2)) <= 2 and p.image.width == w
-    above = ov.layout_blocks(entries, cards, DECK, DECK, "above", 0, 0)
+    above = ov.layout_blocks(entries, cards, DECK, DECK, "above", 0)
     assert all(p.y + p.image.height + ov.GAP == 201 for p in above)
     # capture coordinates map onto a differently sized overlay
     scaled = ov.layout_blocks(entries, cards, DECK, (640, 400), "below")
@@ -821,3 +821,102 @@ def test_needed_for_mastery_rules():
     entries = [e(0, plat=5), e(1, plat=40, mastered=True), e(2, plat=9), e(3, plat=9)]
     assert best_mastery(entries) == 2                       # most plat among needed, lower slot on ties
     assert best_mastery([e(0, crafted=True)]) is None
+
+
+def test_reward_chips_follow_wfhelper():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Xaku Prime Chassis Blueprint", owned=1, required=1, mastered=False, building=True,
+                    set_owned=3, set_required=4, set_name="Xaku Prime Set", set_plat=140, set_price_state="ok",
+                    vaulted=True,
+                    set_parts=[SetPart("Xaku Prime Blueprint", 1, 1), SetPart("Xaku Prime Chassis", 1, 1, True),
+                               SetPart("Xaku Prime Neuroptics", 0, 1, building=True),
+                               SetPart("Xaku Prime Systems", 1, 1)])
+    assert [c.text for c in ov.reward_chips(e)] == ["Own 1/1", "Not Mastered", "In foundry", "Set 3/4", "Set 140p"]
+    assert [c.text for c in ov.reward_chips(e, show_vaulted=True)][-1] == "Vaulted"
+    assert [c.text for c in ov.reward_chips(e, show_owned=False)] == ["Not Mastered", "In foundry", "Set 140p"]
+    e.mastered = True
+    assert "Mastered" in [c.text for c in ov.reward_chips(e)]
+    e.mastered = None  # not masterable / no inventory: no mastery chip
+    assert not {"Mastered", "Not Mastered"} & {c.text for c in ov.reward_chips(e)}
+    parts = ov.part_chips(e)
+    assert [p.text for p in parts] == ["BP 1/1", "Chas 1/1", "Neuro 0/1", "Sys 1/1"]
+    assert parts[1].fill is not None and parts[0].fill is None          # this reward is filled
+    assert parts[2].outline == ov.FOUNDRY and parts[0].color == ov.draw.GOOD
+    assert ov.part_label("Paris Prime Lower Limb", "Paris Prime") == "Lower"
+    assert ov.part_label("Kronen Prime Handle", "Kronen Prime") == "Handle"
+
+
+def test_reward_blocks_share_one_height():
+    from wfh.features.reward_enrich import SetPart
+
+    full = RewardEntry(0, "Xaku Prime Chassis Blueprint", owned=0, required=1, mastered=False, set_owned=0,
+                       set_required=4, set_name="Xaku Prime Set",
+                       set_parts=[SetPart(f"Xaku Prime P{i}", 0, 1) for i in range(5)])
+    bare = RewardEntry(1, "Forma Blueprint", owned=2, required=1)
+    cards = [(0, (300, 200, 156, 160)), (1, (470, 200, 156, 160)), (2, (640, 200, 156, 160))]
+    placed = ov.layout_blocks([full, bare], cards, DECK, DECK)
+    assert len({p.image.height for p in placed}) == 1   # empty slot 2 too
+    # a translucent chip tint must not punch holes into the card
+    img = ov.render_block(full, 156, 0)
+    assert img.crop((4, 4, 150, img.height - 4)).getchannel("A").getextrema()[0] >= 200
+
+
+def test_narrow_block_renders_and_part_words():
+    e = RewardEntry(0, "Vadarya Prime Barrel", rarity="Uncommon", plat=9, price_state="ok")
+    img = ov.render_block(e, ov.MIN_BLOCK_W, 0, is_best_mastery=True, mastery_pick=True)
+    assert img.width == ov.MIN_BLOCK_W
+    assert ov.PART_ABBREV["blueprint"] == "BP" and ov.PART_ABBREV["chassis"] == "Chas"
+
+
+def test_blocks_stay_on_screen_when_neither_side_fits():
+    e = RewardEntry(0, "A Prime Blueprint", ducats=45, plat=18, price_state="ok", rarity="Common", owned=0,
+                    mastered=False)
+    cards = [(0, (300, 150, 156, 160))]
+    for pos in ("above", "below"):
+        p = ov.layout_blocks([e], cards, (1280, 400), (1280, 400), pos)[0]
+        assert ov.TOP_MARGIN <= p.y and p.y + p.image.height <= 400
+
+
+def test_part_chips_without_the_set_prefix_stay_distinct():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Kavasa Prime Band", set_name="Kavasa Prime Kubrow Collar Set",
+                    set_parts=[SetPart("Kavasa Prime Band", 0, 1, True), SetPart("Kavasa Prime Buckle", 1, 1),
+                               SetPart("Kavasa Prime Blueprint", 1, 1)])
+    assert [p.text for p in ov.part_chips(e)] == ["Band 0/1", "Buckle 1/1", "BP 1/1"]
+
+
+def test_part_labels_for_dual_weapons_and_collars():
+    assert ov.part_label("Akbronco Prime Link", "Akbronco Prime") == "Link"
+    assert ov.part_label("Akbronco Prime Blueprint", "Akbronco Prime") == "BP"
+    assert ov.part_label("Bronco Prime", "Akbronco Prime") == "Bronco"
+    assert ov.part_label("Stiletto Prime", "Akstiletto Prime") == "Stiletto"
+    assert ov.part_label("Kavasa Prime Kubrow Collar Blueprint", "Kavasa Prime Kubrow Collar") == "BP"
+    assert ov.part_label("Kavasa Prime Buckle", "Kavasa Prime Kubrow Collar") == "Buckle"
+
+
+def test_blocks_never_overlap_at_small_ui_scale():
+    entries = [RewardEntry(i, f"P{i} Prime Blueprint", plat=5, price_state="ok") for i in range(4)]
+    cards = [(i, (380 + i * 98, 200, 90, 130)) for i in range(4)]  # 98 px apart, narrower than a block
+    placed = sorted(ov.layout_blocks(entries, cards, DECK, DECK), key=lambda p: p.x)
+    for a, b in zip(placed, placed[1:]):
+        assert b.x >= a.x + a.image.width + ov.GAP
+    mid = (placed[0].x + placed[-1].x + placed[-1].image.width) / 2
+    assert abs(mid - (380 + (3 * 98 + 90) / 2)) <= 2  # still centred on the card row
+
+
+def test_row_shifted_on_screen_as_a_whole():
+    entries = [RewardEntry(i, f"P{i} Prime Blueprint", plat=5, price_state="ok") for i in range(4)]
+    cards = [(i, (i * 98, 200, 90, 130)) for i in range(4)]  # hugging the left edge
+    placed = sorted(ov.layout_blocks(entries, cards, DECK, DECK), key=lambda p: p.x)
+    assert placed[0].x >= 0
+    for a, b in zip(placed, placed[1:]):
+        assert b.x >= a.x + a.image.width + ov.GAP
+
+
+def test_part_chips_without_a_set_name():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Foo Prime Chassis Blueprint", set_parts=[SetPart("Foo Prime Chassis", 0, 1, True)])
+    assert [p.text for p in ov.part_chips(e)] == ["Chas 0/1"]

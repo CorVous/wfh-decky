@@ -1011,3 +1011,43 @@ def test_rivens_menu_loads_sheet_in_background(app, monkeypatch):
     fn, a = submitted.pop()
     fn(*a)
     assert events == ["rivens.updated"]
+
+
+def test_listing_lines_fit_and_mark_hidden_stats():
+    from wfh.features import riven_overlay as ro
+
+    row = {"stats": [{"name": n, "value": v, "positive": v > 0, "matched": True}
+                     for n, v in (("Multishot", 123), ("Critical Chance", 140), ("Critical Damage", 95),
+                                  ("Status Chance", 80), ("Fire Rate", 60), ("Impact", -70))]}
+    lines = ro._listing_lines(row, 120)
+    assert len(lines) == 2 and lines[-1][-1][0] == "…"
+    for ln in lines:
+        assert sum(ro.d.text_width(t, 10) for t, _ in ln) + 8 * (len(ln) - 1) <= 120
+    assert ro.listing_stat_text({"name": "Damage Vs Corpus", "value": 0.95}) == "x0.95 DmgCor"
+
+
+def test_listing_stats_use_short_names_for_wfm_attributes():
+    from wfh.features import riven_overlay as ro
+
+    assert ro.listing_abbreviation("Base Damage / Melee Damage") == "Dmg"
+    assert ro.listing_abbreviation("Fire Rate / Attack Speed") == "FireRate"
+    assert ro.listing_abbreviation("Toxin Damage") == "Toxin"
+    assert ro.listing_abbreviation("Recoil") == "Recoil"
+    row = {"stats": [{"name": n, "value": v, "positive": v > 0, "matched": True}
+                     for n, v in (("Base Damage / Melee Damage", 150), ("Fire Rate / Attack Speed", 60),
+                                  ("Toxin Damage", 80), ("Recoil", -60))]}
+    lines = ro._listing_lines(row, ro.PANEL_W - 2 * ro.PAD - 12)
+    assert sum(len(ln) for ln in lines) == 4 and all(t != "…" for ln in lines for t, _ in ln)
+
+
+def test_melee_listing_stats_all_fit():
+    from wfh.features import riven_overlay as ro
+
+    row = {"stats": [{"name": n, "value": v, "positive": True, "matched": True}
+                     for n, v in (("Chance To Gain Extra Combo Count", 80), ("Chance To Gain Combo Count", 80),
+                                  ("Critical Chance On Slide Attack", 120), ("Multishot", 80))]}
+    lines = ro._listing_lines(row, 232)
+    assert sum(len(ln) for ln in lines) == 4
+    long = {"stats": [{"name": "X" * 60, "value": 5, "positive": True, "matched": True}] * 3}
+    for ln in ro._listing_lines(long, 120):  # never "XXX… …": one ellipsis per line at most
+        assert sum(t.count("…") for t, _ in ln) <= 1

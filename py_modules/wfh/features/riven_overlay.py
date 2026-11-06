@@ -17,6 +17,7 @@ from __future__ import annotations
 from PIL import Image, ImageDraw
 
 from ..overlay import draw as d
+from .riven_market import format_listing_value
 
 LAYER_LEFT = "riven"
 LAYER_RIGHT = "riven_right"
@@ -150,6 +151,68 @@ class _Canvas:
         return w
 
 
+_ELEMENTS = {"toxin", "heat", "cold", "electricity", "electric", "impact", "puncture", "slash"}
+LISTING_ABBREVIATIONS = {
+    "electric": "Elec", "impact": "Impact", "puncture": "Punct", "slash": "Slash", "magazine capacity": "Mag",
+    "status duration": "StatDur", "punch through": "PunchThr", "channeling damage": "Chan",
+    "channeling efficiency": "ChanEff", "critical chance on slide attack": "Slide",
+    "chance to gain combo count": "ComboCh", "chance to gain extra combo count": "XtraCombo",
+}
+
+
+def listing_abbreviation(name: str) -> str:
+    """Short name for a warframe.market listing stat. WFM names read like 'Base Damage / Melee Damage',
+    'Fire Rate / Attack Speed', 'Toxin Damage' or 'Recoil', so they are reduced to the card's
+    canonical name before the abbreviation table."""
+    n = str(name or "").lower().strip()
+    if " / " in n:
+        n = n.split(" / ")[0]
+    if n.startswith("base "):
+        n = n[5:]
+    if n.endswith(" damage") and n[:-7] in _ELEMENTS:
+        n = n[:-7]
+    n = STAT_NAME_CANON.get(n, n)
+    return STAT_ABBREVIATIONS.get(n) or LISTING_ABBREVIATIONS.get(n) or abbreviate(name)
+
+
+def listing_stat_text(st: dict) -> str:
+    """'+95% Multi' / 'x1.25 DmgCor': the listing value (riven-scanner.md §13.3) and the short name."""
+    name = str(st.get("name", ""))
+    ab = listing_abbreviation(name)
+    if name.lower().startswith("damage vs "):
+        ab = "Dmg" + name[10:13]
+    v = st.get("value")
+    if isinstance(v, (int, float)):
+        return f"{format_listing_value(name, float(v))} {ab}"
+    return ab
+
+
+def _listing_lines(row: dict, max_w: int, max_lines: int = 2) -> list[list[tuple[str, dict]]]:
+    """A listing's stats flowed onto at most max_lines lines (the rest is dropped)."""
+    lines: list[list[tuple[str, dict]]] = [[]]
+    x = 0
+    stats = row.get("stats") or []
+    for i, st in enumerate(stats):
+        t = d.ellipsize(listing_stat_text(st), max_w, 10)
+        w = d.text_width(t, 10)
+        if lines[-1] and x + w > max_w:
+            if len(lines) == max_lines:  # more stats than fit: end the last line with "…"
+                ell = d.text_width("…", 10)
+                while len(lines[-1]) > 1 and x + ell > max_w:
+                    x -= d.text_width(lines[-1].pop()[0], 10) + 8
+                if x + ell > max_w:  # one stat fills the line: its own ellipsis marks the rest
+                    t0, st0 = lines[-1][0]
+                    lines[-1][0] = (t0 if t0.endswith("…") else d.ellipsize(t0 + " …", max_w, 10), st0)
+                else:
+                    lines[-1].append(("…", {"matched": True, "positive": True}))
+                break
+            lines.append([])
+            x = 0
+        lines[-1].append((t, st))
+        x += w + 8
+    return [ln for ln in lines if ln]
+
+
 def _triangle(dr: ImageDraw.ImageDraw, x: int, y: int, up: bool, color: tuple, size: int = 7) -> None:
     if up:
         pts = [(x, y + size), (x + size, y + size), (x + size / 2, y)]
@@ -273,33 +336,36 @@ def render_panel(view: dict, width: int = PANEL_W, max_h: int = LEFT_MAX_H) -> I
             c.text(PAD, STRINGS["noSimilarFound"], 12, MUTED)
             c.y += 18
         for row in listings[:LISTINGS_SHOWN]:
-            if c.y + 36 > max_h - PAD:
+            lines = _listing_lines(row, inner - 12)
+            card_h = 20 + 14 * len(lines) + 2
+            if c.y + card_h > max_h - PAD:
                 break
             pct = int(row.get("match", 0))
             col = OK if pct >= 75 else WARN_C if pct >= 40 else BAD_C
-            c.dr.rounded_rectangle((PAD, c.y, width - PAD, c.y + 34), 5, fill=SURFACE)
-            c.text(PAD + 6, f"{pct}%", 13, col, True, y=c.y + 2)
-            price = f"{int(row.get('price') or 0)}p"
-            c.text(PAD + 52, price, 13, d.PLAT, True, y=c.y + 2)
+            c.dr.rounded_rectangle((PAD, c.y, width - PAD, c.y + card_h), 5, fill=SURFACE)
+            match = STRINGS["matchPercent"].format(percent=pct)
+            c.text(PAD + 6, match, 12, col, True, y=c.y + 3)
+            price = f"{int(row.get('price') or 0)} p"
+            c.text(PAD + 6 + d.text_width(match, 12, True) + 10, price, 12, d.PLAT, True, y=c.y + 3)
             rolls = STRINGS["rolls"].format(count=int(row.get("rerolls") or 0))
             rw = d.text_width(rolls, 11)
             c.text(width - PAD - 6 - rw, rolls, 11, MUTED, y=c.y + 4)
-            x = PAD + 6
-            for st in row.get("stats") or []:
-                ab = abbreviate(st.get("name", ""))
-                if st.get("name", "").lower().startswith("damage vs "):
-                    ab = "Dmg" + st["name"][10:13]
-                col2 = TEXT if st.get("matched") else (MUTED[0], MUTED[1], MUTED[2], 128)
-                if not st.get("positive", True):
-                    col2 = _rgb("#f4a3a3") if st.get("matched") else (244, 163, 163, 110)
-                w = d.text_width(ab, 10)
-                if x + w > width - PAD - 6:
-                    break
-                c.text(x, ab, 10, col2, y=c.y + 19)
-                if not st.get("matched"):
-                    c.dr.line((x, c.y + 26, x + w, c.y + 26), fill=col2, width=1)
-                x += w + 6
-            c.y += 38
+            ly = c.y + 20
+            for ln in lines:
+                x = PAD + 6
+                for txt, st in ln:
+                    matched = st.get("matched")
+                    if st.get("positive", True):
+                        col2 = TEXT if matched else (MUTED[0], MUTED[1], MUTED[2], 128)
+                    else:
+                        col2 = _rgb("#f4a3a3") if matched else (244, 163, 163, 128)
+                    w = d.text_width(txt, 10)
+                    c.text(x, txt, 10, col2, y=ly)
+                    if not matched:  # WFHelper strikes stats the listing does not share
+                        c.dr.line((x, ly + 7, x + w, ly + 7), fill=col2, width=1)
+                    x += w + 8
+                ly += 14
+            c.y += card_h + 4
 
     h = min(max_h, c.y + PAD - 2)
     out = Image.new("RGBA", (width, h), (0, 0, 0, 0))

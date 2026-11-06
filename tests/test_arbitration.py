@@ -743,13 +743,19 @@ def test_analysis_rotations_cadence_pb():
 # ---- overlay -------------------------------------------------------------------------------------
 
 def test_summary_geometry():
-    img = ov.render_summary(ov.build_summary_payload(make_record()), 1.0)
-    assert img.size == (420, 252)
+    payload = ov.build_summary_payload(make_record())
+    img = ov.render_summary(payload, 1.0)
+    assert img.size == (420, 214)  # WFHelper's default fields: 4 KPIs, no squad / end-reason lines
     assert ov.place("top-center", (1280, 800), img) == (430, 8)
     assert ov.place("top-right", (1280, 800), img) == (1280 - 420 - 16, 8)
-    assert ov.place("left-middle", (1280, 800), img) == (16, 274)
+    assert ov.place("left-middle", (1280, 800), img) == (16, 293)
     assert ov.overlay_scale(5, (1280, 800)) == 1.25 and ov.overlay_scale("x", (1920, 1200)) == 1.5
-    assert ov.render_summary(ov.build_summary_payload(make_record()), 0.75).size == (315, 189)
+    assert ov.render_summary(payload, 0.75).size == (315, 160)
+    every = {"extra_stats": True, "squad": True, "end_reason": True, "vitus_range": True}
+    assert ov.render_summary(payload, 1.0, every).size == (420, 322)
+    assert [c[1] for c in ov.summary_cells(payload)] == ["Expected Vitus", "Drone Kills", "Total Kills",
+                                                         "Time at 15+ Enemies"]
+    assert len(ov.summary_cells(payload, every)) == 9
 
 
 def test_summary_preview_png():
@@ -776,7 +782,7 @@ def test_summary_preview_png():
             if comp.getbbox():
                 break
             time.sleep(0.05)
-        assert comp is not None and comp.getbbox() == (x, y, x + 420, y + 252)
+        assert comp is not None and comp.getbbox() == (x, y, x + 420, y + panel.height)
     finally:
         om.stop()
     # A dim orbiter-ish backdrop so the preview reads like the game screen.
@@ -785,8 +791,10 @@ def test_summary_preview_png():
     d.rectangle((0, 640, 1280, 800), fill=(30, 34, 46, 255))
     d.ellipse((1120, 20, 1260, 160), outline=(70, 80, 100, 255), width=2)   # minimap stand-in (top-right)
     bg.alpha_composite(comp.convert("RGBA"))
-    lucky = ov.render_summary(ov.build_summary_payload({**rec, "vitusActual": 61, "endReason": "aborted"}), 1.0)
-    bg.alpha_composite(lucky, (16, 274))
+    every = {"extra_stats": True, "squad": True, "end_reason": True, "vitus_range": True}
+    lucky = ov.render_summary(ov.build_summary_payload({**rec, "vitusActual": 61, "endReason": "aborted"}), 1.0,
+                              every)
+    bg.alpha_composite(lucky, (16, 240))
     os.makedirs(PREVIEWS, exist_ok=True)
     bg.convert("RGB").save(os.path.join(PREVIEWS, "arbi.png"))
 
@@ -885,3 +893,22 @@ def test_rpcs(app, tmp_path):
         assert asyncio.run(rpc.call_local("arbi.delete_run", {"id": rid})) == {"ok": True}
     finally:
         arbi_schedule.set_instance(None)
+
+
+def test_aborted_marker_survives_a_long_type():
+    rec = make_record(endReason="aborted", missionType="Infested Salvage Extended Variant")
+    p = ov.build_summary_payload(rec)
+    assert p is not None
+    ov.render_summary(p, 1.25)
+    t = ov.type_badge_text({**p, "missionType": "Infested Salvage Extended Variant"}, 150, 11)
+    assert t.endswith(" · ABORTED") and "…" in t
+    assert ov.draw.text_width(t, 11, True) <= 150
+    short = ov.type_badge_text(p, 40, 11)
+    assert short.startswith("AB") and ov.draw.text_width(short, 11, True) <= 40
+
+
+def test_long_expected_vitus_is_not_cut():
+    p = ov.build_summary_payload(make_record())
+    p.update(expectedVitusMean=123.4, expectedVitusStd=12.3)
+    img = ov.render_summary(p, 1.0)
+    assert img.width == ov.PANEL_W

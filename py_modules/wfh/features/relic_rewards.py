@@ -539,9 +539,9 @@ class RewardController:
         drawn = False
         if self._overlay_allowed() and overlay_px and scan is not None:
             placed = ov.layout_blocks(entries, overlay_px, scan.capture_size, self.app.overlays.size,
-                                      str(self.setting("position", "below")), bp, bd,
+                                      str(self.setting("position", "below")), bp,
                                       bool(self.setting("show_ducats", True)), bool(self.setting("show_owned", True)),
-                                      best_mastery=bm)
+                                      best_mastery=bm, show_vaulted=bool(self.setting("show_vaulted", False)))
             comp = ov.compose(placed)
             if comp:
                 self._image = comp

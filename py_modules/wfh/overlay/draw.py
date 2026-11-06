@@ -142,3 +142,83 @@ def fmt_plat(value: float | None) -> str:
     if value is None:
         return "–"
     return f"{value:.0f}p" if value >= 10 or value == int(value) else f"{value:.1f}p"
+
+
+# ---- WFHelper relic theme (overlay.css): rewards and planner use the gold accent --------
+
+GOLD_BG = (6, 10, 18, 235)           # #060a12 at ~92 %
+GOLD_SURFACE = (17, 24, 39, 240)     # #111827
+GOLD_BORDER = (212, 168, 67, 64)     # rgba(212,168,67,.25)
+GOLD_TEXT = (232, 228, 220, 255)     # #e8e4dc
+GOLD_MUTED = (139, 147, 165, 255)    # #8b93a5
+GOLD_ACCENT = (212, 168, 67, 255)    # #d4a843
+GOLD_ACCENT_HI = (240, 201, 92, 255)  # #f0c95c
+PLAT_ICON = (196, 214, 240, 255)     # platinum glyph, silver-blue
+DUCAT_ICON = (226, 180, 90, 255)
+
+
+def plat_icon(d: ImageDraw.ImageDraw, x: int, y: int, size: int) -> int:
+    """A small platinum glyph (a faceted diamond) with its top-left at (x, y); returns its width."""
+    s = max(6, size)
+    cx, cy, r = x + s / 2, y + s / 2, s / 2
+    d.polygon([(cx, cy - r), (cx + r * 0.8, cy), (cx, cy + r), (cx - r * 0.8, cy)], fill=PLAT_ICON)
+    d.line((cx - r * 0.8, cy, cx + r * 0.8, cy), fill=(120, 140, 175, 255), width=1)
+    return s
+
+
+def ducat_icon(d: ImageDraw.ImageDraw, x: int, y: int, size: int) -> int:
+    """A small ducat coin with its top-left at (x, y); returns its width."""
+    s = max(6, size)
+    d.ellipse((x, y, x + s - 1, y + s - 1), fill=DUCAT_ICON, outline=(150, 110, 40, 255))
+    inset = max(2, s // 4)
+    d.ellipse((x + inset, y + inset, x + s - 1 - inset, y + s - 1 - inset), outline=(170, 125, 45, 255))
+    return s
+
+
+@dataclass
+class Pill:
+    text: str
+    color: tuple = MUTED              # text and outline
+    fill: tuple | None = None         # background; None draws a faint tint of color
+    outline: tuple | None = None      # overrides the outline colour (e.g. orange when building)
+
+
+PILL_PAD_X = 4
+
+
+def pill_size(p: Pill, size: int) -> tuple[int, int]:
+    return text_width(p.text, size, True) + PILL_PAD_X * 2, int(size * 1.3) + 4
+
+
+def flow_pills(pills: list[Pill], max_w: int, size: int, gap: int = 3) -> list[list[tuple[Pill, int]]]:
+    """Lays pills left to right, wrapping at max_w. Returns rows of (pill, x)."""
+    rows: list[list[tuple[Pill, int]]] = []
+    x = 0
+    for p in pills:
+        w, _ = pill_size(p, size)
+        if rows and x + w <= max_w:
+            rows[-1].append((p, x))
+        else:
+            rows.append([(p, 0)])
+            x = 0
+        x += w + gap
+    return rows
+
+
+def blend(top: tuple, base: tuple) -> tuple:
+    """top (RGBA) composited over base; ImageDraw writes fills as-is, so a translucent tint
+    drawn straight onto a card would punch a hole in it."""
+    a = (top[3] if len(top) > 3 else 255) / 255
+    rgb = tuple(round(top[i] * a + base[i] * (1 - a)) for i in range(3))
+    return (*rgb, base[3] if len(base) > 3 else 255)
+
+
+def draw_pill(d: ImageDraw.ImageDraw, x: int, y: int, p: Pill, size: int, max_w: int | None = None,
+              base: tuple = GOLD_SURFACE) -> int:
+    """Draws p at (x, y) on a surface of colour base; returns its width."""
+    t = p.text if max_w is None else ellipsize(p.text, max_w - PILL_PAD_X * 2, size, True)
+    w, h = text_width(t, size, True) + PILL_PAD_X * 2, int(size * 1.3) + 4
+    fill = p.fill if p.fill is not None else (p.color[0], p.color[1], p.color[2], 30)
+    d.rounded_rectangle((x, y, x + w - 1, y + h - 1), h // 2, fill=blend(fill, base), outline=p.outline or p.color)
+    d.text((x + PILL_PAD_X, y + 2), t, font=font(size, True), fill=p.color)
+    return w

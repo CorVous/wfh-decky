@@ -16,6 +16,8 @@ DEFAULTS: dict[str, Any] = {
                       # EE.log auto-trigger; EE.cfg UI scale (else ui_scale); blocks below|above the cards
                       "auto_trigger": True, "ui_scale_auto": True, "ui_scale": 0.99, "position": "below",
                       "toast_fallback": True, "prefetch_prices": True,
+                      # Vaulted / Unvaulted chip (hidden by default, as in WFHelper's reward layout)
+                      "show_vaulted": False,
                       # best pick goes to a part of gear never crafted nor mastered first
                       "prioritize_mastery": True},
     "relic_planner": {"enabled": True, "duration_s": 20,
@@ -33,10 +35,14 @@ DEFAULTS: dict[str, Any] = {
                       # compare_arrows: per-stat better/worse marks on the new-roll panel
                       "auctions_shown": True, "ui_scale_auto": True, "ui_scale": 0.99, "canvas": "16:9",
                       "debug_dumps": True, "compare_arrows": True},
-    "arbitration": {"enabled": True, "duration_s": 25, "notify_favorites": True, "favorite_nodes": [],
+    "arbitration": {"enabled": True, "duration_s": 60, "notify_favorites": True, "favorite_nodes": [],
                     # tracking: record runs from EE.log; enabled/duration_s: summary overlay;
                     # summary_position: top-center | top-right | top-left | left-middle; scale 0.75-1.25
-                    "tracking": True, "summary_position": "top-center", "summary_scale": 1.0},
+                    "tracking": True, "summary_position": "top-center", "summary_scale": 1.0,
+                    # summary lines WFHelper hides by default: actual Vitus, rates, kills/drone and
+                    # drone interval; the squad; the end reason; plus the likely Vitus range
+                    "summary_extra_stats": False, "summary_squad": False, "summary_end_reason": False,
+                    "summary_vitus_range": False},
     "ee_log_path": "",
     "wfm_platform": "pc",
     "wfm_crossplay": True,

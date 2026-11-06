@@ -803,3 +803,13 @@ def test_mastery_needs_by_name():
     assert MasteryNeeds(Db(), Inv(xp=10**7)).needed("Vadarya Prime Barrel") is False                 # mastered
     assert MasteryNeeds(Db(), Inv()).needed("Forma Blueprint") is None
     assert MasteryNeeds(Db(), None).needed("Vadarya Prime Barrel") is None
+
+
+def test_panel_card_borders_are_opaque():
+    rows = [{"key": "Axi A1", "name": "Axi A1", "qualityLabel": "Intact", "count": 1, "plat": 5.0,
+             "ducat": 30.0, "vaulted": False, "label": "1x Axi A1 Intact"},
+            {"key": "Axi A2", "name": "Axi A2", "qualityLabel": "Intact", "count": 1, "plat": 9.0,
+             "ducat": 30.0, "vaulted": False, "label": "1x Axi A2 Intact"}]
+    img = rp.render_panel({"state": "rows", "era": "axi", "rows": rows, "squadSize": 4})
+    inner = img.crop((4, 4, img.width - 4, img.height - 4)).getchannel("A")
+    assert inner.getextrema()[0] >= 200  # no see-through lines inside the panel
