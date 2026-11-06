@@ -457,18 +457,22 @@ def _draw_card(d: ImageDraw.ImageDraw, r: dict, x: int, y: int, w: int, h: int, 
     if show_rewards and r.get("rewards"):
         ry = ly + 21
         mastery = set(r.get("masteryParts") or ())
+        # Column widths from this card's own texts, so "Owned 1234" never meets the chance.
+        own_w = max([draw.text_width("Owned 0", 10)] + [draw.text_width(f"Owned {rw.get('owned')}", 10)
+                                                         for rw in r["rewards"] if rw.get("owned") is not None])
+        chance_w = draw.text_width("100.0%", 10)
         for rw in r["rewards"]:
             ch = float(rw.get("chance") or 0)
             chance = f"{ch:.1f}%"
             owned = rw.get("owned")
             own_txt = "?" if owned is None else f"Owned {owned}"
             own_col = MASTERY_C if rw.get("name") in mastery else draw.GOLD_MUTED
-            right_w = 98
+            right_w = own_w + 8 + chance_w
             d.text((cx, ry), draw.ellipsize(rw.get("name", ""), inner - right_w - 4, 11), font=draw.font(11),
                    fill=draw.GOLD_TEXT)
             rx = x + w - 8
             d.text((rx - draw.text_width(own_txt, 10), ry + 1), own_txt, font=draw.font(10), fill=own_col)
-            rx -= 58
+            rx -= own_w + 8
             d.text((rx - draw.text_width(chance, 10), ry + 1), chance, font=draw.font(10),
                    fill=CHANCE_COLOR.get(rw.get("rarity"), draw.GOLD_MUTED))
             ry += REWARD_ROW_H

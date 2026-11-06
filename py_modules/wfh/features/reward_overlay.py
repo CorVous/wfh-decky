@@ -27,7 +27,7 @@ RARITY_COLORS = {
     "Common": (138, 152, 174, 255),    # WFHelper's #64748b, lifted: 10 px on the Deck LCD needs the contrast
 }
 RARITY_LABELS = {"Rare": "RARE", "Uncommon": "UNCOMMON", "Common": "COMMON"}
-RARITY_SHORT = {"Uncommon": "UNCOM"}
+RARITY_SHORT = {"Uncommon": "UNCOM", "Common": "COM"}
 DUCAT_TEXT = (247, 212, 122, 255)     # #f7d47a
 
 _ABBREV = ((r"\bBlueprint\b", "BP"), (r"\bNeuroptics\b", "Neuro"), (r"\bSystems\b", "Sys"),
