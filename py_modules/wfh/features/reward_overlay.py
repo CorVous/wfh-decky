@@ -235,8 +235,9 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
         img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
         a = EMPTY_ALPHA
-        d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=(CARD_BG[0], CARD_BG[1], CARD_BG[2], int(235 * a)),
-                            outline=(255, 255, 255, int(40 * a) + 20))
+        fill = (CARD_BG[0], CARD_BG[1], CARD_BG[2], int(235 * a))
+        d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=fill,
+                            outline=(*draw.blend((255, 255, 255, 40), fill)[:3], fill[3]))
         muted = (*draw.GOLD_MUTED[:3], int(255 * a) + 40)
         d.text((pad, pad), f"SLOT {slot + 1}", font=draw.font(10, True), fill=muted)
         d.text((pad, pad + 18), "-", font=draw.font(15, True), fill=muted)
@@ -256,7 +257,7 @@ def render_block(e: RewardEntry | None, width: int, slot: int, is_best_plat: boo
     h = max(h, min_height)
     img = Image.new("RGBA", (width, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=bg, outline=highlight or CARD_BORDER,
+    d.rounded_rectangle((0, 0, width - 1, h - 1), 8, fill=bg, outline=highlight or draw.blend(CARD_BORDER, bg),
                         width=2 if highlight else 1)
     rar = RARITY_LABELS.get(e.rarity or "", (e.rarity or "").upper())
     tag_w = draw.text_width(tag, 10, True)
