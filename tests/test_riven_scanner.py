@@ -1038,3 +1038,16 @@ def test_listing_stats_use_short_names_for_wfm_attributes():
                                   ("Toxin Damage", 80), ("Recoil", -60))]}
     lines = ro._listing_lines(row, ro.PANEL_W - 2 * ro.PAD - 12)
     assert sum(len(ln) for ln in lines) == 4 and all(t != "…" for ln in lines for t, _ in ln)
+
+
+def test_melee_listing_stats_all_fit():
+    from wfh.features import riven_overlay as ro
+
+    row = {"stats": [{"name": n, "value": v, "positive": True, "matched": True}
+                     for n, v in (("Chance To Gain Extra Combo Count", 80), ("Chance To Gain Combo Count", 80),
+                                  ("Critical Chance On Slide Attack", 120), ("Multishot", 80))]}
+    lines = ro._listing_lines(row, 232)
+    assert sum(len(ln) for ln in lines) == 4
+    long = {"stats": [{"name": "X" * 60, "value": 5, "positive": True, "matched": True}] * 3}
+    for ln in ro._listing_lines(long, 120):  # never "XXX… …": one ellipsis per line at most
+        assert sum(t.count("…") for t, _ in ln) <= 1

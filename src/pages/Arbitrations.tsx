@@ -549,7 +549,7 @@ const SummarySettings: FC = () => {
       <FilterCell label="Summary shows for">
         <Dropdown
           rgOptions={[10, 15, 25, 40, 60].map((v) => ({ data: v, label: `${v} s` }))}
-          selectedOption={a?.duration_s ?? 25}
+          selectedOption={a?.duration_s ?? 60}
           onChange={(o) => set({ duration_s: o.data })}
         />
       </FilterCell>

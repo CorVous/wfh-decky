@@ -543,7 +543,8 @@ def render_panel(payload: dict, show_rewards: bool = False, max_height: int = PA
             y += 20
         y += 6
     # .best: the card with the highest platEv (>= 0); ties go to the first.
-    best_plat = max((r["plat"] for r in rows if r.get("plat") is not None and r["plat"] >= 0), default=None)
+    # (> 0: missing prices count as 0, and an unpriced panel has no best relic)
+    best_plat = max((r["plat"] for r in rows if r.get("plat") is not None and r["plat"] > 0), default=None)
     best_key = next((id(r) for r in rows if best_plat is not None and r.get("plat") == best_plat), None)
     for chunk, rh in grid:
         for j, r in enumerate(chunk):

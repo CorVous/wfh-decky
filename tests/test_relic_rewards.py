@@ -913,3 +913,10 @@ def test_row_shifted_on_screen_as_a_whole():
     assert placed[0].x >= 0
     for a, b in zip(placed, placed[1:]):
         assert b.x >= a.x + a.image.width + ov.GAP
+
+
+def test_part_chips_without_a_set_name():
+    from wfh.features.reward_enrich import SetPart
+
+    e = RewardEntry(0, "Foo Prime Chassis Blueprint", set_parts=[SetPart("Foo Prime Chassis", 0, 1, True)])
+    assert [p.text for p in ov.part_chips(e)] == ["Chas 0/1"]

@@ -194,7 +194,7 @@ def part_chips(e: RewardEntry) -> list[draw.Pill]:
     """Up to 6 set-part chips: green when owned >= required, orange outline when building,
     filled when the part is this reward."""
     out = []
-    parent = _parent_name(e)
+    parent = _parent_name(e) or e.name  # no set name: the reward's own leading words
     for part in e.set_parts[:6]:
         color = draw.GOOD if part.owned >= part.required else draw.GOLD_MUTED
         fill = (color[0], color[1], color[2], 90) if part.is_reward else None

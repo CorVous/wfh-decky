@@ -156,6 +156,7 @@ LISTING_ABBREVIATIONS = {
     "electric": "Elec", "impact": "Impact", "puncture": "Punct", "slash": "Slash", "magazine capacity": "Mag",
     "status duration": "StatDur", "punch through": "PunchThr", "channeling damage": "Chan",
     "channeling efficiency": "ChanEff", "critical chance on slide attack": "Slide",
+    "chance to gain combo count": "ComboCh", "chance to gain extra combo count": "XtraCombo",
 }
 
 
@@ -199,10 +200,11 @@ def _listing_lines(row: dict, max_w: int, max_lines: int = 2) -> list[list[tuple
                 ell = d.text_width("…", 10)
                 while len(lines[-1]) > 1 and x + ell > max_w:
                     x -= d.text_width(lines[-1].pop()[0], 10) + 8
-                if x + ell > max_w:  # one stat filling the line: shorten it to make room
+                if x + ell > max_w:  # one stat fills the line: its own ellipsis marks the rest
                     t0, st0 = lines[-1][0]
-                    lines[-1][0] = (d.ellipsize(t0, max_w - ell - 8, 10), st0)
-                lines[-1].append(("…", {"matched": True, "positive": True}))
+                    lines[-1][0] = (t0 if t0.endswith("…") else d.ellipsize(t0 + " …", max_w, 10), st0)
+                else:
+                    lines[-1].append(("…", {"matched": True, "positive": True}))
                 break
             lines.append([])
             x = 0
